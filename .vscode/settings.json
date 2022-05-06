@@ -1,0 +1,8 @@
+{
+  "go.languageServerExperimentalFeatures": {
+    "diagnostics": false
+  },
+  "go.useLanguageServer": false,
+  "go.buildOnSave": "off",
+  "go.docsTool": "gogetdoc"
+}

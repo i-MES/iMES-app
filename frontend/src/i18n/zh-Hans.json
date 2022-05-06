@@ -1,0 +1,20 @@
+{
+  "nav": {
+    "home": "主页",
+    "about": "关于"
+  },
+  "languages": {
+    "en": "English",
+    "zh-Hans": "简体中文"
+  },
+  "topbar": {
+    "minimise": "最小化",
+    "quit": "退出"
+  },
+  "homepage": {
+    "welcome": "欢迎使用 iMES"
+  },
+  "aboutpage": {
+    "project-repository": "项目仓库"
+  }
+}
