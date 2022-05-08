@@ -43,6 +43,9 @@ export default defineComponent({
     // Click to switch language
     const onclickLanguageHandle = (item: string) => {
       item !== locale.value ? (locale.value = item) : false;
+      window.go.imes.Middleware.OpenFile("~/.zshrc").then(() => {
+        console.log('openfile')
+      });
     };
 
     const onclickMinimise = () => {
@@ -51,6 +54,7 @@ export default defineComponent({
     const onclickQuit = () => {
       Quit();
     };
+
 
     return {
       t,

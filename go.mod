@@ -1,4 +1,4 @@
-module changeme
+module github.com/imes/imes
 
 go 1.17
 
