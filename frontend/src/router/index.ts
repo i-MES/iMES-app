@@ -1,11 +1,17 @@
 import { createRouter, createWebHashHistory, RouteRecordRaw } from "vue-router";
 import Home from "../views/Home.vue";
+import User from "../views/User.vue"
+import Login from "../views/Login.vue"
+import Dashboard from "../views/Dashboard.vue"
 
 const routes: Array<RouteRecordRaw> = [
   {
     path: "/",
     name: "Home",
     component: Home,
+    children: [
+      
+    ]
   },
   {
     path: "/about",
@@ -16,6 +22,21 @@ const routes: Array<RouteRecordRaw> = [
     component: function () {
       return import(/* webpackChunkName: "about" */ "../views/About.vue");
     },
+  },
+  {
+    path: "/user/:id",
+    name: "user",
+    component: User,
+  },
+  {
+    path: "/login",
+    name: "login",
+    component: Login,
+  },
+  {
+    path: "/dashboard",
+    name: "dashboard",
+    component: Dashboard,
   },
 ];
 

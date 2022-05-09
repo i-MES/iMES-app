@@ -1,7 +1,8 @@
 {
   "nav": {
     "home": "主页",
-    "about": "关于"
+    "about": "关于",
+    "dashboard": "看板"
   },
   "languages": {
     "en": "English",

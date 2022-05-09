@@ -8,21 +8,22 @@ import (
 type Middleware struct {
 }
 
-func (s *Middleware) OpenFile(Hash string) {
+func (s *Middleware) OpenFile(Hash string) bool {
 	fmt.Println("OpenFile")
+	return true
 }
 
-func (s *Middleware) OpenLink(Link string) {
+func (s *Middleware) OpenLink(Link string) bool {
 	fmt.Println("OpenLink")
-
+	return true
 }
 
-func (s *Middleware) OpenLog() {
+func (s *Middleware) OpenLog() bool {
 	fmt.Println("OpenLog")
-
+	return true
 }
 
-func (s *Middleware) OpenFolder(Hash string) {
+func (s *Middleware) OpenFolder(Hash string) bool {
 	fmt.Println("OpenFolder")
-
+	return true
 }

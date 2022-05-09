@@ -7,23 +7,12 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent } from "vue";
+<script lang="ts" setup>
 import { useI18n } from "vue-i18n";
 import HelloWorld from "@/components/HelloWorld.vue";
 
-export default defineComponent({
-  name: "Home",
-  components: {
-    HelloWorld,
-  },
-  setup() {
-    const { t } = useI18n({ useScope: "global" });
-    return {
-      t,
-    };
-  },
-});
+const { t } = useI18n({ useScope: "global" });
+
 </script>
 <style lang="scss">
 .home {

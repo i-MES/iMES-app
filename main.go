@@ -45,6 +45,7 @@ func main() {
 		OnShutdown:        app.shutdown,
 		WindowStartState:  options.Normal,
 		Bind: []interface{}{
+			app,
 			&imes.Middleware{},
 		},
 		// Windows platform specific options

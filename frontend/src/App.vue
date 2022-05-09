@@ -4,6 +4,7 @@
     <!-- navigation -->
     <div class="nav" data-wails-no-drag>
       <router-link to="/">{{ t("nav.home") }}</router-link>
+      <router-link to="/dashboard">{{ t("nav.dashboard") }}</router-link>
       <router-link to="/about">{{ t("nav.about") }}</router-link>
     </div>
     <!-- Menu -->
@@ -29,43 +30,31 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent } from "vue";
+<script lang="ts" setup>
 import { useI18n } from "vue-i18n";
 import { WindowMinimise, Quit } from "../wailsjs/runtime";
+import * as imes from "../wailsjs/go/imes/Middleware"
 
-export default defineComponent({
-  setup() {
-    const { t, availableLocales, locale } = useI18n({ useScope: "global" });
-    // List of supported languages
-    const languages = availableLocales;
+const { t, availableLocales, locale } = useI18n({ useScope: "global" });
+// List of supported languages
+const languages = availableLocales;
 
-    // Click to switch language
-    const onclickLanguageHandle = (item: string) => {
-      item !== locale.value ? (locale.value = item) : false;
-      window.go.imes.Middleware.OpenFile("~/.zshrc").then(() => {
-        console.log('openfile')
-      });
-    };
+// Click to switch language
+const onclickLanguageHandle = (item: string) => {
+  item !== locale.value ? (locale.value = item) : false;
+  imes.OpenFile("~/.zshrc").then((result) => {
+    console.log('openfile', result)
+  });
+};
 
-    const onclickMinimise = () => {
-      WindowMinimise();
-    };
-    const onclickQuit = () => {
-      Quit();
-    };
+const onclickMinimise = () => {
+  WindowMinimise();
+};
+const onclickQuit = () => {
+  Quit();
+};
 
 
-    return {
-      t,
-      languages,
-      locale,
-      onclickLanguageHandle,
-      onclickMinimise,
-      onclickQuit,
-    };
-  },
-});
 </script>
 
 <style lang="scss">

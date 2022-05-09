@@ -2,7 +2,7 @@
   <div class="about">
     <div class="content">
       <div class="comeon">
-        <img :src="comeonGif" alt="Gif" />
+        <img :src="logo" alt="Logo" />
       </div>
       <ul class="info">
         <li class="info-item">
@@ -13,21 +13,14 @@
     </div>
   </div>
 </template>
-<script lang="ts">
-import { defineComponent } from "vue";
-import { useI18n } from "vue-i18n";
-import comeonGif from "@/assets/images/logo.svg";
 
-export default defineComponent({
-  setup() {
-    const { t } = useI18n({ useScope: "global" });
-    return {
-      t,
-      comeonGif,
-    };
-  },
-});
+<script lang="ts" setup>
+import { useI18n } from "vue-i18n";
+import logo from "@/assets/images/logo.svg";
+
+const { t } = useI18n({ useScope: "global" });
 </script>
+
 <style lang="scss">
 .about {
   .content {
