@@ -2,11 +2,10 @@
   <v-layout>
     <v-app :theme="store.apptheme">
       <v-app-bar color="info" position="top" data-wails-drag>
-        <v-app-bar-nav-icon variant="text" @click.stop="drawer = !drawer">
-        </v-app-bar-nav-icon>
+        <v-app-bar-nav-icon variant="text" @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
         <v-spacer></v-spacer>
-        <v-btn variant="text" icon="mdi-translate" @click="onclickToggleLanguage"> </v-btn>
-        <v-btn variant="text" icon="mdi-invert-colors" @click="onclickToggleTheme"> </v-btn>
+        <v-btn variant="text" icon="mdi-translate" @click="onclickToggleLanguage"></v-btn>
+        <v-btn variant="text" icon="mdi-invert-colors" @click="onclickToggleTheme"></v-btn>
         <v-btn variant="text" icon="mdi-magnify"></v-btn>
         <v-btn variant="text" icon="mdi-view-module"></v-btn>
         <v-btn variant="text" icon="mdi-dots-vertical"></v-btn>
@@ -15,13 +14,19 @@
       <v-navigation-drawer v-model="drawer" temporary>
         <v-list>
           <v-list-subheader>{{ t("nav.mainmenu") }}</v-list-subheader>
-          <v-list-item v-for="(menu, i) in menus" :key="i" :value="menu" active-color="primary"
-            density="comfortable" :to="menu.ref" @click="onclickMenuListItem(menu.ref)">
+          <v-list-item
+            v-for="(menu, i) in menus"
+            :key="i"
+            :value="menu"
+            active-color="primary"
+            density="comfortable"
+            :to="menu.ref"
+            @click="onclickMenuListItem(menu.ref)"
+          >
             <v-list-item-avatar start>
               <v-icon :icon="menu.icon"></v-icon>
             </v-list-item-avatar>
-            <v-list-item-title v-text="t(menu.title)">
-            </v-list-item-title>
+            <v-list-item-title v-text="t(menu.title)"></v-list-item-title>
           </v-list-item>
         </v-list>
       </v-navigation-drawer>
@@ -31,8 +36,6 @@
       </v-main>
     </v-app>
   </v-layout>
-
-
 </template>
 
 <script lang="ts" setup>
