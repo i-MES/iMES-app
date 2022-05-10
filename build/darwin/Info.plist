@@ -11,4 +11,8 @@
 	<key>LSMinimumSystemVersion</key><string>10.13.0</string>
 	<key>NSHighResolutionCapable</key><string>true</string>
 	<key>NSHumanReadableCopyright</key><string>{{.Info.Copyright}}</string>
+  <key>NSExceptionAllowsInsecureHTTPLoads</key>
+  <true/>
+  <key>NSIncludesSubdomains</key>
+  <true/
 </dict></plist>
