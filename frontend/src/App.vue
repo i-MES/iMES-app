@@ -1,59 +1,108 @@
 <template>
-  <!-- Header -->
-  <div class="header" data-wails-drag>
-    <!-- navigation -->
-    <div class="nav" data-wails-no-drag>
-      <router-link to="/">{{ t("nav.home") }}</router-link>
-      <router-link to="/dashboard">{{ t("nav.dashboard") }}</router-link>
-      <router-link to="/about">{{ t("nav.about") }}</router-link>
-    </div>
-    <!-- Menu -->
-    <div class="menu" data-wails-no-drag>
-      <div class="language">
-        <div
-          v-for="item in languages"
-          :key="item"
-          :class="{ active: item === locale }"
-          @click="onclickLanguageHandle(item)"
-          class="lang-item"
-        >{{ t("languages." + item) }}</div>
-      </div>
-      <div class="bar">
-        <div class="bar-btn" @click="onclickMinimise">{{ t("topbar.minimise") }}</div>
-        <div class="bar-btn" @click="onclickQuit">{{ t("topbar.quit") }}</div>
-      </div>
-    </div>
-  </div>
-  <!-- Page -->
-  <div class="view">
-    <router-view />
-  </div>
+  <v-layout>
+    <v-app :theme="store.apptheme">
+      <v-app-bar color="info" position="top" data-wails-drag>
+        <v-app-bar-nav-icon variant="text" @click.stop="drawer = !drawer">
+        </v-app-bar-nav-icon>
+        <v-spacer></v-spacer>
+        <v-btn variant="text" icon="mdi-translate" @click="onclickToggleLanguage"> </v-btn>
+        <v-btn variant="text" icon="mdi-invert-colors" @click="onclickToggleTheme"> </v-btn>
+        <v-btn variant="text" icon="mdi-magnify"></v-btn>
+        <v-btn variant="text" icon="mdi-view-module"></v-btn>
+        <v-btn variant="text" icon="mdi-dots-vertical"></v-btn>
+      </v-app-bar>
+
+      <v-navigation-drawer v-model="drawer" temporary>
+        <v-list>
+          <v-list-subheader>{{ t("nav.mainmenu") }}</v-list-subheader>
+          <v-list-item v-for="(menu, i) in menus" :key="i" :value="menu" active-color="primary"
+            density="comfortable" :to="menu.ref" @click="onclickMenuListItem(menu.ref)">
+            <v-list-item-avatar start>
+              <v-icon :icon="menu.icon"></v-icon>
+            </v-list-item-avatar>
+            <v-list-item-title v-text="t(menu.title)">
+            </v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </v-navigation-drawer>
+
+      <v-main>
+        <router-view />
+      </v-main>
+    </v-app>
+  </v-layout>
+
+
 </template>
 
 <script lang="ts" setup>
+import { onMounted } from "vue";
+import { useDisplay } from "vuetify";
+import * as imes from "../wailsjs/go/imes/Middleware";
+import { useBaseStore } from "./store/index";
+import { reactive, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { WindowMinimise, Quit } from "../wailsjs/runtime";
-import * as imes from "../wailsjs/go/imes/Middleware"
-
+const store = useBaseStore();
 const { t, availableLocales, locale } = useI18n({ useScope: "global" });
-// List of supported languages
-const languages = availableLocales;
 
-// Click to switch language
+// vuetify's display info
+const display = useDisplay();
+onMounted(() => {
+  console.log(display.height.value);
+  console.log(display.width.value);
+  console.log(display.mobile.value);
+  console.log(display.platform.value);
+});
+
+const drawer = ref(true);
+const menus = reactive([
+  {
+    title: "nav.home",
+    ref: "/",
+    icon: 'mdi-clock'
+  },
+  {
+    title: "nav.dashboard",
+    ref: "/dashboard",
+    icon: 'mdi-account'
+  },
+  {
+    title: "nav.about",
+    ref: "/about",
+    icon: 'mdi-flag'
+  },
+])
+
+
+// change theme
+const onclickToggleTheme = () => {
+  store.apptheme = store.apptheme === "light" ? "dark" : "light";
+  console.log(store.apptheme);
+};
+// change i18n
+const languages = availableLocales;
 const onclickLanguageHandle = (item: string) => {
   item !== locale.value ? (locale.value = item) : false;
-  imes.OpenFile("~/.zshrc").then((result) => {
-    console.log('openfile', result)
-  });
 };
-
+const onclickToggleLanguage = () => {
+  locale.value
+    ? locale.value == "en"
+      ? (locale.value = "zh-Hans")
+      : (locale.value = "en")
+    : false;
+};
+const onclickMenuListItem = (val: string) => {
+  console.log(val)
+}
+// hide window
 const onclickMinimise = () => {
   WindowMinimise();
 };
+// close app
 const onclickQuit = () => {
   Quit();
 };
-
 
 </script>
 
@@ -61,136 +110,9 @@ const onclickQuit = () => {
 @import url("./assets/css/reset.css");
 @import url("./assets/css/font.css");
 
-html {
-  width: 100%;
-  height: 100%;
-}
-
-body {
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  font-family: "Source Han Sans CN, JetBrainsMono";
-  background-color: transparent;
-}
-
 #app {
   position: relative;
   height: 100%;
-  overflow: hidden;
-}
-
-.header {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
-  align-items: center;
-  justify-content: space-between;
-  height: 50px;
-  padding: 0 10px;
-  background-color: #666666;
-
-  .nav {
-    a {
-      display: inline-block;
-      min-width: 50px;
-      height: 30px;
-      line-height: 30px;
-      padding: 0 5px;
-      margin-right: 8px;
-      background-color: #cccccc;
-      border-radius: 2px;
-      text-align: center;
-      text-decoration: none;
-      color: #000000;
-      font-size: 14px;
-      white-space: nowrap;
-
-      &:hover,
-      &.router-link-exact-active {
-        background-color: #999999;
-        color: #ffffff;
-      }
-    }
-  }
-
-  .menu {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    align-items: center;
-    justify-content: space-between;
-
-    .language {
-      margin-right: 20px;
-      border-radius: 2px;
-      background-color: #cccccc;
-      overflow: hidden;
-
-      .lang-item {
-        display: inline-block;
-        min-width: 50px;
-        height: 30px;
-        line-height: 30px;
-        padding: 0 5px;
-        background-color: transparent;
-        text-align: center;
-        text-decoration: none;
-        color: #000000;
-        font-size: 14px;
-
-        &:hover {
-          background-color: #999999;
-          cursor: pointer;
-        }
-
-        &.active {
-          background-color: #999999;
-          color: #ffffff;
-          cursor: not-allowed;
-        }
-      }
-    }
-
-    .bar {
-      display: flex;
-      flex-direction: row;
-      flex-wrap: nowrap;
-      align-items: center;
-      justify-content: flex-end;
-      min-width: 150px;
-
-      .bar-btn {
-        display: inline-block;
-        min-width: 80px;
-        height: 30px;
-        line-height: 30px;
-        padding: 0 5px;
-        margin-left: 8px;
-        background-color: #cccccc;
-        border-radius: 2px;
-        text-align: center;
-        text-decoration: none;
-        color: #000000;
-        font-size: 14px;
-
-        &:hover {
-          background-color: #999999;
-          color: #ffffff;
-          cursor: pointer;
-        }
-      }
-    }
-  }
-}
-
-.view {
-  position: absolute;
-  top: 50px;
-  left: 0;
-  right: 0;
-  bottom: 0;
   overflow: hidden;
 }
 </style>

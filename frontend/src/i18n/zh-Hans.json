@@ -1,12 +1,13 @@
 {
   "nav": {
+    "mainmenu": "主菜单",
     "home": "主页",
     "about": "关于",
     "dashboard": "看板"
   },
   "languages": {
-    "en": "English",
-    "zh-Hans": "简体中文"
+    "en": "En",
+    "zh-Hans": "中"
   },
   "topbar": {
     "minimise": "最小化",

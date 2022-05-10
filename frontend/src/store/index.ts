@@ -11,6 +11,7 @@ export enum AppStatus {
 }
 
 interface IGlobalState {
+  apptheme: string
   username: string
   userstatus: UserStatus
   appstatus: AppStatus
@@ -19,6 +20,7 @@ interface IGlobalState {
 export const useBaseStore = defineStore('imesBaseStore', {
   state: () => {
     return {
+      apptheme: 'dark',
       username: 'admin',
       userstatus: UserStatus.login,
       appstatus: AppStatus.init,

@@ -22,6 +22,7 @@ const { t } = useI18n({ useScope: "global" });
     height: 280px;
     margin: 10px auto 10px;
   }
+
   .link {
     display: flex;
     flex-direction: row;
@@ -29,6 +30,7 @@ const { t } = useI18n({ useScope: "global" });
     align-items: center;
     justify-content: center;
     margin: 18px auto;
+
     .btn {
       display: block;
       width: 150px;
@@ -43,16 +45,20 @@ const { t } = useI18n({ useScope: "global" });
       white-space: nowrap;
       text-decoration: none;
       cursor: pointer;
+
       &.start {
         background-color: #fd0404;
         color: #ffffff;
+
         &:hover {
           background-color: #ec2e2e;
         }
       }
+
       &.star {
         background-color: #ffffff;
         color: #fd0404;
+
         &:hover {
           background-color: #f3f3f3;
         }

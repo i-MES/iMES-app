@@ -3,6 +3,7 @@ import Home from "../views/Home.vue";
 import User from "../views/User.vue"
 import Login from "../views/Login.vue"
 import Dashboard from "../views/Dashboard.vue"
+import HelloVuetify from "../views/HelloVuetify.vue"
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -10,7 +11,7 @@ const routes: Array<RouteRecordRaw> = [
     name: "Home",
     component: Home,
     children: [
-      
+
     ]
   },
   {
@@ -37,6 +38,11 @@ const routes: Array<RouteRecordRaw> = [
     path: "/dashboard",
     name: "dashboard",
     component: Dashboard,
+  },
+  {
+    path: "/hellovuetify",
+    name: "hellovuetify",
+    component: HelloVuetify,
   },
 ];
 
