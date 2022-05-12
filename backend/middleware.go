@@ -2,6 +2,9 @@ package imes
 
 import (
 	"fmt"
+	"log"
+	"os/exec"
+	"runtime"
 )
 
 //Middleware struct to hold wails runtime for all middleware implementations
@@ -26,4 +29,22 @@ func (s *Middleware) OpenLog() bool {
 func (s *Middleware) OpenFolder(Hash string) bool {
 	fmt.Println("OpenFolder")
 	return true
+}
+
+func (s *Middleware) OpenGithub() {
+	var err error
+	url := "https://github.com/i-MES"
+	switch runtime.GOOS {
+	case "linux":
+		err = exec.Command("xdg-open", url).Start()
+	case "windows":
+		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
+	case "darwin":
+		err = exec.Command("open", url).Start()
+	default:
+		err = fmt.Errorf("unsupported platform")
+	}
+	if err != nil {
+		log.Fatal(err)
+	}
 }

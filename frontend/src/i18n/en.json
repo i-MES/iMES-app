@@ -1,9 +1,13 @@
 {
+  "all": {
+    "imes": "intelligent MES"
+  },
   "nav": {
     "mainmenu": "Menu",
     "home": "Home",
-    "about": "About",
-    "dashboard": "Dashbaord"
+    "dashboard": "Dashbaord",
+    "user": "User",
+    "about": "About"
   },
   "languages": {
     "en": "En",
@@ -18,5 +22,9 @@
   },
   "aboutpage": {
     "project-repository": "Project Repository"
+  },
+  "logocomp": {
+    "seemore": "See More",
+    "seeless": "See Less"
   }
 }

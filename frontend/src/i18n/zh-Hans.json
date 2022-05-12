@@ -1,9 +1,13 @@
 {
+  "all": {
+    "imes": "智能 MES"
+  },
   "nav": {
     "mainmenu": "主菜单",
     "home": "主页",
-    "about": "关于",
-    "dashboard": "看板"
+    "dashboard": "看板",
+    "user": "用户",
+    "about": "关于"
   },
   "languages": {
     "en": "En",
@@ -18,5 +22,9 @@
   },
   "aboutpage": {
     "project-repository": "项目仓库"
+  },
+  "logocomp": {
+    "seemore": "查看更多",
+    "seeless": "关闭更多"
   }
 }

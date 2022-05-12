@@ -5,5 +5,5 @@
   "go.useLanguageServer": false,
   "go.buildOnSave": "off",
   "go.docsTool": "gogetdoc",
-  "html.format.wrapLineLength": 108
+  "html.format.wrapLineLength": 88
 }

@@ -52,5 +52,6 @@ type Person struct {
 
 // Greet returns a greeting for the given name
 func (a *App) Greet(p Person) string {
+	fmt.Println("receive frontend greet message")
 	return fmt.Sprintf("Hello %s, age: %d!", p.Name, p.Age)
 }

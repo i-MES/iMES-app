@@ -11,8 +11,8 @@ import vuetify from "./plugins/vuetify"
 import publicComponents from "./components/public/";
 
 const i18n = createI18n({
-  locale: "en",
-  fallbackLocale: "en",
+  locale: "zh-Hans",
+  fallbackLocale: "zh-Hans",
   messages: {
     en: en,
     "zh-Hans": zhHans,
