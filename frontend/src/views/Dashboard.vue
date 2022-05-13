@@ -1,43 +1,46 @@
 <template>
-  <v-container>
-    <v-expansion-panels>
-      <v-expansion-panel
-        v-for="ti in store.testitems"
-        :key="ti.id"
-        :title="ti.title"
-        :text="ti.desc"
-      >
-      </v-expansion-panel>
-    </v-expansion-panels>
-  </v-container>
+  <v-card>
+    <v-tabs v-model="activeTab" background-color="red-lighten-2">
+      <v-tab v-for="n in length" :key="n" :value="n">
+        Item {{ n }}
+      </v-tab>
+    </v-tabs>
+    <v-card-text class="text-center">
+      <v-btn :disabled="!length" text @click="length--">
+        Remove Tab
+      </v-btn>
+      <v-divider class="mx-4" vertical></v-divider>
+      <v-btn text @click="length++">
+        Add Tab
+      </v-btn>
+    </v-card-text>
+
+    <v-window v-model="activeTab">
+      <v-window-item v-for="i in 3" :key="i" :value="i">
+        <v-card>
+          <TI />
+        </v-card>
+      </v-window-item>
+    </v-window>
+  </v-card>
+
+  <TILog />
 </template>
 
 <script lang="ts" setup>
+import { ref, watch } from "vue"
 import { useI18n } from "vue-i18n";
-import { useBaseStore } from "../store/index";
-
+import TI from "../components/TestItem.vue";
+import TILog from "../components/TestItemLog.vue";
 const { t } = useI18n({ useScope: "global" });
-const store = useBaseStore();
 
-[
-  {
-    id: "ti1",
-    title: "Memory Test",
-    desc: "aaaaaaaaaaaa",
-  },
-  {
-    id: "ti2",
-    title: "CPU Test",
-    desc: "bbbbbbbbbb",
-  },
-  {
-    id: "ti3",
-    title: "Network Test",
-    desc: "ccccccccccc",
-  },
-].map((ti) => {
-  store.addTestItem(ti);
-});
+const length = ref(5)
+const activeTab = ref(0)
 
-console.log(store.username);
+watch(
+  length,
+  (nl) => {
+    activeTab.value = nl - 1
+  }
+)
 </script>

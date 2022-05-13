@@ -1,4 +1,4 @@
-module github.com/imes/imes
+module github.com/i-mes/imes-app
 
 go 1.17
 

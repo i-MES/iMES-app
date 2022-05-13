@@ -48,3 +48,34 @@ func (s *Middleware) OpenGithub() {
 		log.Fatal(err)
 	}
 }
+
+type TestItem struct {
+	Id       int    `json:"id"` 
+	Title    string `json:"title"`
+	Desc     string `json:"desc"`
+	Funcname string `json:"funcname"`
+}
+
+// Load testitems from a file
+func (s *Middleware) LoadTestitems(path string) []TestItem {
+	tis := make([]TestItem, 0)
+
+	tis = append(tis,
+		TestItem{1, "MCU Test", "MCU Test...", "test_mcu"},
+		TestItem{2, "Memory Test", "Memory Test...", "test_memory"},
+		TestItem{3, "Network Test", "Network Test...", "test_network"},
+	)
+	return tis
+}
+
+var counter = 0
+
+func (s *Middleware) AddCounter() int {
+	counter += 1
+	fmt.Println(counter)
+	return counter
+}
+
+func (s *Middleware) LoadCounter() int {
+	return counter
+}
