@@ -5,8 +5,10 @@
   "nav": {
     "mainmenu": "主菜单",
     "home": "主页",
+    "test": "测试",
     "dashboard": "看板",
     "user": "用户",
+    "settings": "配置",
     "about": "关于"
   },
   "languages": {

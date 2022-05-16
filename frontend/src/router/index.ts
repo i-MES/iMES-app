@@ -1,6 +1,8 @@
 import { createRouter, createWebHashHistory, RouteRecordRaw } from "vue-router";
 import Home from "../views/Home.vue";
 import User from "../views/User.vue"
+import Test from "../views/Test.vue"
+import Settings from "../views/Settings.vue"
 import Dashboard from "../views/Dashboard.vue"
 
 const routes: Array<RouteRecordRaw> = [
@@ -10,29 +12,47 @@ const routes: Array<RouteRecordRaw> = [
     component: Home,
     meta: {
       sort: 1,
-      icon: 'mdi-clock'
+      icon: 'mdi-home'
     },
     children: [
 
     ]
   },
   {
+    path: "/test",
+    name: "test",
+    component: Test,
+    meta: {
+      sort: 2,
+      icon: 'mdi-arrow-right-bold-circle-outline'
+    }
+  },
+  {
     path: "/dashboard",
     name: "dashboard",
     component: Dashboard,
     meta: {
-      sort: 2,
+      sort: 3,
       icon: 'mdi-view-dashboard'
     }
   },
   {
     path: "/user/:id",
     name: "user",
+    component: User,
     meta: {
-      sort: 3,
+      sort: 4,
       icon: 'mdi-account'
     },
-    component: User,
+  },
+  {
+    path: "/settings",
+    name: "settings",
+    component: Settings,
+    meta: {
+      sort: 5,
+      icon: 'mdi-cog-outline'
+    },
   },
   {
     path: "/about",
@@ -44,7 +64,7 @@ const routes: Array<RouteRecordRaw> = [
       return import(/* webpackChunkName: "about" */ "../views/About.vue");
     },
     meta: {
-      sort: 4,
+      sort: 6,
       icon: 'mdi-flag'
     }
   },

@@ -5,8 +5,10 @@
   "nav": {
     "mainmenu": "Menu",
     "home": "Home",
+    "test": "Test",
     "dashboard": "Dashbaord",
     "user": "User",
+    "settings": "Settings",
     "about": "About"
   },
   "languages": {

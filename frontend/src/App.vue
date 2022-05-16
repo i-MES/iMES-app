@@ -1,11 +1,10 @@
 <template>
   <v-layout>
-    <v-app :theme="store.apptheme">
+    <v-app :theme="store.appTheme">
       <v-app-bar color="#1c7bc9" position="bottom" height="30" data-wails-drag>
-        <v-app-bar-nav-icon variant="text"
-          @click.stop="onToggleDrawer = !onToggleDrawer">
+        <v-app-bar-nav-icon variant="text" @click.stop="onToggleMenu = !onToggleMenu">
         </v-app-bar-nav-icon>
-        <v-btn variant="text" :icon="activeMenuIcon"> </v-btn>
+        <v-icon :icon="activeMenuIcon"> </v-icon>
         <v-spacer></v-spacer>
         <v-btn variant="text" icon="mdi-translate" @click="onclickToggleLanguage">
         </v-btn>
@@ -14,10 +13,12 @@
         <v-btn variant="text" icon="mdi-magnify"></v-btn>
         <v-btn variant="text" icon="mdi-view-module" @click="onclickViewModule"></v-btn>
         <v-btn variant="text" icon="mdi-github" @click="onclickOpenGithub"></v-btn>
-        <v-btn variant="text" icon="mdi-dots-vertical"></v-btn>
+        <v-btn variant="text" icon="mdi-dots-vertical"
+          @click.stop="onToggleStep = !onToggleStep" :disabled="disableToggleStep">
+        </v-btn>
       </v-app-bar>
 
-      <v-navigation-drawer v-model="onToggleDrawer" temporary>
+      <v-navigation-drawer v-model="onToggleMenu" temporary>
         <v-list>
           <v-list-subheader class="h3">{{
               t("nav.mainmenu")
@@ -34,6 +35,16 @@
             <v-list-item-title
               v-text="t(menu.name ? `nav.${menu.name as string}` : 'home')">
             </v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </v-navigation-drawer>
+
+      <v-navigation-drawer v-model="onToggleStep" expand-on-hover rail position="right">
+        <v-list density="compact" nav>
+          <v-list-item v-for="(step, i) in store.teststeps.sort((a, b) => {
+            return (a.sequence - b.sequence)
+          })" :title="step.title" :value="step.id"
+            @click="store.activeTeststepId = step.id">
           </v-list-item>
         </v-list>
       </v-navigation-drawer>
@@ -63,26 +74,14 @@ const route = useRoute(); // route 是一个响应式对象，
 const store = useBaseStore();
 const { t, availableLocales, locale } = useI18n({ useScope: "global" });
 
-// vuetify's display info
-const display = useDisplay();
-onMounted(() => {
-  console.log(display.height.value);
-  console.log(display.width.value);
-  console.log(display.mobile.value);
-  console.log(display.platform.value);
-  // 默认导航到页面
-  router.push({
-    name: "dashboard",
-  });
-  // console.log(router.getRoutes());
-});
-
 // 导航栏 menu 菜单相关
-const onToggleDrawer = ref(true);
-const activeMenuIcon = ref("mdi-view-dashboard");
+const onToggleMenu = ref(true);
+const onToggleStep = ref(false);
+const disableToggleStep = ref(true);
+const activeMenuIcon = ref("mdi-home");
 const onclickMenuListItem = (val: string | unknown) => {
   if (val) {
-    console.log(val);
+    // console.log(val);
     activeMenuIcon.value = val as string;
   }
 };
@@ -90,18 +89,18 @@ watch(
   () => route.path,
   (newPath) => {
     console.log("watching route.path:", newPath);
-  }
-); watch(
-  () => route.params,
-  (v) => {
-    console.log("watching route.params:", v);
+    if (newPath.indexOf('test') > 0) {
+      disableToggleStep.value = false
+    } else {
+      disableToggleStep.value = true
+    }
   }
 );
 
 // change theme
 const onclickToggleTheme = () => {
-  store.apptheme = store.apptheme === "light" ? "dark" : "light";
-  console.log(store.apptheme);
+  store.appTheme = store.appTheme === "light" ? "dark" : "light";
+  console.log(store.appTheme);
 };
 
 // change i18n
@@ -120,7 +119,6 @@ const onclickToggleLanguage = () => {
 };
 const onclickViewModule = () => {
   store.addCounter();
-  store.anothercounter += 1;
 };
 const onclickOpenGithub = () => {
   imes.OpenGithub();
@@ -133,6 +131,30 @@ const onclickMinimise = () => {
 const onclickQuit = () => {
   Quit();
 };
+
+onMounted(() => {
+  // practise vuetify's display props
+  const display = useDisplay();
+  console.log("vuetify's display - height: ", display.height.value);
+  console.log("vuetify's display - width: ", display.width.value);
+  console.log("vuetify's display - mobile: ", display.mobile.value);
+  console.log("vuetify's display - platform: ", display.platform.value);
+
+  // 默认导航的页面
+  const _dr = store.defaultRoute
+  router.push({
+    name: _dr,
+  });
+  // console.log('===', router.getRoutes())
+  router.getRoutes().forEach(val => {
+    if (val.name === _dr) {
+      activeMenuIcon.value = val.meta.icon as string
+    }
+  })
+
+  store.loadSteps()
+});
+
 </script>
 
 <style lang="scss">

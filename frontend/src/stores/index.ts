@@ -15,11 +15,13 @@ export enum AppStatus {
 
 export type TGlobalState = {
   counter: number,
-  anothercounter: number,
-  appname: string,
-  apptheme: string,
-  userstatus: UserStatus,
-  appstatus: AppStatus,
+  defaultRoute: string, // 默认导航的页面
+  appName: string,
+  appTheme: string,
+  userStatus: UserStatus,
+  appStatus: AppStatus,
+  teststeps: imes.TestStep[],   // 测试工序
+  activeTeststepId: number,     // 当前测试工序（的 id）
   testitems: imes.TestItem[]
 }
 
@@ -27,11 +29,13 @@ export const useBaseStore = defineStore('imesBaseStore', {
   state: (): TGlobalState => {
     return {
       counter: 0,
-      anothercounter: 0,
-      appname: 'iMES',
-      apptheme: 'dark',
-      userstatus: UserStatus.login,
-      appstatus: AppStatus.init,
+      defaultRoute: 'test',
+      appName: 'iMES',
+      appTheme: 'dark',
+      userStatus: UserStatus.login,
+      appStatus: AppStatus.init,
+      teststeps: [],
+      activeTeststepId: 0,
       testitems: [],
     }
   },
@@ -64,14 +68,34 @@ export const useBaseStore = defineStore('imesBaseStore', {
         }
       )
     },
+    async loadSteps() {
+      const _ids: number[] = []
+      this.teststeps.forEach((ts) => {
+        _ids.push(ts.id)
+      })
+      imesMid.LoadTestSteps().then(
+        (tss) => {
+          tss.forEach((ts) => {
+            if (_ids) {
+              if (_ids.indexOf(ts.id) < 0) {
+                this.teststeps.push(ts)
+              }
+            } else {
+              this.teststeps.push(ts)
+            }
+
+          })
+        }
+      )
+    },
     async loadTestItem(path: string = '~/.imes/config.yml') {
       if (path === null) throw new Error("Need TI's file path")
       const ids: number[] = []
       this.testitems.forEach((ti) => {
         ids.push(ti.id)
       })
-      return imesMid.LoadTestitems(path)
-        .then((tis) => {
+      imesMid.LoadTestItems(path).then(
+        (tis) => {
           tis.forEach((ti) => {
             if (ids) {
               if (ids.indexOf(ti.id) < 0) {
