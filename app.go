@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
+
+	backend "github.com/i-mes/imes-app/backend"
 )
 
 // App struct
@@ -18,7 +20,10 @@ func NewApp() *App {
 // startup is called when the app starts. The context is saved
 // so we can call the runtime methods
 func (a *App) startup(ctx context.Context) {
+	// wails 通过这里将上下文回吐给 user
+	// user 后续用该上下文(a.ctx) 与 wails runtime 交互
 	a.ctx = ctx
+	backend.ImesBind(&ctx)
 }
 
 // domReady is called after the front-end dom has been loaded

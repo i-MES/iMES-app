@@ -1,11 +1,21 @@
 package imes
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os/exec"
 	"runtime"
+	"time"
+
+	wails "github.com/wailsapp/wails/v2/pkg/runtime"
 )
+
+var imesContext *context.Context
+
+func ImesBind(ctx *context.Context) {
+	imesContext = ctx
+}
 
 //Middleware struct to hold wails runtime for all middleware implementations
 type Middleware struct {
@@ -132,24 +142,28 @@ func (s *Middleware) LoadTestItems(path string) []TestItem {
 	return tis
 }
 
+// 开始一个测试项
+func (s *Middleware) TestItemStart(id int) bool {
+	// do the real test
+
+	// add the log
+	wails.EventsEmit(*imesContext, "testitemlog", TestItemLog{1, "PASS", time.Now().Unix()})
+	return true
+}
+
 // 测试项日志
 type TestItemLog struct {
 	TestItemId int    `json:"testItemId"`
 	Message    string `json:"message"`
-	Year       int    `json:"year"`
-	Month      int    `json:"month"`
-	Day        int    `json:"day"`
-	Hour       int    `json:"hour"`
-	Minute     int    `json:"minute"`
-	Second     int    `json:"second"`
+	TimeStamp  int64  `json:"timestamp"`
 }
 
 // 加载日志
 func (s *Middleware) LoadTestItemLogs(testitemId int) []TestItemLog {
 	logs := make([]TestItemLog, 0)
 	return append(logs,
-		TestItemLog{1, "PASS", 2022, 5, 20, 13, 48, 20},
-		TestItemLog{1, "NG", 2022, 5, 20, 13, 48, 20},
+		TestItemLog{1, "PASS", time.Now().Unix()},
+		TestItemLog{1, "NG", time.Now().Unix() + 1},
 	)
 }
 

@@ -1,5 +1,4 @@
 <template>
-  <v-breadcrumbs :items="items"></v-breadcrumbs>
   <v-tabs class="sticky" grow v-model="activeTab" background-color="red-lighten-2">
     <v-tab v-for="n in length" :key="n" :value="n">
       Item {{ n }}
@@ -7,13 +6,12 @@
   </v-tabs>
 
   <v-window v-model="activeTab">
-    <v-window-item v-for="i in 3" :key="i" :value="i">
+    <v-window-item v-for="i in 13" :key="i" :value="i">
       <v-card>
         <TI />
       </v-card>
     </v-window-item>
   </v-window>
-
 
   <TILog />
 </template>
@@ -31,7 +29,7 @@ const length = ref(5)
 const activeTab = ref(0)
 
 watch(
-  () => store.activeTeststepId,
+  () => store.activeTestStepId,
   (nv) => {
     console.log('active teststep: ', nv)
   }

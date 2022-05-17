@@ -1,7 +1,8 @@
 <template>
   <v-layout>
     <v-app :theme="store.appTheme">
-      <v-app-bar color="#1c7bc9" position="bottom" height="30" data-wails-drag>
+      <v-app-bar color="#1c7bc9" position="bottom" :height="store.appBarHeight"
+        data-wails-drag>
         <v-app-bar-nav-icon variant="text" @click.stop="onToggleMenu = !onToggleMenu">
         </v-app-bar-nav-icon>
         <v-icon :icon="activeMenuIcon"> </v-icon>
@@ -44,7 +45,7 @@
           <v-list-item v-for="(step, i) in store.teststeps.sort((a, b) => {
             return (a.sequence - b.sequence)
           })" :title="step.title" :value="step.id"
-            @click="store.activeTeststepId = step.id">
+            @click="store.activeTestStepId = step.id">
           </v-list-item>
         </v-list>
       </v-navigation-drawer>

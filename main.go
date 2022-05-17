@@ -3,7 +3,7 @@ package main
 import (
 	"embed"
 
-	imes "github.com/i-mes/imes-app/backend"
+	backend "github.com/i-mes/imes-app/backend"
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/logger"
 	"github.com/wailsapp/wails/v2/pkg/options"
@@ -46,7 +46,7 @@ func main() {
 		WindowStartState:  options.Normal,
 		Bind: []interface{}{
 			app,
-			&imes.Middleware{},
+			&backend.Middleware{},
 		},
 		// Windows platform specific options
 		Windows: &windows.Options{

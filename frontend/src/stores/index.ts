@@ -18,11 +18,13 @@ export type TGlobalState = {
   defaultRoute: string, // 默认导航的页面
   appName: string,
   appTheme: string,
+  appBarHeight: number,
   userStatus: UserStatus,
   appStatus: AppStatus,
   teststeps: imes.TestStep[],   // 测试工序
-  activeTeststepId: number,     // 当前测试工序（的 id）
+  activeTestStepId: number,     // 当前测试工序（的 id）
   testitems: imes.TestItem[]
+  testitemsLogs: imes.TestItemLog[]
 }
 
 export const useBaseStore = defineStore('imesBaseStore', {
@@ -32,11 +34,13 @@ export const useBaseStore = defineStore('imesBaseStore', {
       defaultRoute: 'test',
       appName: 'iMES',
       appTheme: 'dark',
+      appBarHeight: 30,
       userStatus: UserStatus.login,
       appStatus: AppStatus.init,
       teststeps: [],
-      activeTeststepId: 0,
+      activeTestStepId: 0,
       testitems: [],
+      testitemsLogs: []
     }
   },
   getters: {
