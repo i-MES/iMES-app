@@ -23,10 +23,23 @@
     "welcome": "欢迎使用 iMES"
   },
   "aboutpage": {
-    "project-repository": "项目仓库"
+    "project-repository": "项目仓库",
+    "history": "APP 历史",
+    "h1-date": "2022.5",
+    "h1-title": "新建",
+    "h1-content": "出发！",
+    "h2-date": "2022.6",
+    "h2-title": "V0.0.1-alph",
+    "h2-content": "实现加载 python 测试项文件并执行测试。",
+    "h3-date": "2022.7",
+    "h3-title": "V0.0.1-beta",
+    "h3-content": "能够通过 SaaS 的 iMES-serve 执行配置和数据存储。"
   },
   "logocomp": {
     "seemore": "查看更多",
     "seeless": "关闭更多"
+  },
+  "settingpage": {
+    "pagetitle": "配置"
   }
 }

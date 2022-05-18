@@ -12,6 +12,9 @@ export enum AppStatus {
   ready,
   testing
 }
+export interface IAppStatusBar {
+  [key: string]: number | string
+}
 
 export type TGlobalState = {
   counter: number,
@@ -19,12 +22,13 @@ export type TGlobalState = {
   appName: string,
   appTheme: string,
   appBarHeight: number,
+  appStatusBar: IAppStatusBar,
   userStatus: UserStatus,
   appStatus: AppStatus,
   teststeps: imes.TestStep[],   // 测试工序
   activeTestStepId: number,     // 当前测试工序（的 id）
   testitems: imes.TestItem[]
-  testitemsLogs: imes.TestItemLog[]
+  testitemsLogs: imes.TestItemLog[],
 }
 
 export const useBaseStore = defineStore('imesBaseStore', {
@@ -35,12 +39,13 @@ export const useBaseStore = defineStore('imesBaseStore', {
       appName: 'iMES',
       appTheme: 'dark',
       appBarHeight: 30,
+      appStatusBar: {},
       userStatus: UserStatus.login,
       appStatus: AppStatus.init,
       teststeps: [],
       activeTestStepId: 0,
       testitems: [],
-      testitemsLogs: []
+      testitemsLogs: [],
     }
   },
   getters: {
@@ -109,6 +114,8 @@ export const useBaseStore = defineStore('imesBaseStore', {
               this.testitems.push(ti)
             }
           })
+          console.log('LoadTestItems return length:', tis.length)
+          console.log('current testitems length:', this.testitems.length)
         })
     }
   }

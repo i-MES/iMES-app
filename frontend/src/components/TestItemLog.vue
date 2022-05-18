@@ -1,7 +1,7 @@
 <template>
   <v-hover v-slot="{ isHovering, props }" open-delay="600" close-delay="600">
-    <v-card class="elevation-24 mx-0 v-card--tilog" color="grey-lighten-4"
-      v-bind="props" :height="(isHovering || sticky) ? `${logHeight}px` : '48px'">
+    <v-card class="mx-0 log-card" color="grey-lighten-4" v-bind="props"
+      :height="(isHovering || sticky) ? `${logHeight}px` : '48px'">
       <v-toolbar height="48">
         <v-toolbar-title>TestItem Log</v-toolbar-title>
         <v-spacer></v-spacer>
@@ -103,13 +103,14 @@ window.runtime.EventsOn("testitemlog", (data) => {
 </script>
 
 <style>
-.v-card--tilog {
+.log-card {
   align-items: center;
   bottom: 0;
   justify-content: center;
-  opacity: .9;
+  opacity: .95;
   position: absolute;
   width: 100%;
+  z-index: 1;
 }
 
 .log-table {

@@ -6,6 +6,7 @@
         <v-app-bar-nav-icon variant="text" @click.stop="onToggleMenu = !onToggleMenu">
         </v-app-bar-nav-icon>
         <v-icon :icon="activeMenuIcon"> </v-icon>
+        <a class="ml-5">{{ store.appStatusBar }}</a>
         <v-spacer></v-spacer>
         <v-btn variant="text" icon="mdi-translate" @click="onclickToggleLanguage">
         </v-btn>
@@ -66,7 +67,6 @@ import { useI18n } from "vue-i18n";
 // wails about
 import { WindowMinimise, Quit } from "../wailsjs/runtime";
 import * as imes from "../wailsjs/go/imes/Middleware";
-import * as app from "../wailsjs/go/main/App";
 // app about
 import { useBaseStore } from "./stores/index";
 

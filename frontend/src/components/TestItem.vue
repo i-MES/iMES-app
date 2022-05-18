@@ -13,15 +13,19 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted, watch, onBeforeUnmount } from "vue";
+import { ref, onMounted, watch, onBeforeUnmount, defineProps } from "vue";
 import { useBaseStore } from "../stores/index";
 const store = useBaseStore();
+
+const props = defineProps<{
+  entityId: number
+}>()
 
 const value = ref(10);
 const bufferValue = ref(20);
 const interval = setInterval(() => {
-  value.value += Math.random() * (15 - 5) + 5;
-  bufferValue.value += Math.random() * (15 - 5) + 6;
+  // value.value += Math.random() * (15 - 5) + 5;
+  // bufferValue.value += Math.random() * (15 - 5) + 6;
 }, 2000);;
 
 watch(
@@ -33,6 +37,7 @@ watch(
   }
 )
 onMounted(() => {
+  console.log(`Load entity ${props.entityId} testitems`)
   store.loadTestItem()
 })
 

@@ -105,6 +105,27 @@ type TestEntity struct {
 	Desc  string `json:"desc"`
 }
 
+var tes = make([]TestEntity, 0)
+
+func (s *Middleware) ConnectTestEntity(ip []int) bool {
+	if len(ip) == 4 {
+		fmt.Println("IP V4")
+	} else if len(ip) == 6 {
+		fmt.Println("IP V6")
+	} else {
+		fmt.Println("Invallied arg")
+	}
+	return true
+}
+
+func (s *Middleware) GetActivedTestEntity() []TestEntity {
+	return append(tes,
+		TestEntity{1, "Entity1", "PC"},
+		TestEntity{2, "Entity2", "MBP"},
+		TestEntity{3, "Entity3", "OPPO"},
+	)
+}
+
 // 测试组
 type TestGroup struct {
 	Id          int    `json:"id"`
@@ -113,8 +134,9 @@ type TestGroup struct {
 	TestItemIds []int  `json:"testItemIds"`
 }
 
+var tgs = make([]TestGroup, 0)
+
 func (s *Middleware) LoadTestGroup(stepId int, stationId int, entityId int) []TestGroup {
-	tgs := make([]TestGroup, 0)
 	return append(tgs,
 		TestGroup{1, "Group1", "测试组1", []int{1, 2}},
 		TestGroup{1, "Group2", "测试组2", []int{2, 3}},
@@ -130,15 +152,20 @@ type TestItem struct {
 	Sequence int    `json:"sequence"`
 }
 
+var tis = make([]TestItem, 0)
+var tised bool = false
+
 // Load testitems from a file
 func (s *Middleware) LoadTestItems(path string) []TestItem {
-	tis := make([]TestItem, 0)
+	if !tised {
+		tis = append(tis,
+			TestItem{1, "MCU Test", "MCU Test...", "test_mcu", 1},
+			TestItem{2, "Memory Test", "Memory Test...", "test_memory", 2},
+			TestItem{3, "Network Test", "Network Test...", "test_network", 3},
+		)
+		tised = true
+	}
 
-	tis = append(tis,
-		TestItem{1, "MCU Test", "MCU Test...", "test_mcu", 1},
-		TestItem{2, "Memory Test", "Memory Test...", "test_memory", 2},
-		TestItem{3, "Network Test", "Network Test...", "test_network", 3},
-	)
 	return tis
 }
 
