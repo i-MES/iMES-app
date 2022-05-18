@@ -1,11 +1,8 @@
 <template>
   <div class="d-flex flex-row">
-    <v-tabs class="sticky" direction="vertical" centered v-model="activeTab"
-      color="deep-purple-accent-4">
+    <v-tabs class="sticky" direction="vertical" centered v-model="activeTab" color="deep-purple-accent-4">
       <v-tab key="all-entity" value="all-entity">All</v-tab>
-      <v-tab v-for="n in tabLength" :key="n" :value="n">
-        Item {{ n }}
-      </v-tab>
+      <v-tab v-for="n in tabLength" :key="n" :value="n"> Item {{ n }} </v-tab>
       <v-tab key="add-entity" value="add-entity">Add</v-tab>
     </v-tabs>
 
@@ -25,13 +22,13 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, reactive, ref, watch } from "vue"
-import { useI18n } from "vue-i18n";
-import { useBaseStore, IAppStatusBar } from "../stores/index";
-import TI from "../components/TestItem.vue";
-import TILog from "../components/TestItemLog.vue";
-const { t } = useI18n({ useScope: "global" });
-const store = useBaseStore();
+import { onMounted, reactive, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useBaseStore, IAppStatusBar } from '../stores/index'
+import TI from '../components/TestItem.vue'
+import TILog from '../components/TestItemLog.vue'
+const { t } = useI18n({ useScope: 'global' })
+const store = useBaseStore()
 const tabLength = ref(5)
 const activeTab = ref(0)
 

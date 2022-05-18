@@ -3,23 +3,20 @@
     <v-col cols="12" sm="8" offset-sm="2">
       <v-card class="mt-5">
         <v-list lines="two">
-          <v-list-subheader>{{ t("settingpage.pagetitle") }}</v-list-subheader>
+          <v-list-subheader>{{ t('settingpage.pagetitle') }}</v-list-subheader>
 
           <v-list-item prepend-avatar="@/images/logo.png" title="版权声明" value="foobar">
             <template v-slot:subtitle>
-              <span class="font-weight-bold">wkevin</span> &mdash; I'll be in your
-              neighborhood doing errands this weekend. Do you want to hang out?
+              <span class="font-weight-bold">wkevin</span> &mdash; I'll be in your neighborhood doing errands this
+              weekend. Do you want to hang out?
             </template>
           </v-list-item>
 
           <v-divider></v-divider>
 
           <v-list-item prepend-avatar="@/images/logo.png">
-            <template v-slot:title>
-              默认主题
-            </template>
-            <template v-slot:subtitle>
-            </template>
+            <template v-slot:title> 默认主题 </template>
+            <template v-slot:subtitle> </template>
           </v-list-item>
 
           <v-divider></v-divider>
@@ -28,13 +25,10 @@
             <v-list-item-media>
               <v-menu>
                 <template v-slot:activator="{ props }">
-                  <v-btn color="primary" v-bind="props">
-                    Activator slot
-                  </v-btn>
+                  <v-btn color="primary" v-bind="props"> Activator slot </v-btn>
                 </template>
                 <v-list>
-                  <v-list-item v-for="(item, index) in items" :key="index"
-                    :value="index">
+                  <v-list-item v-for="(item, index) in items" :key="index" :value="index">
                     <v-list-item-title>{{ item.title }}</v-list-item-title>
                   </v-list-item>
                 </v-list>
@@ -73,26 +67,18 @@
               </v-list-item-header>
             </template>
           </v-list-item>
-
         </v-list>
       </v-card>
     </v-col>
   </v-row>
   <v-sheet></v-sheet>
-
 </template>
 
 <script lang="ts" setup>
-import { useI18n } from "vue-i18n";
-import { useBaseStore } from "../stores/index";
-const { t } = useI18n({ useScope: "global" });
-const store = useBaseStore();
+import { useI18n } from 'vue-i18n'
+import { useBaseStore } from '../stores/index'
+const { t } = useI18n({ useScope: 'global' })
+const store = useBaseStore()
 
-
-const items = [
-  { title: '工作模式 1' },
-  { title: '工作模式 2' },
-  { title: '工作模式 3' },
-]
-
+const items = [{ title: '工作模式 1' }, { title: '工作模式 2' }, { title: '工作模式 3' }]
 </script>
