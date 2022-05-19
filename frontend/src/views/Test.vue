@@ -1,36 +1,32 @@
 <template>
-  <div class="d-flex flex-row">
-    <v-tabs class="sticky" direction="vertical" centered v-model="activeTab" color="deep-purple-accent-4">
-      <v-tab key="all-entity" value="all-entity">All</v-tab>
-      <v-tab v-for="n in tabLength" :key="n" :value="n"> Item {{ n }} </v-tab>
-      <v-tab key="add-entity" value="add-entity">Add</v-tab>
+  <v-container class="mt-16 pa-0 d-inline-flex">
+    <v-tabs class="sticky" direction="vertical" centered v-model="activeTab"
+      color="deep-purple-accent-4">
+      <v-tab v-for="n in tabLength" :key="n" :value="n"> Entity {{ n }} </v-tab>
     </v-tabs>
-
     <v-window v-model="activeTab">
-      <v-window-item key="all-entity" value="all-entity">
-        <a>foo</a>
-      </v-window-item>
-      <v-window-item key="add-entity" value="add-entity">
-        <a>bar</a>
-      </v-window-item>
       <v-window-item v-for="i in tabLength" :key="i" :value="i">
         <TI :entityId="i" />
       </v-window-item>
     </v-window>
-  </div>
+  </v-container>
+  <TIEntity />
   <TILog />
 </template>
 
 <script lang="ts" setup>
 import { onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useBaseStore, IAppStatusBar } from '../stores/index'
+import { useBaseStore } from '../stores/index'
+import { useDisplay } from 'vuetify'
 import TI from '../components/TestItem.vue'
+import TIEntity from '../components/TestEntity.vue'
 import TILog from '../components/TestItemLog.vue'
 const { t } = useI18n({ useScope: 'global' })
 const store = useBaseStore()
 const tabLength = ref(5)
 const activeTab = ref(0)
+const display = useDisplay()
 
 watch(
   () => store.activeTestStepId,
@@ -39,25 +35,14 @@ watch(
   }
 )
 
-interface IAppStatusBar {
-  activeTab: number
-}
-
 onMounted(() => {
-  store.appStatusBar.activeTab = activeTab.value
+  store.tiPageAvilableHeight = display.height.value - store.toolbarheight * 2 - 38
 })
 
-watch(
-  () => activeTab.value,
-  (nv) => {
-    store.appStatusBar.activeTab = nv
-  }
-)
 </script>
 
 <style>
 .sticky {
   position: stickey;
-  top: 10;
 }
 </style>

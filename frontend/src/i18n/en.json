@@ -39,7 +39,11 @@
     "seemore": "See More",
     "seeless": "See Less"
   },
-  "settingpage":{
+  "settingpage": {
     "pagetitle": "Settings"
+  },
+  "testpage": {
+    "testentity-overall": "TestEntity Overall",
+    "testitem-log": "TestItem Log"
   }
 }

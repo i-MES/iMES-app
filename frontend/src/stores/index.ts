@@ -29,6 +29,8 @@ export type TGlobalState = {
   activeTestStepId: number,     // 当前测试工序（的 id）
   testitems: imes.TestItem[]
   testitemsLogs: imes.TestItemLog[],
+  toolbarheight: number,
+  tiPageAvilableHeight: number
 }
 
 export const useBaseStore = defineStore('imesBaseStore', {
@@ -46,6 +48,8 @@ export const useBaseStore = defineStore('imesBaseStore', {
       activeTestStepId: 0,
       testitems: [],
       testitemsLogs: [],
+      toolbarheight: 48,
+      tiPageAvilableHeight: 0
     }
   },
   getters: {

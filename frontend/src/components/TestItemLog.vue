@@ -1,29 +1,26 @@
 <template>
   <v-hover v-slot="{ isHovering, props }" open-delay="600" close-delay="600">
-    <v-card
-      class="mx-0 log-card"
-      color="grey-lighten-4"
-      v-bind="props"
-      :height="isHovering || sticky ? `${logHeight}px` : '48px'"
-    >
-      <v-toolbar height="48">
-        <v-toolbar-title>TestItem Log</v-toolbar-title>
+    <v-card class="mx-0 log-card" color="grey-lighten-4" v-bind="props">
+      <v-toolbar :height="store.toolbarheight">
+        <v-toolbar-title>{{ t("testpage.testitem-log") }}</v-toolbar-title>
         <v-spacer></v-spacer>
-        <v-btn icon="mdi-download-outline" @click="logHeight - 50 < 48 ? 48 : (logHeight -= 50)"> </v-btn>
-        <v-btn
-          icon="mdi-upload-outline"
-          @click="logHeight + 50 > display.height.value ? display.height.value : (logHeight += 50)"
-        >
+        <v-text-field hide-details :height="store.toolbarheight - 10"
+          prepend-icon="mdi-magnify">
+        </v-text-field>
+        <v-btn icon="mdi-upload-outline"
+          @click="logHeight + 50 > store.tiPageAvilableHeight ? (logHeight = store.tiPageAvilableHeight) : (logHeight += 50)">
         </v-btn>
-        <v-btn
-          :icon="logHeightMaxed ? 'mdi-download-multiple' : 'mdi-upload-multiple'"
-          @click="logHeightMaxed = !logHeightMaxed"
-        >
+        <v-btn icon="mdi-download-outline"
+          @click="logHeight - 50 < 0 ? (logHeight = 0) : (logHeight -= 50)">
         </v-btn>
-        <v-btn :icon="sticky ? 'mdi-pin' : 'mdi-pin-off'" @click="sticky = !sticky"> </v-btn>
+        <v-btn :icon="logHeightMaxed ? 'mdi-download-multiple' : 'mdi-upload-multiple'"
+          @click="logHeightMaxed = !logHeightMaxed">
+        </v-btn>
+        <v-btn :icon="sticky ? 'mdi-pin' : 'mdi-pin-off'" @click="sticky = !sticky">
+        </v-btn>
       </v-toolbar>
 
-      <v-table density="compact" :height="`${logHeight - 48}px`">
+      <v-table v-if="isHovering || sticky" density="compact" :height="logHeight">
         <thead>
           <tr>
             <th class="text-left" width="8%">No.</th>
@@ -34,7 +31,8 @@
         <tbody>
           <tr v-for="(log, idx) in store.testitemsLogs" :key="log.timestamp">
             <td>{{ idx + 1 }}</td>
-            <td>{{ DateTime.fromSeconds(log.timestamp).toFormat('yyyy-MM-dd HH:MM:ss') }}</td>
+            <td>{{ DateTime.fromSeconds(log.timestamp).toFormat('yyyy-MM-dd HH:MM:ss')
+            }}</td>
             <td>{{ log.message }}</td>
           </tr>
         </tbody>
@@ -44,16 +42,16 @@
 </template>
 
 <script lang="ts" setup>
-import { onUnmounted, ref, watch } from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { useBaseStore } from '../stores/index'
-import { useDisplay } from 'vuetify'
 import { TestItemStart } from '../../wailsjs/go/imes/Middleware'
+import { useI18n } from 'vue-i18n'
 import { DateTime } from 'luxon'
-import VueTableLite from 'vue3-table-lite/ts'
+
+const { t } = useI18n({ useScope: 'global' })
 
 const store = useBaseStore()
-const display = useDisplay()
-const logHeight = ref(200)
+const logHeight = ref(200) // card - toolbar height, only log height
 const logHeightBak = ref(0)
 const logHeightMaxed = ref(false)
 const sticky = ref(false)
@@ -65,18 +63,25 @@ const timer = setInterval(() => {
   })
 }, 3000)
 
+onMounted(() => {
+  store.appStatusBar.logHeight = logHeight.value
+})
 onUnmounted(() => {
   clearInterval(timer)
 })
 
-function onScroll(event) {
-  console.log(event?.srcElement.scrollTop)
-}
+watch(
+  () => logHeight.value,
+  (nv, ov) => {
+    store.tiPageAvilableHeight -= (nv - ov)
+    store.appStatusBar.logHeight = nv
+  }
+)
 watch(logHeightMaxed, (nv) => {
   if (nv) {
     // max log window
     logHeightBak.value = logHeight.value
-    logHeight.value = display.height.value - store.appBarHeight
+    logHeight.value = store.tiPageAvilableHeight
     stickyBak.value = sticky.value
     sticky.value = true
   } else {

@@ -41,5 +41,9 @@
   },
   "settingpage": {
     "pagetitle": "配置"
+  },
+  "testpage": {
+    "testentity-overall": "被测实体总览",
+    "testitem-log": "测试项 Log"
   }
 }
