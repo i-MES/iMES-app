@@ -1,9 +1,21 @@
 <template>
   <v-container>
     <v-expansion-panels multiple>
-      <v-expansion-panel v-for="ti in store.testitems" :key="ti.id" :title="ti.title" :text="ti.desc">
+      <v-expansion-panel v-for="ti in store.testitems" :key="ti.id" :title="ti.title"
+        :text="ti.desc">
         <div>
-          <v-progress-linear v-model="value" :buffer-value="bufferValue"> </v-progress-linear>
+          <v-progress-linear v-model="value" :buffer-value="bufferValue">
+          </v-progress-linear>
+        </div>
+      </v-expansion-panel>
+    </v-expansion-panels>
+
+    <v-expansion-panels class="mt-10">
+      <v-expansion-panel title="扫描测试项" text="扫描测试项">
+        <div>
+          <v-file-input dense chips multiple label="Scan File"
+            prepend-icon="mdi-overscan">
+          </v-file-input>
         </div>
       </v-expansion-panel>
     </v-expansion-panels>

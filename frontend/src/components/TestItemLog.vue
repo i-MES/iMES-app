@@ -4,8 +4,7 @@
       <v-toolbar :height="store.toolbarheight">
         <v-toolbar-title>{{ t("testpage.testitem-log") }}</v-toolbar-title>
         <v-spacer></v-spacer>
-        <v-text-field hide-details :height="store.toolbarheight - 10"
-          prepend-icon="mdi-magnify">
+        <v-text-field hide-details prepend-icon="mdi-magnify">
         </v-text-field>
         <v-btn icon="mdi-upload-outline"
           @click="logHeight + 50 > store.tiPageAvilableHeight ? (logHeight = store.tiPageAvilableHeight) : (logHeight += 50)">
@@ -64,19 +63,19 @@ const timer = setInterval(() => {
 }, 3000)
 
 onMounted(() => {
-  store.appStatusBar.logHeight = logHeight.value
+  // store.appStatusBar.logHeight = logHeight.value
 })
 onUnmounted(() => {
   clearInterval(timer)
 })
 
-watch(
-  () => logHeight.value,
-  (nv, ov) => {
-    store.tiPageAvilableHeight -= (nv - ov)
-    store.appStatusBar.logHeight = nv
-  }
-)
+// watch(
+//   () => logHeight.value,
+//   (nv, ov) => {
+//     store.tiPageAvilableHeight -= (nv - ov)
+//     store.appStatusBar.logHeight = nv
+//   }
+// )
 watch(logHeightMaxed, (nv) => {
   if (nv) {
     // max log window

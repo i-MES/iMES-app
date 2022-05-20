@@ -25,6 +25,7 @@ export type TGlobalState = {
   appStatusBar: IAppStatusBar,
   userStatus: UserStatus,
   appStatus: AppStatus,
+  testProductions: imes.TestProduction[],
   teststeps: imes.TestStep[],   // 测试工序
   activeTestStepId: number,     // 当前测试工序（的 id）
   testitems: imes.TestItem[]
@@ -42,17 +43,21 @@ export const useBaseStore = defineStore('imesBaseStore', {
       appTheme: 'dark',
       appBarHeight: 30,
       appStatusBar: {},
+      testProductions: [],
       userStatus: UserStatus.login,
       appStatus: AppStatus.init,
       teststeps: [],
       activeTestStepId: 0,
       testitems: [],
       testitemsLogs: [],
-      toolbarheight: 48,
+      toolbarheight: 38,
       tiPageAvilableHeight: 0
     }
   },
   getters: {
+    testProduction: (state) => {
+      return (id: number) => state.testProductions.find((tp) => tp.id === id)
+    },
     userInfo: (state) => {
       const user = useUserStore()
       return {
@@ -96,7 +101,6 @@ export const useBaseStore = defineStore('imesBaseStore', {
             } else {
               this.teststeps.push(ts)
             }
-
           })
         }
       )
@@ -121,6 +125,15 @@ export const useBaseStore = defineStore('imesBaseStore', {
           console.log('LoadTestItems return length:', tis.length)
           console.log('current testitems length:', this.testitems.length)
         })
+    },
+    async loadTestProductions() {
+      imesMid.LoadTestProduction().then(
+        (_tps) => {
+          if (_tps) {
+            this.testProductions = _tps
+          }
+        }
+      )
     }
   }
 })

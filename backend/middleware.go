@@ -59,6 +59,26 @@ func (s *Middleware) OpenGithub() {
 	}
 }
 
+// 产品
+type TestProduction struct {
+	Id    int    `json:"id"`
+	Title string `json:"title"`
+	Desc  string `json:"desc"`
+}
+
+var tps = make([]TestProduction, 0)
+
+func (s *Middleware) LoadTestProduction() []TestProduction {
+	if len(tps) == 0 {
+		tps = append(tps,
+			TestProduction{1, "电脑", "PC 机"},
+			TestProduction{2, "机顶盒", "电视机顶盒"},
+			TestProduction{3, "手机", "Android 手机"},
+		)
+	}
+	return tps
+}
+
 // 工序
 type TestStep struct {
 	Id       int    `json:"id"`
@@ -67,15 +87,18 @@ type TestStep struct {
 	Sequence int    `json:"sequence"`
 }
 
+var tss = make([]TestStep, 0)
+
 // 加载测试工序
 func (s *Middleware) LoadTestSteps() []TestStep {
-	tps := make([]TestStep, 0)
-	tps = append(tps,
-		TestStep{147, "工序1", "测试工序1", 1},
-		TestStep{369, "工序2", "测试工序2", 2},
-		TestStep{248, "工序3", "测试工序3", 3},
-	)
-	return tps
+	if len(tss) == 0 {
+		tss = append(tss,
+			TestStep{369, "工序2", "测试工序2", 2},
+			TestStep{248, "工序3", "测试工序3", 3},
+			TestStep{147, "工序1", "测试工序1", 1},
+		)
+	}
+	return tss
 }
 
 // 工位（允许支持多个测试工序）
@@ -137,10 +160,13 @@ type TestGroup struct {
 var tgs = make([]TestGroup, 0)
 
 func (s *Middleware) LoadTestGroup(stepId int, stationId int, entityId int) []TestGroup {
-	return append(tgs,
-		TestGroup{1, "Group1", "测试组1", []int{1, 2}},
-		TestGroup{1, "Group2", "测试组2", []int{2, 3}},
-	)
+	if len(tgs) == 0 {
+		tgs = append(tgs,
+			TestGroup{1, "Group1", "测试组1", []int{1, 2}},
+			TestGroup{1, "Group2", "测试组2", []int{2, 3}},
+		)
+	}
+	return tgs
 }
 
 // 测试项
@@ -153,17 +179,15 @@ type TestItem struct {
 }
 
 var tis = make([]TestItem, 0)
-var tised bool = false
 
 // Load testitems from a file
 func (s *Middleware) LoadTestItems(path string) []TestItem {
-	if !tised {
+	if len(tis) == 0 {
 		tis = append(tis,
 			TestItem{1, "MCU Test", "MCU Test...", "test_mcu", 1},
 			TestItem{2, "Memory Test", "Memory Test...", "test_memory", 2},
 			TestItem{3, "Network Test", "Network Test...", "test_network", 3},
 		)
-		tised = true
 	}
 
 	return tis
@@ -185,9 +209,10 @@ type TestItemLog struct {
 	TimeStamp  int64  `json:"timestamp"`
 }
 
+var logs = make([]TestItemLog, 0)
+
 // 加载日志
 func (s *Middleware) LoadTestItemLogs(testitemId int) []TestItemLog {
-	logs := make([]TestItemLog, 0)
 	return append(logs,
 		TestItemLog{1, "PASS", time.Now().Unix()},
 		TestItemLog{1, "NG", time.Now().Unix() + 1},

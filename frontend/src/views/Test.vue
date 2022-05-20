@@ -1,7 +1,7 @@
 <template>
-  <v-container class="mt-16 pa-0 d-inline-flex">
-    <v-tabs class="sticky" direction="vertical" centered v-model="activeTab"
-      color="deep-purple-accent-4">
+  <TIEntityOverall />
+  <v-container class="mt-16 pa-0 ">
+    <v-tabs class="sticky" centered v-model="activeTab" color="deep-purple-accent-4">
       <v-tab v-for="n in tabLength" :key="n" :value="n"> Entity {{ n }} </v-tab>
     </v-tabs>
     <v-window v-model="activeTab">
@@ -10,7 +10,6 @@
       </v-window-item>
     </v-window>
   </v-container>
-  <TIEntity />
   <TILog />
 </template>
 
@@ -20,7 +19,7 @@ import { useI18n } from 'vue-i18n'
 import { useBaseStore } from '../stores/index'
 import { useDisplay } from 'vuetify'
 import TI from '../components/TestItem.vue'
-import TIEntity from '../components/TestEntity.vue'
+import TIEntityOverall from '../components/TestEntityOverall.vue'
 import TILog from '../components/TestItemLog.vue'
 const { t } = useI18n({ useScope: 'global' })
 const store = useBaseStore()
