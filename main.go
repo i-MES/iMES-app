@@ -3,7 +3,7 @@ package main
 import (
 	"embed"
 
-	backend "github.com/i-mes/imes-app/backend"
+	imes "github.com/i-mes/imes-app/backend"
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/logger"
 	"github.com/wailsapp/wails/v2/pkg/options"
@@ -19,7 +19,8 @@ var icon []byte
 
 func main() {
 	// Create an instance of the app structure
-	app := NewApp()
+	api := &imes.Api{}
+	app := NewApp(api)
 
 	// Create application with options
 	err := wails.Run(&options.App{
@@ -28,8 +29,6 @@ func main() {
 		Height:            768,
 		MinWidth:          900,
 		MinHeight:         600,
-		MaxWidth:          1200,
-		MaxHeight:         800,
 		DisableResize:     false,
 		Fullscreen:        false,
 		Frameless:         false,
@@ -46,7 +45,7 @@ func main() {
 		WindowStartState:  options.Normal,
 		Bind: []interface{}{
 			app,
-			&backend.Middleware{},
+			api,
 		},
 		// Windows platform specific options
 		Windows: &windows.Options{

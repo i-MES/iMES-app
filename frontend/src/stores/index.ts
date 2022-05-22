@@ -1,7 +1,7 @@
 import { defineStore, storeToRefs } from 'pinia'
 import { useUserStore } from './user'
 import { imes } from "../../wailsjs/go/models"
-import * as imesMid from "../../wailsjs/go/imes/Middleware";
+import * as api from "../../wailsjs/go/imes/Api";
 
 export enum UserStatus {
   login,
@@ -27,6 +27,7 @@ export type TGlobalState = {
   appStatus: AppStatus,
   testProductions: imes.TestProduction[],
   teststeps: imes.TestStep[],   // 测试工序
+  atciveTestProduction: number, // 当前选中产品
   activeTestStepId: number,     // 当前测试工序（的 id）
   testitems: imes.TestItem[]
   testitemsLogs: imes.TestItemLog[],
@@ -47,6 +48,7 @@ export const useBaseStore = defineStore('imesBaseStore', {
       userStatus: UserStatus.login,
       appStatus: AppStatus.init,
       teststeps: [],
+      atciveTestProduction: 0,
       activeTestStepId: 0,
       testitems: [],
       testitemsLogs: [],
@@ -55,8 +57,10 @@ export const useBaseStore = defineStore('imesBaseStore', {
     }
   },
   getters: {
-    testProduction: (state) => {
-      return (id: number) => state.testProductions.find((tp) => tp.id === id)
+    testProductionById: (state) => {
+      return (id: number): imes.TestProduction | undefined => {
+        return state.testProductions.find((tp) => tp.id === id)
+      }
     },
     userInfo: (state) => {
       const user = useUserStore()
@@ -73,7 +77,7 @@ export const useBaseStore = defineStore('imesBaseStore', {
   },
   actions: {
     addCounter() {
-      imesMid.AddCounter().then(
+      api.AddCounter().then(
         (ctr) => {
           console.log(ctr)
           this.counter = ctr
@@ -91,7 +95,7 @@ export const useBaseStore = defineStore('imesBaseStore', {
       this.teststeps.forEach((ts) => {
         _ids.push(ts.id)
       })
-      imesMid.LoadTestSteps().then(
+      api.LoadTestSteps().then(
         (tss) => {
           tss.forEach((ts) => {
             if (_ids) {
@@ -111,7 +115,7 @@ export const useBaseStore = defineStore('imesBaseStore', {
       this.testitems.forEach((ti) => {
         ids.push(ti.id)
       })
-      imesMid.LoadTestItems(path).then(
+      api.LoadTestItems(path).then(
         (tis) => {
           tis.forEach((ti) => {
             if (ids) {
@@ -127,11 +131,18 @@ export const useBaseStore = defineStore('imesBaseStore', {
         })
     },
     async loadTestProductions() {
-      imesMid.LoadTestProduction().then(
-        (_tps) => {
-          if (_tps) {
-            this.testProductions = _tps
-          }
+      api.OpenConfigFile().then(
+        (f) => {
+          api.LoadJsonConfigData(f).then((b) => {
+            if (b) {
+              api.GetJsonProductions().then((_tps) => {
+                if (_tps) {
+                  this.testProductions = _tps
+                  console.log(this.testProductions)
+                }
+              })
+            }
+          })
         }
       )
     }

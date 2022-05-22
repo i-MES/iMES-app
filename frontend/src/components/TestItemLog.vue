@@ -2,21 +2,23 @@
   <v-hover v-slot="{ isHovering, props }" open-delay="600" close-delay="600">
     <v-card class="mx-0 log-card" color="grey-lighten-4" v-bind="props">
       <v-toolbar :height="store.toolbarheight">
-        <v-toolbar-title>{{ t("testpage.testitem-log") }}</v-toolbar-title>
+        <v-toolbar-title>{{ t('testpage.testitem-log') }}</v-toolbar-title>
         <v-spacer></v-spacer>
-        <v-text-field hide-details prepend-icon="mdi-magnify">
-        </v-text-field>
-        <v-btn icon="mdi-upload-outline"
-          @click="logHeight + 50 > store.tiPageAvilableHeight ? (logHeight = store.tiPageAvilableHeight) : (logHeight += 50)">
+        <v-text-field hide-details prepend-icon="mdi-magnify"> </v-text-field>
+        <v-btn
+          icon="mdi-upload-outline"
+          @click="
+            logHeight + 50 > store.tiPageAvilableHeight ? (logHeight = store.tiPageAvilableHeight) : (logHeight += 50)
+          "
+        >
         </v-btn>
-        <v-btn icon="mdi-download-outline"
-          @click="logHeight - 50 < 0 ? (logHeight = 0) : (logHeight -= 50)">
+        <v-btn icon="mdi-download-outline" @click="logHeight - 50 < 0 ? (logHeight = 0) : (logHeight -= 50)"> </v-btn>
+        <v-btn
+          :icon="logHeightMaxed ? 'mdi-download-multiple' : 'mdi-upload-multiple'"
+          @click="logHeightMaxed = !logHeightMaxed"
+        >
         </v-btn>
-        <v-btn :icon="logHeightMaxed ? 'mdi-download-multiple' : 'mdi-upload-multiple'"
-          @click="logHeightMaxed = !logHeightMaxed">
-        </v-btn>
-        <v-btn :icon="sticky ? 'mdi-pin' : 'mdi-pin-off'" @click="sticky = !sticky">
-        </v-btn>
+        <v-btn :icon="sticky ? 'mdi-pin' : 'mdi-pin-off'" @click="sticky = !sticky"> </v-btn>
       </v-toolbar>
 
       <v-table v-if="isHovering || sticky" density="compact" :height="logHeight">
@@ -30,8 +32,7 @@
         <tbody>
           <tr v-for="(log, idx) in store.testitemsLogs" :key="log.timestamp">
             <td>{{ idx + 1 }}</td>
-            <td>{{ DateTime.fromSeconds(log.timestamp).toFormat('yyyy-MM-dd HH:MM:ss')
-            }}</td>
+            <td>{{ DateTime.fromSeconds(log.timestamp).toFormat('yyyy-MM-dd HH:MM:ss') }}</td>
             <td>{{ log.message }}</td>
           </tr>
         </tbody>
@@ -43,7 +44,7 @@
 <script lang="ts" setup>
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { useBaseStore } from '../stores/index'
-import { TestItemStart } from '../../wailsjs/go/imes/Middleware'
+import { TestItemStart } from '../../wailsjs/go/imes/Api'
 import { useI18n } from 'vue-i18n'
 import { DateTime } from 'luxon'
 

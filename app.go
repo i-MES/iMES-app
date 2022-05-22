@@ -5,16 +5,27 @@ import (
 	"fmt"
 
 	backend "github.com/i-mes/imes-app/backend"
+	"github.com/wailsapp/wails/v2/pkg/menu"
+	"github.com/wailsapp/wails/v2/pkg/menu/keys"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 // App struct
 type App struct {
 	ctx context.Context
+	api *backend.Api
 }
 
 // NewApp creates a new App application struct
-func NewApp() *App {
-	return &App{}
+func NewApp(api *backend.Api) *App {
+	app := &App{}
+	app.api = api
+	return app
+}
+
+func (a *App) loadConfigFileCallback(data *menu.CallbackData) {
+	fmt.Println(data.MenuItem.Label)
+	a.api.LoadJsonConfigData(a.api.OpenConfigFile())
 }
 
 // startup is called when the app starts. The context is saved
@@ -24,6 +35,16 @@ func (a *App) startup(ctx context.Context) {
 	// user 后续用该上下文(a.ctx) 与 wails runtime 交互
 	a.ctx = ctx
 	backend.ImesBind(&ctx)
+	myMenu := menu.NewMenuFromItems(
+		menu.SubMenu("File", menu.NewMenuFromItems(
+			menu.Text("Load Config File", keys.CmdOrCtrl("o"), a.loadConfigFileCallback),
+			menu.Separator(),
+			menu.Text("Quit", keys.CmdOrCtrl("q"), func(_ *menu.CallbackData) {
+				runtime.Quit(a.ctx)
+			}),
+		)),
+	)
+	runtime.MenuSetApplicationMenu(a.ctx, myMenu)
 }
 
 // domReady is called after the front-end dom has been loaded
@@ -48,15 +69,4 @@ func (a *App) beforeClose(ctx context.Context) (prevent bool) {
 func (a *App) shutdown(ctx context.Context) {
 	// Perform your teardown here
 	// 在此处做一些资源释放的操作
-}
-
-type Person struct {
-	Name string `json:"name"`
-	Age  uint8  `json:"age"`
-}
-
-// Greet returns a greeting for the given name
-func (a *App) Greet(p Person) string {
-	fmt.Println("receive frontend greet message")
-	return fmt.Sprintf("Hello %s, age: %d!", p.Name, p.Age)
 }

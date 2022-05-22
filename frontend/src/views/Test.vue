@@ -1,14 +1,17 @@
 <template>
-  <TIEntityOverall />
-  <v-container class="mt-16 pa-0 ">
-    <v-tabs class="sticky" centered v-model="activeTab" color="deep-purple-accent-4">
-      <v-tab v-for="n in tabLength" :key="n" :value="n"> Entity {{ n }} </v-tab>
-    </v-tabs>
-    <v-window v-model="activeTab">
-      <v-window-item v-for="i in tabLength" :key="i" :value="i">
-        <TI :entityId="i" />
-      </v-window-item>
-    </v-window>
+  <v-container>
+    <v-row>
+      <v-col cols="12">
+        <v-tabs class="sticky" centered v-model="activeTab" color="deep-purple-accent-4">
+          <v-tab v-for="n in tabLength" :key="n" :value="n"> Entity {{ n }} </v-tab>
+        </v-tabs>
+        <v-window v-model="activeTab">
+          <v-window-item v-for="i in tabLength" :key="i" :value="i">
+            <TI :entityId="i" />
+          </v-window-item>
+        </v-window>
+      </v-col>
+    </v-row>
   </v-container>
   <TILog />
 </template>
@@ -37,7 +40,6 @@ watch(
 onMounted(() => {
   store.tiPageAvilableHeight = display.height.value - store.toolbarheight * 2 - 38
 })
-
 </script>
 
 <style>

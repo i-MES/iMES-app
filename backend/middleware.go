@@ -4,11 +4,12 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os/exec"
-	"runtime"
+	"os"
 	"time"
 
+	jsoniter "github.com/json-iterator/go"
 	wails "github.com/wailsapp/wails/v2/pkg/runtime"
+	"gopkg.in/yaml.v2"
 )
 
 var imesContext *context.Context
@@ -17,46 +18,51 @@ func ImesBind(ctx *context.Context) {
 	imesContext = ctx
 }
 
-//Middleware struct to hold wails runtime for all middleware implementations
-type Middleware struct {
+var json = jsoniter.ConfigCompatibleWithStandardLibrary
+
+//Api struct to hold wails runtime for all Api implementations
+type Api struct {
+	conf    map[interface{}]interface{}
+	confstr []byte
 }
 
-func (s *Middleware) OpenFile(Hash string) bool {
+func (s *Api) OpenFile(Hash string) bool {
 	fmt.Println("OpenFile")
 	return true
 }
 
-func (s *Middleware) OpenLink(Link string) bool {
+func (s *Api) OpenLink(Link string) bool {
 	fmt.Println("OpenLink")
 	return true
 }
 
-func (s *Middleware) OpenLog() bool {
+func (s *Api) OpenLog() bool {
 	fmt.Println("OpenLog")
 	return true
 }
 
-func (s *Middleware) OpenFolder(Hash string) bool {
+func (s *Api) OpenFolder(Hash string) bool {
 	fmt.Println("OpenFolder")
 	return true
 }
 
-func (s *Middleware) OpenGithub() {
-	var err error
+func (s *Api) OpenGithub() {
 	url := "https://github.com/i-MES"
-	switch runtime.GOOS {
-	case "linux":
-		err = exec.Command("xdg-open", url).Start()
-	case "windows":
-		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
-	case "darwin":
-		err = exec.Command("open", url).Start()
-	default:
-		err = fmt.Errorf("unsupported platform")
-	}
-	if err != nil {
-		log.Fatal(err)
-	}
+	wails.BrowserOpenURL(*imesContext, url)
+	// var err error
+	// switch runtime.GOOS {
+	// case "linux":
+	// 	err = exec.Command("xdg-open", url).Start()
+	// case "windows":
+	// 	err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
+	// case "darwin":
+	// 	err = exec.Command("open", url).Start()
+	// default:
+	// 	err = fmt.Errorf("unsupported platform")
+	// }
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 }
 
 // 产品
@@ -64,19 +70,6 @@ type TestProduction struct {
 	Id    int    `json:"id"`
 	Title string `json:"title"`
 	Desc  string `json:"desc"`
-}
-
-var tps = make([]TestProduction, 0)
-
-func (s *Middleware) LoadTestProduction() []TestProduction {
-	if len(tps) == 0 {
-		tps = append(tps,
-			TestProduction{1, "电脑", "PC 机"},
-			TestProduction{2, "机顶盒", "电视机顶盒"},
-			TestProduction{3, "手机", "Android 手机"},
-		)
-	}
-	return tps
 }
 
 // 工序
@@ -90,7 +83,7 @@ type TestStep struct {
 var tss = make([]TestStep, 0)
 
 // 加载测试工序
-func (s *Middleware) LoadTestSteps() []TestStep {
+func (s *Api) LoadTestSteps() []TestStep {
 	if len(tss) == 0 {
 		tss = append(tss,
 			TestStep{369, "工序2", "测试工序2", 2},
@@ -111,7 +104,7 @@ type TestStation struct {
 }
 
 // 获取工位信息，通常即本机
-func (s *Middleware) GetTestStationInfo() TestStation {
+func (s *Api) GetTestStationInfo() TestStation {
 	return TestStation{
 		789,
 		"Station1",
@@ -130,7 +123,7 @@ type TestEntity struct {
 
 var tes = make([]TestEntity, 0)
 
-func (s *Middleware) ConnectTestEntity(ip []int) bool {
+func (s *Api) ConnectTestEntity(ip []int) bool {
 	if len(ip) == 4 {
 		fmt.Println("IP V4")
 	} else if len(ip) == 6 {
@@ -141,7 +134,7 @@ func (s *Middleware) ConnectTestEntity(ip []int) bool {
 	return true
 }
 
-func (s *Middleware) GetActivedTestEntity() []TestEntity {
+func (s *Api) GetActivedTestEntity() []TestEntity {
 	return append(tes,
 		TestEntity{1, "Entity1", "PC"},
 		TestEntity{2, "Entity2", "MBP"},
@@ -159,7 +152,7 @@ type TestGroup struct {
 
 var tgs = make([]TestGroup, 0)
 
-func (s *Middleware) LoadTestGroup(stepId int, stationId int, entityId int) []TestGroup {
+func (s *Api) LoadTestGroup(stepId int, stationId int, entityId int) []TestGroup {
 	if len(tgs) == 0 {
 		tgs = append(tgs,
 			TestGroup{1, "Group1", "测试组1", []int{1, 2}},
@@ -181,7 +174,7 @@ type TestItem struct {
 var tis = make([]TestItem, 0)
 
 // Load testitems from a file
-func (s *Middleware) LoadTestItems(path string) []TestItem {
+func (s *Api) LoadTestItems(path string) []TestItem {
 	if len(tis) == 0 {
 		tis = append(tis,
 			TestItem{1, "MCU Test", "MCU Test...", "test_mcu", 1},
@@ -194,7 +187,7 @@ func (s *Middleware) LoadTestItems(path string) []TestItem {
 }
 
 // 开始一个测试项
-func (s *Middleware) TestItemStart(id int) bool {
+func (s *Api) TestItemStart(id int) bool {
 	// do the real test
 
 	// add the log
@@ -212,7 +205,7 @@ type TestItemLog struct {
 var logs = make([]TestItemLog, 0)
 
 // 加载日志
-func (s *Middleware) LoadTestItemLogs(testitemId int) []TestItemLog {
+func (s *Api) LoadTestItemLogs(testitemId int) []TestItemLog {
 	return append(logs,
 		TestItemLog{1, "PASS", time.Now().Unix()},
 		TestItemLog{1, "NG", time.Now().Unix() + 1},
@@ -221,12 +214,115 @@ func (s *Middleware) LoadTestItemLogs(testitemId int) []TestItemLog {
 
 var counter = 0
 
-func (s *Middleware) AddCounter() int {
+func (s *Api) AddCounter() int {
 	counter += 1
 	fmt.Println(counter)
 	return counter
 }
 
-func (s *Middleware) LoadCounter() int {
+func (s *Api) LoadCounter() int {
 	return counter
+}
+
+func (a *Api) OpenConfigFile() string {
+	_opt := wails.OpenDialogOptions{
+		DefaultDirectory: "./",
+		Title:            "Open Config File",
+		Filters:          []wails.FileFilter{{DisplayName: "Config File", Pattern: "*.json"}},
+	}
+	selectedFile, err := wails.OpenFileDialog(*imesContext, _opt)
+	if err != nil {
+		log.Panic("Error on file opening", err.Error())
+	}
+	return selectedFile
+}
+
+func (a *Api) OpenConfigFolder() string {
+	_opt := wails.OpenDialogOptions{
+		DefaultDirectory: "./",
+		Title:            "Open Config Folder",
+	}
+	selectedFolder, err := wails.OpenDirectoryDialog(*imesContext, _opt)
+	if err != nil {
+		log.Panic("Error on folder opening", err.Error())
+	}
+	return selectedFolder
+}
+
+func (a *Api) LoadYamlConfigData(filePath string) bool {
+	m := make(map[interface{}]interface{})
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		log.Fatalf("ReadFile error: %v", err)
+		return false
+	}
+	err = yaml.Unmarshal([]byte(data), &m)
+	if err != nil {
+		log.Fatalf("yaml.Unmarshal error: %v", err)
+		return false
+	}
+	a.conf = m
+	fmt.Printf("--- conf:\n%v\n\n", a.conf)
+	return true
+}
+
+func (a *Api) LoadJsonConfigData(filePath string) bool {
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		log.Fatalf("ReadFile error: %v", err)
+		return false
+	} else {
+		a.confstr = data
+		// fmt.Printf("--- conf:\n%v\n\n", a.confstr)
+	}
+	return true
+}
+
+// func (a *Api) GetYamlConfig(keys ...interface{}) jsoniter.Any {
+// 	if v, ok := a.conf[keys[0]]; ok {
+// 		if len(keys) == 1 {
+// 			fmt.Printf("find config %v(type:%v): %v\n", keys[0], reflect.TypeOf(v), v)
+// 			return v, true
+// 		} else {
+// 			return a.GetYamlConfig(keys[1:])
+// 		}
+// 	}
+// 	return "", false
+// }
+
+func (a *Api) GetYamlProductions() []TestProduction {
+	var tps []TestProduction
+	_tps := []byte(json.Get(a.confstr, "productions").ToString())
+	err := json.Unmarshal(_tps, &tps)
+	if err != nil {
+		fmt.Println(tps)
+		// tps := tps.([]interface{})
+		// var tp TestProduction
+		// for i := 0; i < len(tps); i++ {
+		// 	_tp, err := yaml.Marshal(tps[i])
+		// 	if err == nil {
+		// 		fmt.Println(_tp)
+		// 		err := yaml.Unmarshal(_tp, &tp)
+		// 		if err == nil {
+		// 			fmt.Println(tp)
+		// 		} else {
+		// 			fmt.Println("oops")
+		// 		}
+		// 	}
+		// }
+	}
+	return nil
+}
+
+func (a *Api) GetJsonProductions() []TestProduction {
+	var tps []TestProduction
+	_tps := []byte(json.Get(a.confstr, "productions").ToString())
+	err := json.Unmarshal(_tps, &tps)
+	if err == nil {
+		// fmt.Println(reflect.TypeOf(tps), tps)
+		return tps
+	} else {
+		fmt.Println(err)
+	}
+	return nil
 }

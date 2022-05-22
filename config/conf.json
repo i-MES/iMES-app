@@ -1,0 +1,28 @@
+{
+  "name": "imes-frontend",
+  "private": true,
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint --ext .ts,.vue src && stylelint **/*.vue"
+  },
+  "productions": [
+    {
+      "id": 1,
+      "title": "PC",
+      "desc": "PC"
+    },
+    {
+      "id": 2,
+      "title": "机顶盒",
+      "desc": "IPTV Box"
+    },
+    {
+      "id": 3,
+      "title": "手机",
+      "desc": "Mobile"
+    }
+  ]
+}

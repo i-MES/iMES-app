@@ -2,10 +2,9 @@
   <v-hover v-slot="{ isHovering, props }" open-delay="600" close-delay="600">
     <v-card class="mx-0 entity-card" color="grey-lighten-4" v-bind="props">
       <v-toolbar :height="store.toolbarheight">
-        <v-toolbar-title>{{ t("testpage.testentity-overall") }}</v-toolbar-title>
+        <v-toolbar-title>{{ t('testpage.testentity-overall') }}</v-toolbar-title>
         <v-spacer></v-spacer>
-        <v-btn :icon="esticky ? 'mdi-pin' : 'mdi-pin-off'" @click="esticky = !esticky">
-        </v-btn>
+        <v-btn :icon="esticky ? 'mdi-pin' : 'mdi-pin-off'" @click="esticky = !esticky"> </v-btn>
       </v-toolbar>
 
       <v-row justify="space-around" v-if="isHovering || esticky">
@@ -34,7 +33,7 @@
 import { onUnmounted, ref } from 'vue'
 import { useBaseStore } from '../stores/index'
 import { useI18n } from 'vue-i18n'
-import { TestItemStart } from '../../wailsjs/go/imes/Middleware'
+import { TestItemStart } from '../../wailsjs/go/imes/Api'
 
 const { t } = useI18n({ useScope: 'global' })
 
@@ -51,8 +50,6 @@ const timer = setInterval(() => {
 onUnmounted(() => {
   clearInterval(timer)
 })
-
-
 </script>
 
 <style>
