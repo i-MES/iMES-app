@@ -23,6 +23,7 @@ export type TGlobalState = {
   appTheme: string,
   appBarHeight: number,
   appStatusBar: IAppStatusBar,
+  testPageViewModel: boolean,
   userStatus: UserStatus,
   appStatus: AppStatus,
   testProductions: imes.TestProduction[],
@@ -44,6 +45,7 @@ export const useBaseStore = defineStore('imesBaseStore', {
       appTheme: 'dark',
       appBarHeight: 30,
       appStatusBar: {},
+      testPageViewModel: false,
       testProductions: [],
       userStatus: UserStatus.login,
       appStatus: AppStatus.init,
@@ -59,7 +61,7 @@ export const useBaseStore = defineStore('imesBaseStore', {
   getters: {
     testProductionById: (state) => {
       return (id: number): imes.TestProduction | undefined => {
-        return state.testProductions.find((tp) => tp.id === id)
+        return state.testProductions.find((tp) => tp.id == id)
       }
     },
     userInfo: (state) => {
@@ -97,6 +99,7 @@ export const useBaseStore = defineStore('imesBaseStore', {
       })
       api.LoadTestSteps().then(
         (tss) => {
+          console.log(tss)
           tss.forEach((ts) => {
             if (_ids) {
               if (_ids.indexOf(ts.id) < 0) {
@@ -143,6 +146,9 @@ export const useBaseStore = defineStore('imesBaseStore', {
               })
             }
           })
+        },
+        (err) => {
+          console.log(err)
         }
       )
     }

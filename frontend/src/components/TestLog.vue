@@ -4,21 +4,18 @@
       <v-toolbar :height="store.toolbarheight">
         <v-toolbar-title>{{ t('testpage.testitem-log') }}</v-toolbar-title>
         <v-spacer></v-spacer>
-        <v-text-field hide-details prepend-icon="mdi-magnify"> </v-text-field>
-        <v-btn
-          icon="mdi-upload-outline"
-          @click="
-            logHeight + 50 > store.tiPageAvilableHeight ? (logHeight = store.tiPageAvilableHeight) : (logHeight += 50)
-          "
-        >
+        <v-text-field hide-details append-icon="mdi-magnify"> </v-text-field>
+        <v-btn icon="mdi-upload-outline" @click="
+          logHeight + 50 > store.tiPageAvilableHeight ? (logHeight = store.tiPageAvilableHeight) : (logHeight += 50)
+        ">
         </v-btn>
-        <v-btn icon="mdi-download-outline" @click="logHeight - 50 < 0 ? (logHeight = 0) : (logHeight -= 50)"> </v-btn>
-        <v-btn
-          :icon="logHeightMaxed ? 'mdi-download-multiple' : 'mdi-upload-multiple'"
-          @click="logHeightMaxed = !logHeightMaxed"
-        >
+        <v-btn icon="mdi-download-outline"
+          @click="logHeight - 50 < 0 ? (logHeight = 0) : (logHeight -= 50)"> </v-btn>
+        <v-btn :icon="logHeightMaxed ? 'mdi-download-multiple' : 'mdi-upload-multiple'"
+          @click="logHeightMaxed = !logHeightMaxed">
         </v-btn>
-        <v-btn :icon="sticky ? 'mdi-pin' : 'mdi-pin-off'" @click="sticky = !sticky"> </v-btn>
+        <v-btn :icon="sticky ? 'mdi-pin' : 'mdi-pin-off'" @click="sticky = !sticky">
+        </v-btn>
       </v-toolbar>
 
       <v-table v-if="isHovering || sticky" density="compact" :height="logHeight">
@@ -32,7 +29,8 @@
         <tbody>
           <tr v-for="(log, idx) in store.testitemsLogs" :key="log.timestamp">
             <td>{{ idx + 1 }}</td>
-            <td>{{ DateTime.fromSeconds(log.timestamp).toFormat('yyyy-MM-dd HH:MM:ss') }}</td>
+            <td>{{ DateTime.fromSeconds(log.timestamp).toFormat('yyyy-MM-dd HH:MM:ss')
+            }}</td>
             <td>{{ log.message }}</td>
           </tr>
         </tbody>

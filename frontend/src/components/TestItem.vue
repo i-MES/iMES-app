@@ -1,5 +1,13 @@
 <template>
   <v-container>
+    <v-tabs class="sticky" centered v-model="activeTab" color="deep-purple-accent-4">
+      <v-tab v-for="n in tabLength" :key="n" :value="n"> Entity {{ n }} </v-tab>
+    </v-tabs>
+    <v-window v-model="activeTab">
+      <v-window-item v-for="i in tabLength" :key="i" :value="i">
+        <v-sheet>TG</v-sheet>
+      </v-window-item>
+    </v-window>
     <v-expansion-panels multiple>
       <v-expansion-panel v-for="ti in store.testitems" :key="ti.id" :title="ti.title"
         :text="ti.desc">
@@ -27,9 +35,11 @@ import { ref, onMounted, watch, onBeforeUnmount, defineProps } from 'vue'
 import { useBaseStore } from '../stores/index'
 const store = useBaseStore()
 
-const props = defineProps<{
-  entityId: number
-}>()
+const activeTab = ref()
+const tabLength = ref(5)
+// const props = defineProps<{
+//   entityId: number
+// }>()
 
 const value = ref(10)
 const bufferValue = ref(20)
@@ -44,7 +54,7 @@ watch(value, (n) => {
   bufferValue.value = 10
 })
 onMounted(() => {
-  console.log(`Load entity ${props.entityId} testitems`)
+  // console.log(`Load entity ${props.entityId} testitems`)
   store.loadTestItem()
 })
 

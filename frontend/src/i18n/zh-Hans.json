@@ -9,7 +9,8 @@
     "dashboard": "看板",
     "user": "用户",
     "settings": "配置",
-    "about": "关于"
+    "about": "关于",
+    "loadconfig": "加载配置"
   },
   "languages": {
     "en": "En",
@@ -44,6 +45,9 @@
   },
   "testpage": {
     "testentity-overall": "被测实体总览",
-    "testitem-log": "测试项 Log"
+    "testitem-log": "测试项日志",
+    "view-model": "视图",
+    "view-model-single": "单机",
+    "view-model-all": "全体"
   }
 }

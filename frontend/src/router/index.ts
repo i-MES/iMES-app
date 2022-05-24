@@ -13,10 +13,7 @@ const routes: Array<RouteRecordRaw> = [
     meta: {
       sort: 1,
       icon: 'mdi-home'
-    },
-    children: [
-
-    ]
+    }
   },
   {
     path: "/test",

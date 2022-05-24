@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
 	"time"
 
 	jsoniter "github.com/json-iterator/go"
 	wails "github.com/wailsapp/wails/v2/pkg/runtime"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 var imesContext *context.Context
@@ -239,7 +240,7 @@ func (a *Api) OpenConfigFile() string {
 
 func (a *Api) OpenConfigFolder() string {
 	_opt := wails.OpenDialogOptions{
-		DefaultDirectory: "./",
+		DefaultDirectory: "./config/",
 		Title:            "Open Config Folder",
 	}
 	selectedFolder, err := wails.OpenDirectoryDialog(*imesContext, _opt)
@@ -267,6 +268,13 @@ func (a *Api) LoadYamlConfigData(filePath string) bool {
 }
 
 func (a *Api) LoadJsonConfigData(filePath string) bool {
+	if filePath == "" {
+		return false
+	}
+	matched, err := regexp.Match(`/.*`, []byte(filePath))
+	if !matched {
+		log.Fatalf("config file path(%v) invalled, err: %v", filePath, err)
+	}
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		log.Fatalf("ReadFile error: %v", err)

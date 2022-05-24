@@ -9,7 +9,8 @@
     "dashboard": "Dashbaord",
     "user": "User",
     "settings": "Settings",
-    "about": "About"
+    "about": "About",
+    "loadconfig": "Load Config"
   },
   "languages": {
     "en": "En",
@@ -44,6 +45,9 @@
   },
   "testpage": {
     "testentity-overall": "TestEntity Overall",
-    "testitem-log": "TestItem Log"
+    "testitem-log": "TestItem Log",
+    "view-model": "View",
+    "view-model-single": "Single",
+    "view-model-all": "All"
   }
 }
