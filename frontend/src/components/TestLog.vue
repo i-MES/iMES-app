@@ -5,20 +5,20 @@
         <v-toolbar-title>{{ t('testpage.testitem-log') }}</v-toolbar-title>
         <v-spacer></v-spacer>
         <v-text-field hide-details append-icon="mdi-magnify"> </v-text-field>
-        <v-btn icon="mdi-upload-outline" @click="
-          logHeight + 50 > store.tiPageAvilableHeight ? (logHeight = store.tiPageAvilableHeight) : (logHeight += 50)
-        ">
+        <v-btn icon="mdi-upload-outline"
+          @click="logHoverHeight + 50 > availableHeight ? (logHoverHeight = availableHeight) : logHoverHeight += 50">
         </v-btn>
         <v-btn icon="mdi-download-outline"
-          @click="logHeight - 50 < 0 ? (logHeight = 0) : (logHeight -= 50)"> </v-btn>
-        <v-btn :icon="logHeightMaxed ? 'mdi-download-multiple' : 'mdi-upload-multiple'"
-          @click="logHeightMaxed = !logHeightMaxed">
+          @click="logHoverHeight - 50 < 0 ? (logHoverHeight = 0) : (logHoverHeight -= 50)">
         </v-btn>
-        <v-btn :icon="sticky ? 'mdi-pin' : 'mdi-pin-off'" @click="sticky = !sticky">
+        <v-btn :icon="logHeightMaxed ? 'mdi-download-multiple' : 'mdi-upload-multiple'"
+          @click="onclickMax">
+        </v-btn>
+        <v-btn :icon="pin ? 'mdi-pin' : 'mdi-pin-off'" @click="pin = !pin">
         </v-btn>
       </v-toolbar>
 
-      <v-table v-if="isHovering || sticky" density="compact" :height="logHeight">
+      <v-table v-if="isHovering || pin" density="compact" :height="logHoverHeight">
         <thead>
           <tr>
             <th class="text-left" width="8%">No.</th>
@@ -46,15 +46,41 @@ import { TestItemStart } from '../../wailsjs/go/imes/Api'
 import { useI18n } from 'vue-i18n'
 import { DateTime } from 'luxon'
 
+const props = defineProps<{
+  availableHeight: number
+}>()
 const { t } = useI18n({ useScope: 'global' })
-
 const store = useBaseStore()
-const logHeight = ref(200) // card - toolbar height, only log height
-const logHeightBak = ref(0)
+const logHoverHeight = ref(200) // card - toolbar height, only log height
+const logHoverHeightBak = ref(0)
 const logHeightMaxed = ref(false)
-const sticky = ref(false)
-const stickyBak = ref(false)
+const pin = ref(false)
+const pinBak = ref(false)
 
+const onclickMax = () => {
+  if (!logHeightMaxed.value) {
+    // max log window
+    logHoverHeightBak.value = logHoverHeight.value
+    logHoverHeight.value = props.availableHeight - store.toolbarheight
+    pinBak.value = pin.value
+    pin.value = true
+  } else {
+    // retreave log window
+    logHoverHeight.value = logHoverHeightBak.value
+    pin.value = pinBak.value
+  }
+  logHeightMaxed.value = !logHeightMaxed.value
+}
+watch(
+  () => pin.value,
+  (nv) => {
+    if (nv) {
+      store.logHeight = logHoverHeight.value
+    } else {
+      store.logHeight = 0
+    }
+  }
+)
 const timer = setInterval(() => {
   TestItemStart(1).then((val) => {
     console.log('测试项启动：', val ? '成功' : '失败')
@@ -68,26 +94,6 @@ onUnmounted(() => {
   clearInterval(timer)
 })
 
-// watch(
-//   () => logHeight.value,
-//   (nv, ov) => {
-//     store.tiPageAvilableHeight -= (nv - ov)
-//     store.appStatusBar.logHeight = nv
-//   }
-// )
-watch(logHeightMaxed, (nv) => {
-  if (nv) {
-    // max log window
-    logHeightBak.value = logHeight.value
-    logHeight.value = store.tiPageAvilableHeight
-    stickyBak.value = sticky.value
-    sticky.value = true
-  } else {
-    // retreave log window
-    logHeight.value = logHeightBak.value
-    sticky.value = stickyBak.value
-  }
-})
 
 window.runtime.EventsOn('testitemlog', (data) => {
   store.testitemsLogs.push(data)
@@ -99,7 +105,7 @@ window.runtime.EventsOn('testitemlog', (data) => {
   align-items: center;
   bottom: 0;
   justify-content: center;
-  opacity: 0.95;
+  opacity: 0.9;
   position: absolute;
   width: 100%;
   z-index: 1;

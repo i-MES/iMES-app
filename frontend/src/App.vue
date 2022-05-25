@@ -75,7 +75,7 @@
         <template v-slot:append>
           <div class="px-2 ">
             <v-switch v-model="store.testPageViewModel" color="success"
-              density="compact" @change="onchangeViewModel"
+              density="compact"
               :label="`${t('testpage.view-model')}: ${store.testPageViewModel ? t('testpage.view-model-single') : t('testpage.view-model-all')}`">
             </v-switch>
           </div>
@@ -181,9 +181,6 @@ watch(
     }
   }
 )
-const onchangeViewModel = () => {
-  console.log("view model value changed:", viewmodel.value ? '单机' : '全体')
-}
 
 //********** 其他 **********/
 // hide window

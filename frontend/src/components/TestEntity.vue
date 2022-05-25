@@ -1,65 +1,64 @@
 <template>
-  <v-card class="mx-0 entity-card" color="grey-lighten-4">
-    <v-toolbar :height="store.toolbarheight">
-      <v-toolbar-title>{{ t('testpage.testentity-overall') }}</v-toolbar-title>
-      <v-spacer></v-spacer>
-      <v-text-field hide-details append-icon="mdi-magnify"> </v-text-field>
-      <v-btn :icon="esticky ? 'mdi-pin' : 'mdi-pin-off'" @click="esticky = !esticky">
-      </v-btn>
-    </v-toolbar>
+  <v-toolbar class="entity-toolbar" :height="store.toolbarheight">
+    <v-toolbar-title>{{ t('testpage.testentity-overall') }}</v-toolbar-title>
+    <v-spacer></v-spacer>
+    <v-text-field hide-details append-icon="mdi-magnify"> </v-text-field>
+  </v-toolbar>
+  <v-container class="fill-height width-100 mt-10">
+    <v-row>
+      <v-col v-for="entity in entities" :key="entity.id" cols="4">
+        <v-card :elevation="5"
+          :color="store.appTheme == 'dark' ? 'blue-grey-darken-2' : 'blue-grey-lighten-3'">
+          <v-card-avatar></v-card-avatar>
+          <template v-slot:title>{{ entity.title }}</template>
+          <template v-slot:subtitle>{{ entity.desc }}</template>
+          <template v-slot:text>{{ entity.id }}- {{ entity.title }} - {{ entity.desc
+          }}</template>
+          <v-card-actions>
 
-    <v-row justify="space-around">
-      <v-col v-for="elevation in [1, 2, 3]" :key="elevation" cols="12" md="4">
-        <v-sheet class="ma-5 pa-12" color="grey lighten-3">
-          <v-sheet :elevation="elevation" class="mx-auto" height="100" width="100">
-            <v-btn>Entity{{ elevation }}</v-btn>
-          </v-sheet>
-        </v-sheet>
+          </v-card-actions>
+        </v-card>
       </v-col>
     </v-row>
-    <v-row justify="space-around">
-      <v-col v-for="elevation in [1, 2, 3]" :key="elevation" cols="12" md="4">
-        <v-sheet class="ma-5 pa-12" color="grey lighten-3">
-          <v-sheet :elevation="elevation" class="mx-auto" height="100" width="100">
-            <v-btn>Entity{{ elevation + 3 }}</v-btn>
-          </v-sheet>
-        </v-sheet>
-      </v-col>
-    </v-row>
-  </v-card>
+  </v-container>
 </template>
 
 <script lang="ts" setup>
-import { onUnmounted, ref } from 'vue'
+import { onMounted, onUnmounted, reactive, ref } from 'vue'
 import { useBaseStore } from '../stores/index'
 import { useI18n } from 'vue-i18n'
-import { TestItemStart } from '../../wailsjs/go/imes/Api'
+import { imes } from '../../wailsjs/go/models'
+import { GetActivedTestEntity, TestItemStart } from '../../wailsjs/go/imes/Api'
 
 const { t } = useI18n({ useScope: 'global' })
-
 const store = useBaseStore()
-const esticky = ref(false)
-const entitywindow = ref()
+var entities = reactive<imes.TestEntity[]>([])
 
-const timer = setInterval(() => {
-  TestItemStart(1).then((val) => {
-    console.log('测试项启动：', val ? '成功' : '失败')
-  })
-}, 3000)
+// const timer = setInterval(() => {
+//   TestItemStart(1).then((val) => {
+//     console.log('测试项启动：', val ? '成功' : '失败')
+//   })
+// }, 3000)
 
+onMounted(() => {
+  GetActivedTestEntity().then(
+    (_entites) => {
+      _entites.forEach((e) => entities.push(e))
+      console.log(entities)
+    }
+  )
+})
 onUnmounted(() => {
-  clearInterval(timer)
+  // clearInterval(timer)
 })
 </script>
 
 <style>
-.entity-card {
-  align-items: center;
+.entity-toolbar {
   top: 0;
-  justify-content: center;
-  opacity: 0.95;
   position: absolute;
   width: 100%;
-  z-index: 2;
+  /* opacity: 0.95; */
+  z-index: 1;
 }
 </style>

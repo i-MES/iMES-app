@@ -140,6 +140,9 @@ func (s *Api) GetActivedTestEntity() []TestEntity {
 		TestEntity{1, "Entity1", "PC"},
 		TestEntity{2, "Entity2", "MBP"},
 		TestEntity{3, "Entity3", "OPPO"},
+		TestEntity{4, "Entity4", "VIVO"},
+		TestEntity{5, "Entity5", "HW"},
+		TestEntity{6, "Entity6", "ZTE"},
 	)
 }
 
