@@ -1,14 +1,14 @@
 <template>
   <v-tabs class="sticky" centered v-model="activeTab" color="deep-purple-accent-4">
-    <v-tab v-for="e in entities" :key="e.id" :value="e.id"> {{ e.desc }}
+    <v-tab v-for="e in store.testEntities" :key="e.id" :value="e.id"> {{ e.desc }}
     </v-tab>
   </v-tabs>
   <v-window v-model="activeTab">
-    <v-window-item v-for="e in entities" :key="e.id" :value="e.id">
+    <v-window-item v-for="e in store.testEntities" :key="e.id" :value="e.id">
       <v-container class="fill-height width-100 mt-10">
         <v-row>
           <v-col
-            v-for="tg in [{ id: 1, title: 'tg1' }, { id: 2, title: 'tg2' }, { id: 3, title: 'tg3' }]"
+            v-for="tg in [{ id: 1, title: 'tg1' }, { id: 2, title: 'tg2' }, { id: 3, title: 'tg3' }, { id: 4, title: 'tg4' }]"
             :key="tg.id" cols="4">
             <v-sheet
               :color="store.appTheme == 'dark' ? 'blue-grey-darken-2' : 'blue-grey-lighten-3'">
@@ -40,14 +40,18 @@
 import { ref, onMounted, watch, onBeforeUnmount, defineProps, reactive } from 'vue'
 import { useBaseStore } from '../stores/index'
 import { imes } from '../../wailsjs/go/models'
-import { GetActivedTestEntity, TestItemStart } from '../../wailsjs/go/imes/Api'
+import { GetActivedTestEntity } from '../../wailsjs/go/imes/Api'
 const store = useBaseStore()
 
 const activeTab = ref(1)
-var entities = reactive<imes.TestEntity[]>([])
-// const props = defineProps<{
-//   entityId: number
-// }>()
+const props = withDefaults(
+  defineProps<{
+    entityId: number,
+  }>(),
+  {
+    entityId: 1
+  }
+)
 
 const value = ref(10)
 const bufferValue = ref(20)
@@ -61,16 +65,6 @@ watch(value, (n) => {
   if (n < 100) return
   value.value = 0
   bufferValue.value = 10
-})
-onMounted(() => {
-  GetActivedTestEntity().then(
-    (_entites) => {
-      _entites.forEach((e) => entities.push(e))
-      console.log(entities)
-    }
-  )
-  // console.log(`Load entity ${props.entityId} testitems`)
-  store.loadTestItem()
 })
 
 onBeforeUnmount(() => {

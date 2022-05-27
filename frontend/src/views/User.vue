@@ -1,6 +1,5 @@
 <template>
   <v-card>User: {{ $route.name }}</v-card>
-  <v-card>{{ store.counter }}</v-card>
 </template>
 
 <script lang="ts" setup>

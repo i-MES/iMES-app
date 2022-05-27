@@ -6,10 +6,10 @@
         <v-spacer></v-spacer>
         <v-text-field hide-details append-icon="mdi-magnify"> </v-text-field>
         <v-btn icon="mdi-upload-outline"
-          @click="logHoverHeight + 50 > availableHeight ? (logHoverHeight = availableHeight) : logHoverHeight += 50">
+          @click="logHeight + 50 > (store.availableHeight - store.toolbarheight) ? (logHeight = store.availableHeight - store.toolbarheight) : logHeight += 50">
         </v-btn>
         <v-btn icon="mdi-download-outline"
-          @click="logHoverHeight - 50 < 0 ? (logHoverHeight = 0) : (logHoverHeight -= 50)">
+          @click="logHeight - 50 < 0 ? (logHeight = 0) : (logHeight -= 50)">
         </v-btn>
         <v-btn :icon="logHeightMaxed ? 'mdi-download-multiple' : 'mdi-upload-multiple'"
           @click="onclickMax">
@@ -18,7 +18,7 @@
         </v-btn>
       </v-toolbar>
 
-      <v-table v-if="isHovering || pin" density="compact" :height="logHoverHeight">
+      <v-table v-if="isHovering || pin" density="compact" :height="logHeight">
         <thead>
           <tr>
             <th class="text-left" width="8%">No.</th>
@@ -46,13 +46,13 @@ import { TestItemStart } from '../../wailsjs/go/imes/Api'
 import { useI18n } from 'vue-i18n'
 import { DateTime } from 'luxon'
 
-const props = defineProps<{
-  availableHeight: number
-}>()
+// const props = defineProps<{
+//   availableHeight: number
+// }>()
 const { t } = useI18n({ useScope: 'global' })
 const store = useBaseStore()
-const logHoverHeight = ref(200) // card - toolbar height, only log height
-const logHoverHeightBak = ref(0)
+const logHeight = ref(200) // card - toolbar height, only log height
+const logHeightBak = ref(0)
 const logHeightMaxed = ref(false)
 const pin = ref(false)
 const pinBak = ref(false)
@@ -60,13 +60,13 @@ const pinBak = ref(false)
 const onclickMax = () => {
   if (!logHeightMaxed.value) {
     // max log window
-    logHoverHeightBak.value = logHoverHeight.value
-    logHoverHeight.value = props.availableHeight - store.toolbarheight
+    logHeightBak.value = logHeight.value
+    logHeight.value = store.availableHeight - store.toolbarheight
     pinBak.value = pin.value
     pin.value = true
   } else {
     // retreave log window
-    logHoverHeight.value = logHoverHeightBak.value
+    logHeight.value = logHeightBak.value
     pin.value = pinBak.value
   }
   logHeightMaxed.value = !logHeightMaxed.value
@@ -75,7 +75,7 @@ watch(
   () => pin.value,
   (nv) => {
     if (nv) {
-      store.logHeight = logHoverHeight.value
+      store.logHeight = logHeight.value
     } else {
       store.logHeight = 0
     }

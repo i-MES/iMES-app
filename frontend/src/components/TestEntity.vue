@@ -6,51 +6,42 @@
   </v-toolbar>
   <v-container class="fill-height width-100 mt-10">
     <v-row>
-      <v-col v-for="entity in entities" :key="entity.id" cols="4">
-        <v-card :elevation="5"
+      <v-col v-for="entity in store.testEntities" :key="entity.id" cols="6" md="4"
+        lg="3" xl="2">
+        <v-card :elevation="5" @click="onclickEntity(entity.id)"
           :color="store.appTheme == 'dark' ? 'blue-grey-darken-2' : 'blue-grey-lighten-3'">
-          <v-card-avatar></v-card-avatar>
-          <template v-slot:title>{{ entity.title }}</template>
-          <template v-slot:subtitle>{{ entity.desc }}</template>
-          <template v-slot:text>{{ entity.id }}- {{ entity.title }} - {{ entity.desc
-          }}</template>
+          <!-- <v-card-avatar></v-card-avatar> -->
+          <template v-slot:title>{{ entity.ip }}</template>
+          <template v-slot:subtitle>{{ entity.title }} - {{ entity.desc }}</template>
+          <template v-slot:text>
+            <v-row>
+              <v-col cols="12">
+                状态：测试中……
+              </v-col>
+            </v-row>
+          </template>
           <v-card-actions>
-
           </v-card-actions>
         </v-card>
+
+      </v-col>
+      <v-col cols="6" md="4" lg="3" xl="2">
+        <AddEntity />
       </v-col>
     </v-row>
   </v-container>
 </template>
 
 <script lang="ts" setup>
-import { onMounted, onUnmounted, reactive, ref } from 'vue'
 import { useBaseStore } from '../stores/index'
 import { useI18n } from 'vue-i18n'
-import { imes } from '../../wailsjs/go/models'
-import { GetActivedTestEntity, TestItemStart } from '../../wailsjs/go/imes/Api'
-
+import AddEntity from './public/AddEntity.vue'
 const { t } = useI18n({ useScope: 'global' })
 const store = useBaseStore()
-var entities = reactive<imes.TestEntity[]>([])
-
-// const timer = setInterval(() => {
-//   TestItemStart(1).then((val) => {
-//     console.log('测试项启动：', val ? '成功' : '失败')
-//   })
-// }, 3000)
-
-onMounted(() => {
-  GetActivedTestEntity().then(
-    (_entites) => {
-      _entites.forEach((e) => entities.push(e))
-      console.log(entities)
-    }
-  )
-})
-onUnmounted(() => {
-  // clearInterval(timer)
-})
+const onclickEntity = (id) => {
+  console.log(id)
+  store.TEorTI = false
+}
 </script>
 
 <style>

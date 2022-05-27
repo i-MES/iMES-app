@@ -4,13 +4,10 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
-	"regexp"
 	"time"
 
 	jsoniter "github.com/json-iterator/go"
 	wails "github.com/wailsapp/wails/v2/pkg/runtime"
-	"gopkg.in/yaml.v3"
 )
 
 var imesContext *context.Context
@@ -23,31 +20,11 @@ var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 //Api struct to hold wails runtime for all Api implementations
 type Api struct {
-	conf    map[interface{}]interface{}
+	// conf     map[interface{}]interface{}
 	confstr []byte
 }
 
-func (s *Api) OpenFile(Hash string) bool {
-	fmt.Println("OpenFile")
-	return true
-}
-
-func (s *Api) OpenLink(Link string) bool {
-	fmt.Println("OpenLink")
-	return true
-}
-
-func (s *Api) OpenLog() bool {
-	fmt.Println("OpenLog")
-	return true
-}
-
-func (s *Api) OpenFolder(Hash string) bool {
-	fmt.Println("OpenFolder")
-	return true
-}
-
-func (s *Api) OpenGithub() {
+func (a *Api) OpenGithub() {
 	url := "https://github.com/i-MES"
 	wails.BrowserOpenURL(*imesContext, url)
 	// var err error
@@ -66,6 +43,33 @@ func (s *Api) OpenGithub() {
 	// }
 }
 
+// 通过对话框 UI 得到用户选择
+func (a *Api) OpenConfigFile() string {
+	_opt := wails.OpenDialogOptions{
+		DefaultDirectory: "./",
+		Title:            "Open Config File",
+		Filters:          []wails.FileFilter{{DisplayName: "Config File", Pattern: "*.json"}},
+	}
+	selectedFile, err := wails.OpenFileDialog(*imesContext, _opt)
+	if err != nil {
+		log.Panic("Error on file opening", err.Error())
+	}
+	return selectedFile
+}
+
+// 通过对话框 UI 得到用户选择
+func (a *Api) OpenConfigFolder() string {
+	_opt := wails.OpenDialogOptions{
+		DefaultDirectory: "./config/",
+		Title:            "Open Config Folder",
+	}
+	selectedFolder, err := wails.OpenDirectoryDialog(*imesContext, _opt)
+	if err != nil {
+		log.Panic("Error on folder opening", err.Error())
+	}
+	return selectedFolder
+}
+
 // 产品
 type TestProduction struct {
 	Id    int    `json:"id"`
@@ -73,46 +77,105 @@ type TestProduction struct {
 	Desc  string `json:"desc"`
 }
 
+func (a *Api) InitTestProductions() {
+	// ...
+}
+func (a *Api) SaveTestProductions(data []TestProduction) {
+	// ...
+}
+
+func (a *Api) LoadTestProductions() []TestProduction {
+	var data []TestProduction
+	_data := []byte(json.Get(InputConfigData("productions")).ToString())
+	err := json.Unmarshal(_data, &data)
+	if err == nil {
+		return data
+	} else {
+		fmt.Println(err)
+		return nil
+	}
+}
+
 // 工序
-type TestStep struct {
+type TestStage struct {
 	Id       int    `json:"id"`
+	ProdId   int    `json:"pid"`
 	Title    string `json:"title"`
 	Desc     string `json:"desc"`
 	Sequence int    `json:"sequence"`
 }
 
-var tss = make([]TestStep, 0)
+func (a *Api) InitTestStage() {
+	data := make([]TestStage, 0)
+	data = append(data,
+		TestStage{01, 1, "Boot测试", "测试工序", 2},
+		TestStage{02, 1, "上电测试", "测试工序", 3},
+		TestStage{03, 1, "烧录版本", "测试工序", 1},
+		TestStage{04, 1, "校准测试", "测试工序", 1},
+		TestStage{05, 1, "网络测试", "测试工序", 1},
+		TestStage{11, 2, "Boot测试", "测试工序", 2},
+		TestStage{12, 2, "上电测试", "测试工序", 3},
+		TestStage{13, 2, "盐雾版本", "测试工序", 1},
+		TestStage{14, 2, "颜色测试", "测试工序", 1},
+		TestStage{15, 2, "跌落测试", "测试工序", 1},
+		TestStage{21, 3, "网络测试", "测试工序", 2},
+		TestStage{22, 3, "电路测试", "测试工序", 3},
+		TestStage{23, 3, "盐雾版本", "测试工序", 1},
+		TestStage{41, 4, "综合测试", "测试工序", 1},
+	)
+	a.SaveTestStages(data)
+}
+func (a *Api) SaveTestStages(data []TestStage) {
+	_data := make(map[string]interface{})
+	_data["stages"] = data
+	OutputConfigData(_data)
+}
 
-// 加载测试工序
-func (s *Api) LoadTestSteps() []TestStep {
-	if len(tss) == 0 {
-		tss = append(tss,
-			TestStep{369, "工序2", "测试工序2", 2},
-			TestStep{248, "工序3", "测试工序3", 3},
-			TestStep{147, "工序1", "测试工序1", 1},
-		)
+func (a *Api) LoadTestStages() []TestStage {
+	var data []TestStage
+	_data := []byte(json.Get(InputConfigData("stages")).ToString())
+	err := json.Unmarshal(_data, &data)
+	if err == nil {
+		return data
+	} else {
+		fmt.Println(err)
+		return nil
 	}
-	return tss
 }
 
 // 工位（允许支持多个测试工序）
 type TestStation struct {
-	Id                 int    `json:"id"`
-	Title              string `json:"title"`
-	Desc               string `json:"desc"`
-	EanbledTestStepIds []int  `json:"enabledTestStepIds"`
-	ActivedTestStepIds []int  `json:"activedTestStepIds"`
+	Id                  int    `json:"id"`
+	Title               string `json:"title"`
+	Desc                string `json:"desc"`
+	EnabledTestStageIds []int  `json:"enabledTestStageIds"`
+	ActivedTestStageIds []int  `json:"activedTestStageIds"`
+}
+
+func (a *Api) InitTestStation() {
+	a.SaveTestStation(TestStation{
+		Id:                  789,
+		Title:               "Station1",
+		Desc:                "一个非常好用的工位",
+		EnabledTestStageIds: []int{147, 369, 248},
+		ActivedTestStageIds: []int{369, 248},
+	})
+}
+func (a *Api) SaveTestStation(data TestStation) {
+	_data := make(map[string]interface{})
+	_data["station"] = data
+	OutputConfigData(_data)
 }
 
 // 获取工位信息，通常即本机
-func (s *Api) GetTestStationInfo() TestStation {
-	return TestStation{
-		789,
-		"Station1",
-		"一个非常好用的工位",
-		[]int{147, 369, 248},
-		[]int{369, 248},
+func (a *Api) LoadTestStation() TestStation {
+	var data TestStation
+	_data := []byte(json.Get(InputConfigData("station")).ToString())
+	err := json.Unmarshal(_data, &data)
+	if err != nil {
+		fmt.Println(err)
 	}
+	return data
 }
 
 // 被测实体
@@ -120,11 +183,25 @@ type TestEntity struct {
 	Id    int    `json:"id"`
 	Title string `json:"title"`
 	Desc  string `json:"desc"`
+	Ip    []int  `json:"ip"`
 }
 
-var tes = make([]TestEntity, 0)
+func (a *Api) SaveTestEntity(data []TestEntity) {
+	_data := make(map[string]interface{})
+	_data["entity"] = data
+	OutputConfigData(_data)
+}
+func (a *Api) LoadTestEntity() []TestEntity {
+	var data []TestEntity
+	_data := []byte(json.Get(InputConfigData("entity")).ToString())
+	err := json.Unmarshal(_data, &data)
+	if err != nil {
+		fmt.Println(err)
+	}
+	return data
+}
 
-func (s *Api) ConnectTestEntity(ip []int) bool {
+func (a *Api) ConnectTestEntity(ip []int) bool {
 	if len(ip) == 4 {
 		fmt.Println("IP V4")
 	} else if len(ip) == 6 {
@@ -135,17 +212,6 @@ func (s *Api) ConnectTestEntity(ip []int) bool {
 	return true
 }
 
-func (s *Api) GetActivedTestEntity() []TestEntity {
-	return append(tes,
-		TestEntity{1, "Entity1", "PC"},
-		TestEntity{2, "Entity2", "MBP"},
-		TestEntity{3, "Entity3", "OPPO"},
-		TestEntity{4, "Entity4", "VIVO"},
-		TestEntity{5, "Entity5", "HW"},
-		TestEntity{6, "Entity6", "ZTE"},
-	)
-}
-
 // 测试组
 type TestGroup struct {
 	Id          int    `json:"id"`
@@ -154,16 +220,19 @@ type TestGroup struct {
 	TestItemIds []int  `json:"testItemIds"`
 }
 
-var tgs = make([]TestGroup, 0)
-
-func (s *Api) LoadTestGroup(stepId int, stationId int, entityId int) []TestGroup {
-	if len(tgs) == 0 {
-		tgs = append(tgs,
-			TestGroup{1, "Group1", "测试组1", []int{1, 2}},
-			TestGroup{1, "Group2", "测试组2", []int{2, 3}},
-		)
+func (a *Api) SaveTestGroup(data []TestGroup) {
+	_data := make(map[string]interface{})
+	_data["testgroup"] = data
+	OutputConfigData(_data)
+}
+func (a *Api) LoadTestGroup() []TestGroup {
+	var data []TestGroup
+	_data := []byte(json.Get(InputConfigData("testgroup")).ToString())
+	err := json.Unmarshal(_data, &data)
+	if err != nil {
+		fmt.Println(err)
 	}
-	return tgs
+	return data
 }
 
 // 测试项
@@ -175,23 +244,33 @@ type TestItem struct {
 	Sequence int    `json:"sequence"`
 }
 
-var tis = make([]TestItem, 0)
+func (a *Api) InitTestItems() {
+	data := make([]TestItem, 0)
+	data = append(data,
+		TestItem{1, "MCU Test", "MCU Test...", "test_mcu", 1},
+		TestItem{2, "Memory Test", "Memory Test...", "test_memory", 2},
+		TestItem{3, "Network Test", "Network Test...", "test_network", 3},
+	)
+	a.SaveTestItems(data)
+}
 
-// Load testitems from a file
-func (s *Api) LoadTestItems(path string) []TestItem {
-	if len(tis) == 0 {
-		tis = append(tis,
-			TestItem{1, "MCU Test", "MCU Test...", "test_mcu", 1},
-			TestItem{2, "Memory Test", "Memory Test...", "test_memory", 2},
-			TestItem{3, "Network Test", "Network Test...", "test_network", 3},
-		)
+func (a *Api) SaveTestItems(data []TestItem) {
+	_data := make(map[string]interface{})
+	_data["testitem"] = data
+	OutputConfigData(_data)
+}
+func (a *Api) LoadTestItems() []TestItem {
+	var data []TestItem
+	_data := []byte(json.Get(InputConfigData("testitem")).ToString())
+	err := json.Unmarshal(_data, &data)
+	if err != nil {
+		fmt.Println(err)
 	}
-
-	return tis
+	return data
 }
 
 // 开始一个测试项
-func (s *Api) TestItemStart(id int) bool {
+func (a *Api) TestItemStart(id int) bool {
 	// do the real test
 
 	// add the log
@@ -209,131 +288,9 @@ type TestItemLog struct {
 var logs = make([]TestItemLog, 0)
 
 // 加载日志
-func (s *Api) LoadTestItemLogs(testitemId int) []TestItemLog {
+func (a *Api) LoadTestItemLogs(testitemId int) []TestItemLog {
 	return append(logs,
 		TestItemLog{1, "PASS", time.Now().Unix()},
 		TestItemLog{1, "NG", time.Now().Unix() + 1},
 	)
-}
-
-var counter = 0
-
-func (s *Api) AddCounter() int {
-	counter += 1
-	fmt.Println(counter)
-	return counter
-}
-
-func (s *Api) LoadCounter() int {
-	return counter
-}
-
-func (a *Api) OpenConfigFile() string {
-	_opt := wails.OpenDialogOptions{
-		DefaultDirectory: "./",
-		Title:            "Open Config File",
-		Filters:          []wails.FileFilter{{DisplayName: "Config File", Pattern: "*.json"}},
-	}
-	selectedFile, err := wails.OpenFileDialog(*imesContext, _opt)
-	if err != nil {
-		log.Panic("Error on file opening", err.Error())
-	}
-	return selectedFile
-}
-
-func (a *Api) OpenConfigFolder() string {
-	_opt := wails.OpenDialogOptions{
-		DefaultDirectory: "./config/",
-		Title:            "Open Config Folder",
-	}
-	selectedFolder, err := wails.OpenDirectoryDialog(*imesContext, _opt)
-	if err != nil {
-		log.Panic("Error on folder opening", err.Error())
-	}
-	return selectedFolder
-}
-
-func (a *Api) LoadYamlConfigData(filePath string) bool {
-	m := make(map[interface{}]interface{})
-	data, err := os.ReadFile(filePath)
-	if err != nil {
-		log.Fatalf("ReadFile error: %v", err)
-		return false
-	}
-	err = yaml.Unmarshal([]byte(data), &m)
-	if err != nil {
-		log.Fatalf("yaml.Unmarshal error: %v", err)
-		return false
-	}
-	a.conf = m
-	fmt.Printf("--- conf:\n%v\n\n", a.conf)
-	return true
-}
-
-func (a *Api) LoadJsonConfigData(filePath string) bool {
-	if filePath == "" {
-		return false
-	}
-	matched, err := regexp.Match(`/.*`, []byte(filePath))
-	if !matched {
-		log.Fatalf("config file path(%v) invalled, err: %v", filePath, err)
-	}
-	data, err := os.ReadFile(filePath)
-	if err != nil {
-		log.Fatalf("ReadFile error: %v", err)
-		return false
-	} else {
-		a.confstr = data
-		// fmt.Printf("--- conf:\n%v\n\n", a.confstr)
-	}
-	return true
-}
-
-// func (a *Api) GetYamlConfig(keys ...interface{}) jsoniter.Any {
-// 	if v, ok := a.conf[keys[0]]; ok {
-// 		if len(keys) == 1 {
-// 			fmt.Printf("find config %v(type:%v): %v\n", keys[0], reflect.TypeOf(v), v)
-// 			return v, true
-// 		} else {
-// 			return a.GetYamlConfig(keys[1:])
-// 		}
-// 	}
-// 	return "", false
-// }
-
-func (a *Api) GetYamlProductions() []TestProduction {
-	var tps []TestProduction
-	_tps := []byte(json.Get(a.confstr, "productions").ToString())
-	err := json.Unmarshal(_tps, &tps)
-	if err != nil {
-		fmt.Println(tps)
-		// tps := tps.([]interface{})
-		// var tp TestProduction
-		// for i := 0; i < len(tps); i++ {
-		// 	_tp, err := yaml.Marshal(tps[i])
-		// 	if err == nil {
-		// 		fmt.Println(_tp)
-		// 		err := yaml.Unmarshal(_tp, &tp)
-		// 		if err == nil {
-		// 			fmt.Println(tp)
-		// 		} else {
-		// 			fmt.Println("oops")
-		// 		}
-		// 	}
-		// }
-	}
-	return nil
-}
-
-func (a *Api) GetJsonProductions() []TestProduction {
-	var tps []TestProduction
-	_tps := []byte(json.Get(a.confstr, "productions").ToString())
-	err := json.Unmarshal(_tps, &tps)
-	if err == nil {
-		// fmt.Println(reflect.TypeOf(tps), tps)
-		return tps
-	} else {
-		fmt.Println(err)
-	}
-	return nil
 }

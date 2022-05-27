@@ -45,7 +45,7 @@ func main() {
 		WindowStartState:  options.Normal,
 		Bind: []interface{}{
 			app,
-			api,
+			api, // bind a struct(not a file)
 		},
 		// Windows platform specific options
 		Windows: &windows.Options{

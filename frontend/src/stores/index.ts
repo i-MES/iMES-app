@@ -17,52 +17,77 @@ export interface IAppStatusBar {
 }
 
 export type TGlobalState = {
-  counter: number,
   defaultRoute: string, // 默认导航的页面
-  appName: string,
-  appTheme: string,
+  appTheme: string,   // 颜色主题
   appBarHeight: number,
-  appStatusBar: IAppStatusBar,
-  testPageViewModel: boolean,
+  appStatusBar: IAppStatusBar, // 状态栏信息显示
+  appConfWorkModel: string,     // 工作模式：'1'-本地、'2'-网络
+  appConfDefaultLang: string,   // 默认语言
+  toolbarheight: number,
+  logHeight: number,
+  availableHeight: number,
   userStatus: UserStatus,
   appStatus: AppStatus,
-  testProductions: imes.TestProduction[],
-  teststeps: imes.TestStep[],   // 测试工序
-  atciveTestProduction: number, // 当前选中产品
-  activeTestStepId: number,     // 当前测试工序（的 id）
+  testProductions: imes.TestProduction[], // 所有产品
+  activedProductionId: number,            // 选中产品
+  testStages: imes.TestStage[],     // 所有工序
+  activedTestStageId: number,       // 选中工序
+  testStation: imes.TestStation,  // 工位(only one)
+  testEntities: imes.TestEntity[],  // 所有被测实体
+  activedTestEntity: number,        // 选中实体
   testitems: imes.TestItem[]
   testitemsLogs: imes.TestItemLog[],
-  logHeight: number,
-  toolbarheight: number,
-
+  addEntity: boolean,
+  TEorTI: boolean,
 }
 
 export const useBaseStore = defineStore('imesBaseStore', {
   state: (): TGlobalState => {
     return {
-      counter: 0,
       defaultRoute: 'test',
-      appName: 'iMES',
       appTheme: 'dark',
       appBarHeight: 30,
       appStatusBar: {},
-      testPageViewModel: true,
-      testProductions: [],
+      appConfWorkModel: '1',
+      appConfDefaultLang: '1',
+      toolbarheight: 38,
+      logHeight: 0,
+      availableHeight: 0,
       userStatus: UserStatus.login,
       appStatus: AppStatus.init,
-      teststeps: [],
-      atciveTestProduction: 0,
-      activeTestStepId: 0,
+      testProductions: [],
+      activedProductionId: 0,
+      testStages: [],
+      activedTestStageId: 0,
+      testStation: { id: 0, title: '', desc: '', enabledTestStageIds: [], activedTestStageIds: [] },
+      testEntities: [],
+      activedTestEntity: 0,
       testitems: [],
       testitemsLogs: [],
-      logHeight: 0,
-      toolbarheight: 38,
+      addEntity: false,
+      TEorTI: true
     }
   },
   getters: {
     testProductionById: (state) => {
       return (id: number): imes.TestProduction | undefined => {
         return state.testProductions.find((tp) => tp.id == id)
+      }
+    },
+    testStageById: (state) => {
+      return (id: number): imes.TestStage | undefined => {
+        return state.testStages.find((tp) => tp.id == id)
+      }
+    },
+    testStageByProductionId: (state) => {
+      return (id: number): imes.TestStage[] => {
+        var tss: imes.TestStage[] = []
+        state.testStages.forEach((ts, _) => {
+          if (ts.pid == id) {
+            tss.push(ts)
+          }
+        })
+        return tss
       }
     },
     userInfo: (state) => {
@@ -79,79 +104,70 @@ export const useBaseStore = defineStore('imesBaseStore', {
     }
   },
   actions: {
-    addCounter() {
-      api.AddCounter().then(
-        (ctr) => {
-          console.log(ctr)
-          this.counter = ctr
-        })
+    async initConfig() {
+      api.InitTestProductions()
+      api.InitTestStage()
+      api.InitTestStation()
+      api.InitTestItems()
     },
-    addTestItem(id: string) {
-      this.loadTestItem(id).then(
-        (ti) => {
-          this.testitems.push()
+    async syncTestProductions() {
+      // sync: 加载 & 去重 & 去脏 & 写回
+      api.LoadTestProductions().then(
+        (_tps) => {
+          if (_tps) {
+            this.testProductions = _tps
+            console.log(this.testProductions)
+          }
         }
       )
+      // api.SaveTestProductions([])
     },
-    async loadSteps() {
+    async syncTestStages() {
+      // sync: 加载 & 去重 & 去脏 & 写回
       const _ids: number[] = []
-      this.teststeps.forEach((ts) => {
+      this.testStages.forEach((ts) => {
         _ids.push(ts.id)
       })
-      api.LoadTestSteps().then(
+      api.LoadTestStages().then(
         (tss) => {
           console.log(tss)
           tss.forEach((ts) => {
             if (_ids) {
               if (_ids.indexOf(ts.id) < 0) {
-                this.teststeps.push(ts)
+                this.testStages.push(ts)
               }
             } else {
-              this.teststeps.push(ts)
+              this.testStages.push(ts)
             }
           })
         }
       )
     },
-    async loadTestItem(path: string = '~/.imes/config.yml') {
-      if (path === null) throw new Error("Need TI's file path")
-      const ids: number[] = []
-      this.testitems.forEach((ti) => {
-        ids.push(ti.id)
+    async syncTestStation() {
+      // sync: 加载 & 去重 & 去脏 & 写回
+      api.LoadTestStation().then((ts) => {
+        if (ts) {
+          this.testStation = ts
+        }
       })
-      api.LoadTestItems(path).then(
-        (tis) => {
-          tis.forEach((ti) => {
-            if (ids) {
-              if (ids.indexOf(ti.id) < 0) {
-                this.testitems.push(ti)
-              }
-            } else {
-              this.testitems.push(ti)
-            }
-          })
-          console.log('LoadTestItems return length:', tis.length)
-          console.log('current testitems length:', this.testitems.length)
-        })
     },
-    async loadTestProductions() {
-      api.OpenConfigFile().then(
-        (f) => {
-          api.LoadJsonConfigData(f).then((b) => {
-            if (b) {
-              api.GetJsonProductions().then((_tps) => {
-                if (_tps) {
-                  this.testProductions = _tps
-                  console.log(this.testProductions)
-                }
-              })
-            }
+    async syncTestEntity() {
+      // sync: 加载 & 去重 & 去脏 & 写回
+      api.LoadTestEntity().then((tes) => {
+        if (tes) {
+          tes.forEach((te) => {
+            this.testEntities.push(te)
           })
-        },
-        (err) => {
-          console.log(err)
         }
-      )
-    }
+      })
+    },
+    async syncTestItem() {
+      // sync: 加载 & 去重 & 去脏 & 写回
+      api.LoadTestItems().then((tis) => {
+        tis.forEach((ti) => {
+          this.testitems.push(ti)
+        })
+      })
+    },
   }
 })

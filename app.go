@@ -3,8 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 
 	backend "github.com/i-mes/imes-app/backend"
+	"github.com/wailsapp/wails/v2/pkg/logger"
 	"github.com/wailsapp/wails/v2/pkg/menu"
 	"github.com/wailsapp/wails/v2/pkg/menu/keys"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
@@ -25,7 +27,6 @@ func NewApp(api *backend.Api) *App {
 
 func (a *App) loadConfigFileCallback(data *menu.CallbackData) {
 	fmt.Println(data.MenuItem.Label)
-	a.api.LoadJsonConfigData(a.api.OpenConfigFile())
 }
 
 // startup is called when the app starts. The context is saved
@@ -45,6 +46,15 @@ func (a *App) startup(ctx context.Context) {
 		)),
 	)
 	runtime.MenuSetApplicationMenu(a.ctx, myMenu)
+
+	// 不是 log 到文件，而是到 stdout
+	envInfo := runtime.Environment(a.ctx)
+	runtime.LogInfo(a.ctx, envInfo.BuildType)
+	runtime.LogInfo(a.ctx, envInfo.Platform)
+	runtime.LogInfo(a.ctx, envInfo.Arch)
+	wd, _ := os.Getwd()
+	runtime.LogInfo(a.ctx, wd)
+	runtime.LogSetLogLevel(a.ctx, logger.ERROR)
 }
 
 // domReady is called after the front-end dom has been loaded
