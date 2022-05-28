@@ -32,6 +32,10 @@
                   </v-list>
                 </v-menu>
               </v-list-item>
+
+              <v-list-item prepend-avatar=" " title="Test Config 加载模式">
+                <v-btn @click="selectConfigFolder">选择配置文件目录 </v-btn>
+              </v-list-item>
             </v-list>
           </v-card>
 
@@ -103,9 +107,15 @@ import { watch } from 'vue';
 import { reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n'
 import { useBaseStore } from '../stores/index'
+import { OpenConfigFolder } from '../../wailsjs/go/imes/Api'
+
 const { t } = useI18n({ useScope: 'global' })
 const store = useBaseStore()
 
 const items = [{ title: '模式 1' }, { title: '模式 2' }, { title: '模式 3' }]
 const username = ref('')
+
+const selectConfigFolder = () => {
+  OpenConfigFolder()
+}
 </script>

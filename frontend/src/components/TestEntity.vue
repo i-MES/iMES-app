@@ -1,10 +1,5 @@
 <template>
-  <v-toolbar class="entity-toolbar" :height="store.toolbarheight">
-    <v-toolbar-title>{{ t('testpage.testentity-overall') }}</v-toolbar-title>
-    <v-spacer></v-spacer>
-    <v-text-field hide-details append-icon="mdi-magnify"> </v-text-field>
-  </v-toolbar>
-  <v-container class="fill-height width-100 mt-10">
+  <v-container class="fill-height width-100">
     <v-row>
       <v-col v-for="entity in store.testEntities" :key="entity.id" cols="6" md="4"
         lg="3" xl="2">

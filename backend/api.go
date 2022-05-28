@@ -43,6 +43,19 @@ func (a *Api) OpenGithub() {
 	// }
 }
 
+func (a *Api) MsgDialog(msg string) {
+	selection, _ := wails.MessageDialog(*imesContext, wails.MessageDialogOptions{
+		Title:   "Infomation",
+		Message: msg,
+		Buttons: []string{"close"},
+	})
+	if selection == "close" {
+		return
+	} else {
+		return
+	}
+}
+
 // 通过对话框 UI 得到用户选择
 func (a *Api) OpenConfigFile() string {
 	_opt := wails.OpenDialogOptions{

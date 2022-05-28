@@ -18,8 +18,6 @@
           </v-btn>
           <v-btn variant="text" icon="mdi-magnify" @click="onclickMagnify">
           </v-btn>
-          <v-btn variant="text" icon="mdi-view-module" @click="onclickViewModule">
-          </v-btn>
           <v-btn variant="text" icon="mdi-github" @click="onclickOpenGithub"></v-btn>
           <v-btn variant="text" icon="mdi-dots-vertical"
             @click.stop="toggleMore = !toggleMore" :disabled="disableToggleMore">
@@ -54,32 +52,14 @@
         </template>
       </v-navigation-drawer>
 
-      <!-- 右侧产品导航栏 -->
+      <!-- 右侧导航栏 -->
       <v-navigation-drawer width="160" v-model="toggleMore" position="right">
-        <template v-slot:prepend>
-          <div class="pa-1">
-            <v-btn :disabled="autoLoadConfig" block v-if="planab === 'a'"
-              @click="onclickLoadConfig">{{
-                  t("nav.loadconfig")
-              }} </v-btn>
-            <v-file-input v-if="planab === 'b'" label="File input" outlined dense>
-            </v-file-input>
-          </div>
-        </template>
-        <v-select filled label="产品" dense hide-details v-model="selectedProd"
-          :items="store.testProductions.map((v, _) => v.id + '-' + v.title)">
-        </v-select>
-        <v-select filled label="工序" dense hide-details v-model="selectedStage"
-          :items="stages">
-        </v-select>
-        <template v-slot:append>
-          <div class="px-2 ">
-            <v-switch v-model="autoLoadConfig" color="success" density="compact"
-              :label="`自动加载`">
-            </v-switch>
-          </div>
-        </template>
+        <template v-slot:prepend> </template>
+        <Logo logoheight="80px" />
+        <template v-slot:append> </template>
       </v-navigation-drawer>
+
+      <!-- 主窗口 -->
       <v-main>
         <router-view />
       </v-main>
@@ -98,7 +78,7 @@ import { WindowMinimise, Quit } from '../wailsjs/runtime'
 import { OpenGithub } from '../wailsjs/go/imes/Api'
 // about app
 import { useBaseStore } from './stores/index'
-import { OpenConfigFolder } from '../wailsjs/go/imes/Api'
+import Logo from './components/Logo.vue'
 
 const router = useRouter() // router 是管理器，可以 addRoute、removeRoute、getRoutes、push...
 const route = useRoute() // route 是一个响应式对象，
@@ -123,9 +103,6 @@ const onclickToggleLanguage = () => {
   locale.value ? (locale.value == 'en' ? (locale.value = 'zh-Hans') : (locale.value = 'en')) : false
 }
 const onclickMagnify = () => {
-}
-const onclickViewModule = () => {
-  store.TEorTI = true
 }
 const onclickOpenGithub = () => {
   OpenGithub()
@@ -155,53 +132,7 @@ watch(
   }
 )
 
-//********** 右侧产品导航栏相关 **********/
-const autoLoadConfig = ref(true)
-const selectedProd = ref()
-const selectedStage = ref()
-const planab = ref('a')
-const onclickLoadConfig = () => {
-  if (planab.value == 'a') {
-    // 方案1：后端加载
-    OpenConfigFolder()
-  } else {
-    // 方案2：前端加载
-  }
-}
-
-if (false) {
-  store.initConfig()
-}
-// 加载已保存的数据
-store.syncTestProductions()
-store.syncTestStages()
-store.syncTestStation()
-store.syncTestEntity()
-store.syncTestItem()
-
-const stages = reactive([])
-watch(
-  () => selectedProd.value,
-  (nv) => {
-    var pid = Number((nv as string).split('-')[0])
-    store.activedProductionId = pid
-    // 联动 stage 工序选择栏
-    var i = stages.length
-    while (i--) {
-      stages.splice(i, 1)
-    }
-    store.testStageByProductionId(pid).map((v, _) => (v.id + '-' + v.title)).forEach(
-      (n) => stages.push(n)
-    )
-  }
-)
-watch(
-  () => selectedStage.value,
-  (nv) => {
-    var sid = Number((nv as string).split('-')[0])
-    store.activedTestStageId = sid
-  }
-)
+//********** 右侧导航栏相关 **********/
 
 //********** 其他 **********/
 const display = useDisplay()

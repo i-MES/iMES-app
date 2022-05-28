@@ -1,10 +1,10 @@
 <template>
   <v-tabs class="sticky" centered v-model="activeTab" color="deep-purple-accent-4">
-    <v-tab v-for="e in store.testEntities" :key="e.id" :value="e.id"> {{ e.desc }}
+    <v-tab v-for="e in store.testEntities" :key="e.ip" :value="e.ip"> {{ e.ip }}
     </v-tab>
   </v-tabs>
   <v-window v-model="activeTab">
-    <v-window-item v-for="e in store.testEntities" :key="e.id" :value="e.id">
+    <v-window-item v-for="e in store.testEntities" :key="e.ip" :value="e.ip">
       <v-container class="fill-height width-100 mt-10">
         <v-row>
           <v-col
