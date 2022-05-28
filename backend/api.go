@@ -180,12 +180,20 @@ func (a *Api) LoadTestStation() TestStation {
 
 // 被测实体
 type TestEntity struct {
-	Id    int    `json:"id"`
-	Title string `json:"title"`
-	Desc  string `json:"desc"`
-	Ip    []int  `json:"ip"`
+	Id   int      `json:"id"`
+	Ip   string   `json:"ip"`
+	Code string   `json:"code"` // 条码
+	Tags []string `json:"tags"`
 }
 
+func (a *Api) InitTestEntity() {
+	a.SaveTestEntity([]TestEntity{{
+		Id:   1,
+		Ip:   "127.0.0.1",
+		Code: "foobar123",
+		Tags: []string{"高端PC"},
+	}})
+}
 func (a *Api) SaveTestEntity(data []TestEntity) {
 	_data := make(map[string]interface{})
 	_data["entity"] = data

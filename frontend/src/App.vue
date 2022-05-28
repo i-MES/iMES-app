@@ -169,7 +169,7 @@ const onclickLoadConfig = () => {
   }
 }
 
-if (true) {
+if (false) {
   store.initConfig()
 }
 // 加载已保存的数据

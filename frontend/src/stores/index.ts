@@ -108,6 +108,7 @@ export const useBaseStore = defineStore('imesBaseStore', {
       api.InitTestProductions()
       api.InitTestStage()
       api.InitTestStation()
+      api.InitTestEntity()
       api.InitTestItems()
     },
     async syncTestProductions() {

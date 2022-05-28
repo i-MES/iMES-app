@@ -17,18 +17,18 @@ func OutputConfigData(data map[string]interface{}) {
 	datatype := ""
 	for k := range data {
 		datatype = k
-		switch data[k].(type) {
-		case int:
-			fmt.Println("int")
-		case float64:
-			fmt.Println("float64")
-		case string:
-			fmt.Println("string")
-		default:
-			fmt.Println("default")
-		}
+		// switch data[k].(type) {
+		// case int:
+		// 	fmt.Println("int")
+		// case float64:
+		// 	fmt.Println("float64")
+		// case string:
+		// 	fmt.Println("string")
+		// default:
+		// 	fmt.Println("default")
+		// }
 	}
-	fmt.Println(datatype)
+	fmt.Println("Output config data, type: ", datatype)
 	_data, _ := json.Marshal(data[datatype])
 	filePath := GetAppPath() + "/config/" + datatype + ".json"
 	err := os.WriteFile(filePath, _data, 0644)
@@ -48,7 +48,7 @@ func InputConfigData(dataType string) []byte {
 	if !matched {
 		log.Fatalf("config file path(%v) invalled, err: %v", filePath, err)
 	}
-	fmt.Println("Read config data from: ", filePath)
+	fmt.Println("Input config data from: ", filePath)
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		log.Fatalf("ReadFile error: %v", err)
