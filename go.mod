@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/json-iterator/go v1.1.12
-	github.com/wailsapp/wails/v2 v2.0.0-beta.36
+	github.com/wailsapp/wails/v2 v2.0.0-beta.37
 )
 
 require (

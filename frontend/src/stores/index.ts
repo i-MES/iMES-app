@@ -17,6 +17,7 @@ export interface IAppStatusBar {
 }
 
 export type TGlobalState = {
+  sysInfo: imes.SysInfo,
   defaultRoute: string, // 默认导航的页面
   appTheme: string,   // 颜色主题
   appBarHeight: number,
@@ -34,7 +35,7 @@ export type TGlobalState = {
   activedTestStageId: number,       // 选中工序
   testStation: imes.TestStation,  // 工位(only one)
   testEntities: imes.TestEntity[],  // 所有被测实体
-  activedTestEntity: number,        // 选中实体
+  activedTestEntityIp: string,      // 选中实体
   testitems: imes.TestItem[]
   testitemsLogs: imes.TestItemLog[],
   addEntity: boolean,
@@ -44,6 +45,7 @@ export type TGlobalState = {
 export const useBaseStore = defineStore('imesBaseStore', {
   state: (): TGlobalState => {
     return {
+      sysInfo: {},
       defaultRoute: 'test',
       appTheme: 'dark',
       appBarHeight: 30,
@@ -61,7 +63,7 @@ export const useBaseStore = defineStore('imesBaseStore', {
       activedTestStageId: 0,
       testStation: { id: 0, title: '', desc: '', enabledTestStageIds: [], activedTestStageIds: [] },
       testEntities: [],
-      activedTestEntity: 0,
+      activedTestEntityIp: '',
       testitems: [],
       testitemsLogs: [],
       addEntity: false,
@@ -152,12 +154,36 @@ export const useBaseStore = defineStore('imesBaseStore', {
         }
       })
     },
+    async addTestEntity(te: imes.TestEntity) {
+      var _new = true
+      this.testEntities.forEach((_te, idx) => {
+        if (_te.ip.toString() == te.ip.toString()) {
+          this.testEntities[idx] = te
+          console.log('update testentity:', te.ip)
+          _new = false
+        }
+      })
+      if (_new) {
+        this.testEntities.push(te)
+        console.log('create testentity:', te.ip)
+      }
+    },
     async syncTestEntity() {
       // sync: 加载 & 去重 & 去脏 & 写回
+      const _ips: string[] = []
+      this.testEntities.forEach((te) => {
+        _ips.push(te.ip.toString())
+      })
       api.LoadTestEntity().then((tes) => {
         if (tes) {
           tes.forEach((te) => {
-            this.testEntities.push(te)
+            if (_ips) {
+              if (_ips.indexOf(te.ip.toString()) < 0) {
+                this.testEntities.push(te)
+              }
+            } else {
+              this.testEntities.push(te)
+            }
           })
         }
       })

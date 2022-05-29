@@ -80,3 +80,18 @@ func (a *App) shutdown(ctx context.Context) {
 	// Perform your teardown here
 	// 在此处做一些资源释放的操作
 }
+
+type SysInfo struct {
+	BuildType string `json:"buildtype"`
+	Platform  string `json:"platform"`
+	Arch      string `json:"arch"`
+}
+
+func (a *App) SysInfo() SysInfo {
+	envInfo := runtime.Environment(a.ctx)
+	return SysInfo{
+		BuildType: envInfo.BuildType,
+		Platform:  envInfo.Platform,
+		Arch:      envInfo.Arch,
+	}
+}

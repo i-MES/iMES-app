@@ -10,6 +10,10 @@
     background-origin: content-box;
 }
 
+html {
+  font-size: 0.8rem !important;
+}
+
 .result {
     height: 20px;
     line-height: 20px;

@@ -193,16 +193,14 @@ func (a *Api) LoadTestStation() TestStation {
 
 // 被测实体
 type TestEntity struct {
-	Id   int      `json:"id"`
-	Ip   string   `json:"ip"`
+	Ip   []int    `json:"ip"`
 	Code string   `json:"code"` // 条码
 	Tags []string `json:"tags"`
 }
 
 func (a *Api) InitTestEntity() {
 	a.SaveTestEntity([]TestEntity{{
-		Id:   1,
-		Ip:   "127.0.0.1",
+		Ip:   []int{127, 0, 0, 1},
 		Code: "foobar123",
 		Tags: []string{"高端PC"},
 	}})

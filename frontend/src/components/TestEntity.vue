@@ -1,13 +1,16 @@
 <template>
   <v-container class="fill-height width-100">
     <v-row>
-      <v-col v-for="entity in store.testEntities" :key="entity.id" cols="6" md="4"
-        lg="3" xl="2">
-        <v-card :elevation="5" @click="onclickEntity(entity.id)"
+      <v-col v-for="entity in store.testEntities" :key="entity.ip.toString()"
+        :cols="defcols">
+        <v-card :elevation="5" @click="onclickEntity(entity.ip.toString())"
           :color="store.appTheme == 'dark' ? 'blue-grey-darken-2' : 'blue-grey-lighten-3'">
           <!-- <v-card-avatar></v-card-avatar> -->
-          <template v-slot:title>{{ entity.ip }}</template>
-          <template v-slot:subtitle>{{ entity.title }} - {{ entity.desc }}</template>
+          <template v-slot:title>{{ entity.ip.toString().replaceAll(',', '.')
+          }}</template>
+          <template v-slot:subtitle>code: {{ entity.code }}<br />tags:{{
+              entity.tags
+          }}</template>
           <template v-slot:text>
             <v-row>
               <v-col cols="12">
@@ -18,10 +21,6 @@
           <v-card-actions>
           </v-card-actions>
         </v-card>
-
-      </v-col>
-      <v-col cols="6" md="4" lg="3" xl="2">
-        <AddEntity />
       </v-col>
     </v-row>
   </v-container>
@@ -30,13 +29,25 @@
 <script lang="ts" setup>
 import { useBaseStore } from '../stores/index'
 import { useI18n } from 'vue-i18n'
-import AddEntity from './public/AddEntity.vue'
 const { t } = useI18n({ useScope: 'global' })
 const store = useBaseStore()
-const onclickEntity = (id) => {
-  console.log(id)
+
+const props = withDefaults(
+  defineProps<{
+    defcols: number,
+  }>(),
+  {
+    defcols: 3
+  }
+)
+
+const onclickEntity = (ip) => {
+  console.log(ip)
+  store.activedTestEntityIp = ip
   store.TEorTI = false
 }
+
+
 </script>
 
 <style>

@@ -1,10 +1,12 @@
 <template>
   <v-tabs class="sticky" centered v-model="activeTab" color="deep-purple-accent-4">
-    <v-tab v-for="e in store.testEntities" :key="e.ip" :value="e.ip"> {{ e.ip }}
+    <v-tab v-for="e in store.testEntities" :key="e.ip.toString()"
+      :value="e.ip.toString()"> {{ e.ip.toString().replaceAll(',', '.') }}
     </v-tab>
   </v-tabs>
   <v-window v-model="activeTab">
-    <v-window-item v-for="e in store.testEntities" :key="e.ip" :value="e.ip">
+    <v-window-item v-for="e in store.testEntities" :key="e.ip.toString()"
+      :value="e.ip.toString()">
       <v-container class="fill-height width-100 mt-10">
         <v-row>
           <v-col
@@ -40,18 +42,17 @@
 import { ref, onMounted, watch, onBeforeUnmount, defineProps, reactive } from 'vue'
 import { useBaseStore } from '../stores/index'
 import { imes } from '../../wailsjs/go/models'
-import { GetActivedTestEntity } from '../../wailsjs/go/imes/Api'
 const store = useBaseStore()
 
-const activeTab = ref(1)
-const props = withDefaults(
-  defineProps<{
-    entityId: number,
-  }>(),
-  {
-    entityId: 1
-  }
-)
+const activeTab = ref(store.activedTestEntityIp)
+// const props = withDefaults(
+//   defineProps<{
+//     entityId: string,
+//   }>(),
+//   {
+//     entityId: '127.0.0.1'
+//   }
+// )
 
 const value = ref(10)
 const bufferValue = ref(20)

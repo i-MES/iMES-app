@@ -76,6 +76,7 @@ import { useI18n } from 'vue-i18n'
 // about wails
 import { WindowMinimise, Quit } from '../wailsjs/runtime'
 import { OpenGithub } from '../wailsjs/go/imes/Api'
+import { SysInfo } from '../wailsjs/go/main/App'
 // about app
 import { useBaseStore } from './stores/index'
 import Logo from './components/Logo.vue'
@@ -165,16 +166,58 @@ onMounted(() => {
   })
 
   store.availableHeight = display.height.value - store.appBarHeight
+
+  if (true) {
+    store.initConfig()
+  }
+  // 加载已保存的数据
+  store.syncTestProductions()
+  store.syncTestStages()
+  store.syncTestStation()
+  store.syncTestEntity()
+  store.syncTestItem()
+
+  SysInfo().then(
+    (info) => {
+      if (info) {
+        store.sysInfo = info
+      }
+    }
+  )
 })
+const breakpoint = () => {
+  if (store.sysInfo.buildtype) {
+    console.log("buildtype: ", store.sysInfo.buildtype)
+    if (store.sysInfo.buildtype == 'dev') {
+      var w: number = display.width.value
+      if (w < 600) {
+        store.appStatusBar.width = 'xs-' + w
+      } else if (w < 960) {
+        store.appStatusBar.width = 'sm-' + w
+      } else if (w < 1264) {
+        store.appStatusBar.width = 'md-' + w
+      } else if (w < 1904) {
+        store.appStatusBar.width = 'lg-' + w
+      } else {
+        store.appStatusBar.width = 'xl-' + w
+      }
+    }
+  }
+}
+breakpoint()
 window.onresize = () => {
   store.availableHeight = display.height.value - store.appBarHeight
   console.log('store.availableHeight changed: ', store.availableHeight)
+  store.appStatusBar.width = display.width.value
+  breakpoint()
 }
+
 </script>
 
 <style lang="scss">
 @import url('./assets/css/reset.css');
 @import url('./assets/css/font.css');
+@import url('./app.css');
 
 #app {
   position: relative;

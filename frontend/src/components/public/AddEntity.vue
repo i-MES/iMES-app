@@ -1,19 +1,7 @@
 <template>
   <v-dialog v-model="addEntity" persistent max-width="600px">
     <template v-slot:activator="{ isActive, props }">
-      <v-card
-        :color="store.appTheme == 'dark' ? 'blue-grey-darken-1' : 'blue-grey-lighten-5'"
-        @click="addEntity = true">
-        <v-card-text>
-          <v-row>
-            <v-col class="text-h5">添加 Entity {{ isActive }}
-            </v-col>
-          </v-row>
-        </v-card-text>
-        <v-card-actions>
-          <v-icon class="ma-auto" icon="mdi-overscan" size="85"></v-icon>
-        </v-card-actions>
-      </v-card>
+      <v-btn class="ma-auto" icon="mdi-overscan" text @click="addEntity = true"></v-btn>
     </template>
     <v-card>
       <v-card-title>
@@ -21,21 +9,21 @@
       </v-card-title>
       <v-card-text>
         <v-container>
-          <v-row>
+          <v-row align="center">
             <v-col cols="12" sm="6" md="6">
-              <v-text-field label="产品" readonly
+              <v-text-field label="产品" readonly hide-details="auto"
                 :placeholder="store.testProductionById(store.activedProductionId)?.title"
                 persistent-placeholder>
               </v-text-field>
             </v-col>
             <v-col cols="12" sm="6" md="6">
-              <v-text-field label="工序" readonly
+              <v-text-field label="工序" readonly hide-details="auto"
                 :placeholder="store.testStageById(store.activedTestStageId)?.title"
                 persistent-placeholder>
               </v-text-field>
             </v-col>
 
-            <v-col cols="12" sm="6" md="6">
+            <!-- <v-col cols="12" sm="6" md="6">
               <v-text-field v-model="ip1" label="IP Address [Start]*" required
                 hint="IP 段扫描起始地址" placeholder="127.0.0.1" persistent-placeholder>
               </v-text-field>
@@ -43,33 +31,58 @@
             <v-col cols="12" sm="6" md="6">
               <v-text-field v-model="ip2" label="IP Address End" hint="IP 段扫描终止地址">
               </v-text-field>
+            </v-col> -->
+
+            <v-col cols="2">
+              <v-text-field v-model="ip1" placeholder="127" persistent-placeholder
+                :rules="iprules" label="IP">
+              </v-text-field>
             </v-col>
+            <v-col cols="2">
+              <v-text-field v-model="ip2" placeholder="0" persistent-placeholder
+                :rules="iprules">
+              </v-text-field>
+            </v-col>
+            <v-col cols="2">
+              <v-text-field v-model="ip3" placeholder="0" persistent-placeholder
+                :rules="iprules">
+              </v-text-field>
+            </v-col>
+            <v-col cols="2">
+              <v-text-field v-model="ip41" placeholder="1" persistent-placeholder
+                :rules="iprules">
+              </v-text-field>
+            </v-col>
+            <v-col cols="1">
+              <a>~</a>
+            </v-col>
+            <v-col cols="2">
+              <v-text-field v-model="ip42">
+              </v-text-field>
+            </v-col>
+
             <v-col cols="12">
-              <v-text-field v-model="code" label="扫条码" required hint="英文"
+              <v-text-field v-model="code" label="扫条码" required hint="英文" :rules="rules"
                 placeholder="entity-realme-x40"></v-text-field>
             </v-col>
+
             <v-col cols="12">
-              <v-text-field v-model="tags" label="Tags" hint="支持多个标签">
-              </v-text-field>
+              <v-text-field v-model="tags" label="Tags" hint="支持多个标签"> </v-text-field>
             </v-col>
           </v-row>
         </v-container>
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="addEntity = false">
-          Close
-        </v-btn>
+        <v-btn color="blue darken-1" text @click="addEntity = false"> Close </v-btn>
         <v-btn color="blue darken-1" text @click="progressDialog = !progressDialog">
-          Save
-        </v-btn>
+          Save </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
 
   <v-dialog v-model="progressDialog" hide-overlay persistent width="300">
-    <template>
-    </template>
+    <template> </template>
     <v-card color="primary" dark>
       <v-card-text>
         Please stand by
@@ -81,18 +94,49 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, watch } from 'vue'
-import { imes } from '../../../wailsjs/go/models';
+import { onMounted, onUnmounted, ref, watch, reactive } from 'vue'
+import { imes } from '../../../wailsjs/go/models'
 import { useBaseStore } from '../../stores/index'
 import { MsgDialog } from '../../../wailsjs/go/imes/Api'
 const store = useBaseStore()
 const addEntity = ref(false)
 const progressDialog = ref(false)
-const ip1 = ref('')
-const ip2 = ref('')
+const ip1 = ref('127')
+const ip2 = ref('0')
+const ip3 = ref('0')
+const ip41 = ref('1')
+const ip42 = ref('1')
 const code = ref('')
 const tags = ref('')
 
+const rules = reactive([
+  value => !!value || 'Required.',
+  value => (value && value.length >= 12) || 'Min 12 characters',
+])
+
+const iprules = reactive([
+  // value => ((value as number) < 1 || (value as number) > 255) || '1-255',
+  value => (value as number) >= 0 || '>=0',
+  value => (value as number) < 255 || '<255'
+])
+
+watch(
+  () => addEntity.value,
+  (nv) => {
+    if (nv) {
+      document.onkeydown = function (e) {
+        let key = window.event.keyCode;
+        console.log(key)
+        if (key == 27) {
+          addEntity.value = false
+        }
+      }
+    } else {
+      document.onkeydown = function (e) {
+      }
+    }
+  }
+)
 watch(
   () => progressDialog.value,
   (nv) => {
@@ -100,28 +144,23 @@ watch(
       setTimeout(() => {
         progressDialog.value = false
       }, 500)
-      console.log("ip1:", ip1)
-      console.log("ip2:", ip2)
+
+      var _ip1 = Number(ip1.value)
+      var _ip2 = Number(ip2.value)
+      var _ip3 = Number(ip3.value)
+      var _ip41 = Number(ip41.value)
+      var _ip42 = Number(ip42.value)
+      console.log(_ip1, _ip2, _ip3, _ip41, _ip42)
       if (ip1.value == "") {
         MsgDialog("IP address 非法")
         addEntity.value = true
       } else {
-        var _cf = false
-        store.testEntities.forEach((te) => {
-          if (te.ip == ip1.value) {
-            MsgDialog("IP address 重复")
-            _cf = true
-          }
-        })
-        if (!_cf) {
-          var te: imes.TestEntity = {
-            id: store.testEntities.length + 1,
-            ip: ip1,
+        for (let index = _ip41; index <= _ip42; index++) {
+          store.addTestEntity({
+            ip: [_ip1, _ip2, _ip3, index],
             code: code.value,
             tags: tags.value,
-          }
-          console.log(te)
-          store.testEntities.push(te)
+          })
           addEntity.value = false
         }
       }
