@@ -5,41 +5,50 @@ import (
 	"testing"
 )
 
+// TestXXX() :go test // 会自动调用并报告结果 PASS/FAIL
 func TestAddCounter(t *testing.T) {
-	mid := new(Middleware)
-	i := mid.LoadCounter()
-	if (i + 1) != mid.AddCounter() {
-		t.Errorf("AddCounter from %d want %d", i, i+1)
+	ta := new(Api)
+	ta.InitCounter()
+	i := ta.GetCounter()
+	if (i + 1) != ta.AddCounter(1) {
+		t.Errorf("AddCounter: want %d, got %d", i+1, i)
+	}
+	if (i + +1 + 100) != ta.AddCounter(100) {
+		t.Errorf("AddCounter: want %d, got %d", i+100, i)
 	}
 }
 
+// BenchmarkXXX(): go test 会多次执行并计算一个平均执行时间
 func BenchmarkAddCounter(b *testing.B) {
-	mid := new(Middleware)
+	ta := new(Api)
 	for i := 0; i < b.N; i++ {
-		mid.AddCounter()
+		ta.AddCounter(1)
 	}
 }
 
 func BenchmarkAddCounterParallel(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
-		mid := new(Middleware)
+		ta := new(Api)
 		for i := 0; i < b.N; i++ {
-			mid.AddCounter()
+			ta.AddCounter(1)
 		}
 	})
 }
 
-func ExampleMiddleware_AddCounter() {
-	mid := new(Middleware)
-	mid.AddCounter()
+// Example<Type>_<Func><opt>() : 自动测试 + 生成文档，注释中没有 Output: 不予执行
+func ExampleApi_AddCounter() {
+	ta := new(Api)
+	ta.InitCounter()
+	fmt.Println(ta.AddCounter(1))
 	// output:
-	// i+1
+	// 1
 }
 
-func ExampleMiddleware_LoadTestitems() {
-	fmt.Println("foobar")
-	mid := new(Middleware)
-	mid.LoadTestitems("foobar")
-	// Output:
-	// {}
+func TestFileWalk(t *testing.T) {
+	a := new(Api)
+	fs, err := a.WalkMatch(GetAppPath(), "*.py")
+	if err != nil {
+		panic(err)
+	}
+	t.Log(fs)
 }

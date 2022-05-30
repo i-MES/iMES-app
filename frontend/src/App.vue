@@ -175,7 +175,6 @@ onMounted(() => {
   store.syncTestStages()
   store.syncTestStation()
   store.syncTestEntity()
-  store.syncTestItem()
 
   SysInfo().then(
     (info) => {

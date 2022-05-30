@@ -1,6 +1,6 @@
 import { defineStore, storeToRefs } from 'pinia'
 import { useUserStore } from './user'
-import { imes } from "../../wailsjs/go/models"
+import { main, imes, testset } from "../../wailsjs/go/models"
 import * as api from "../../wailsjs/go/imes/Api";
 
 export enum UserStatus {
@@ -17,7 +17,7 @@ export interface IAppStatusBar {
 }
 
 export type TGlobalState = {
-  sysInfo: imes.SysInfo,
+  sysInfo: main.SysInfo,
   defaultRoute: string, // 默认导航的页面
   appTheme: string,   // 颜色主题
   appBarHeight: number,
@@ -36,8 +36,8 @@ export type TGlobalState = {
   testStation: imes.TestStation,  // 工位(only one)
   testEntities: imes.TestEntity[],  // 所有被测实体
   activedTestEntityIp: string,      // 选中实体
-  testitems: imes.TestItem[]
-  testitemsLogs: imes.TestItemLog[],
+  testGroups: testset.TestGroup[]
+  testitemsLogs: testset.TestItemLog[],
   addEntity: boolean,
   TEorTI: boolean,
 }
@@ -64,7 +64,7 @@ export const useBaseStore = defineStore('imesBaseStore', {
       testStation: { id: 0, title: '', desc: '', enabledTestStageIds: [], activedTestStageIds: [] },
       testEntities: [],
       activedTestEntityIp: '',
-      testitems: [],
+      testGroups: [],
       testitemsLogs: [],
       addEntity: false,
       TEorTI: true
@@ -98,12 +98,6 @@ export const useBaseStore = defineStore('imesBaseStore', {
         ...user
       }
     },
-    firstTestItem: (state) => {
-      return state.testitems[0]
-    },
-    lastTestItem: (state) => {
-      return state.testitems[-1]
-    }
   },
   actions: {
     async initConfig() {
@@ -111,7 +105,6 @@ export const useBaseStore = defineStore('imesBaseStore', {
       api.InitTestStage()
       api.InitTestStation()
       api.InitTestEntity()
-      api.InitTestItems()
     },
     async syncTestProductions() {
       // sync: 加载 & 去重 & 去脏 & 写回
@@ -188,12 +181,13 @@ export const useBaseStore = defineStore('imesBaseStore', {
         }
       })
     },
-    async syncTestItem() {
+    async syncTestSet() {
       // sync: 加载 & 去重 & 去脏 & 写回
-      api.LoadTestItems().then((tis) => {
-        tis.forEach((ti) => {
-          this.testitems.push(ti)
-        })
+      api.LoadPythonTestSet().then((tgs) => {
+        if (tgs) {
+          console.log(tgs)
+          this.testGroups = tgs
+        }
       })
     },
   }

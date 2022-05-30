@@ -96,6 +96,26 @@
               </v-list-item>
             </v-list>
           </v-card>
+
+          <v-card class="mt-5">
+            <v-list lines="three" active-strategy="multiple">
+              <v-list-subheader>数据配置</v-list-subheader>
+              <v-list-item prepend-avatar=" ">
+                <v-row justify="center">
+                  <v-col cols="4">
+                    <v-btn @click="onclickInitConfigData">初始化 Config Data</v-btn>
+                  </v-col>
+                  <v-col cols="8">
+                    <v-expand-transition>
+                      <v-card v-show="expand" width="80%" class="mx-auto secondary"
+                        text="Init config data done">
+                      </v-card>
+                    </v-expand-transition>
+                  </v-col>
+                </v-row>
+              </v-list-item>
+            </v-list>
+          </v-card>
         </v-col>
       </v-row>
     </v-container>
@@ -107,15 +127,21 @@ import { watch } from 'vue';
 import { reactive, ref } from 'vue';
 import { useI18n } from 'vue-i18n'
 import { useBaseStore } from '../stores/index'
-import { OpenConfigFolder } from '../../wailsjs/go/imes/Api'
+import { OpenFolder } from '../../wailsjs/go/imes/Api'
 
 const { t } = useI18n({ useScope: 'global' })
 const store = useBaseStore()
 
 const items = [{ title: '模式 1' }, { title: '模式 2' }, { title: '模式 3' }]
 const username = ref('')
+const expand = ref(false)
 
 const selectConfigFolder = () => {
-  OpenConfigFolder()
+  OpenFolder()
+}
+
+const onclickInitConfigData = () => {
+  store.initConfig()
+  expand.value = true
 }
 </script>

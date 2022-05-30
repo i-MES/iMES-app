@@ -4,12 +4,18 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"regexp"
+	"runtime"
 )
 
 func GetAppPath() string {
-	wd, _ := os.Getwd()
-	return wd
+	// wd, _ := os.Getwd()
+	// f, _ := exec.LookPath(os.Args[0])
+	_, fileStr, _, _ := runtime.Caller(0)
+	approot, _ := filepath.Abs(filepath.Dir(fileStr) + "/..")
+	// fmt.Println("AppRoot: ", approot)
+	return approot
 }
 
 // data: [key: contents]，取 key 作为 filename

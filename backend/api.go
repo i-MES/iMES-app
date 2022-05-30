@@ -4,8 +4,11 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
+	"path/filepath"
 	"time"
 
+	"github.com/i-mes/imes-app/backend/testset"
 	jsoniter "github.com/json-iterator/go"
 	wails "github.com/wailsapp/wails/v2/pkg/runtime"
 )
@@ -21,9 +24,20 @@ var json = jsoniter.ConfigCompatibleWithStandardLibrary
 //Api struct to hold wails runtime for all Api implementations
 type Api struct {
 	// conf     map[interface{}]interface{}
-	confstr []byte
+	counter int
 }
 
+func (a *Api) InitCounter() {
+	a.counter = 0
+}
+func (a *Api) GetCounter() int {
+	return a.counter
+}
+
+func (a *Api) AddCounter(c int) int {
+	a.counter += c
+	return a.counter
+}
 func (a *Api) OpenGithub() {
 	url := "https://github.com/i-MES"
 	wails.BrowserOpenURL(*imesContext, url)
@@ -57,11 +71,17 @@ func (a *Api) MsgDialog(msg string) {
 }
 
 // 通过对话框 UI 得到用户选择
-func (a *Api) OpenConfigFile() string {
+func (a *Api) OpenFile(title, filePattern string) string {
+	if title == "" {
+		title = "Open Config File"
+	}
+	if filePattern == "" {
+		filePattern = "*.json"
+	}
 	_opt := wails.OpenDialogOptions{
 		DefaultDirectory: "./",
-		Title:            "Open Config File",
-		Filters:          []wails.FileFilter{{DisplayName: "Config File", Pattern: "*.json"}},
+		Title:            title,
+		Filters:          []wails.FileFilter{{DisplayName: "File Filter", Pattern: filePattern}},
 	}
 	selectedFile, err := wails.OpenFileDialog(*imesContext, _opt)
 	if err != nil {
@@ -71,16 +91,42 @@ func (a *Api) OpenConfigFile() string {
 }
 
 // 通过对话框 UI 得到用户选择
-func (a *Api) OpenConfigFolder() string {
+func (a *Api) OpenFolder(title string) string {
+	if title == "" {
+		title = "Open Config Folder"
+	}
 	_opt := wails.OpenDialogOptions{
-		DefaultDirectory: "./config/",
-		Title:            "Open Config Folder",
+		DefaultDirectory: GetAppPath(),
+		Title:            title,
 	}
 	selectedFolder, err := wails.OpenDirectoryDialog(*imesContext, _opt)
 	if err != nil {
 		log.Panic("Error on folder opening", err.Error())
 	}
 	return selectedFolder
+}
+
+func (a *Api) WalkMatch(root, pattern string) ([]string, error) {
+	var matches []string
+	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			return nil
+		}
+		if matched, err := filepath.Match(pattern, filepath.Base(path)); err != nil {
+			return err
+		} else if matched {
+			matches = append(matches, path)
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return matches, nil
+
 }
 
 // 产品
@@ -231,85 +277,82 @@ func (a *Api) ConnectTestEntity(ip []int) bool {
 	return true
 }
 
-// 测试组
-type TestGroup struct {
-	Id          int    `json:"id"`
-	Title       string `json:"title"`
-	Desc        string `json:"desc"`
-	TestItemIds []int  `json:"testItemIds"`
-}
-
-func (a *Api) SaveTestGroup(data []TestGroup) {
-	_data := make(map[string]interface{})
-	_data["testgroup"] = data
-	OutputConfigData(_data)
-}
-func (a *Api) LoadTestGroup() []TestGroup {
-	var data []TestGroup
-	_data := []byte(json.Get(InputConfigData("testgroup")).ToString())
-	err := json.Unmarshal(_data, &data)
-	if err != nil {
-		fmt.Println(err)
+func (a *Api) LoadPythonTestSet() []testset.TestGroup {
+	folderpath := ""
+	if true {
+		folderpath = GetAppPath() + "/testcase/python/"
+	} else {
+		// 用户选择
+		folderpath = a.OpenFolder("Open TestCase Folder")
 	}
-	return data
-}
-
-// 测试项
-type TestItem struct {
-	Id       int    `json:"id"`
-	Title    string `json:"title"`
-	Desc     string `json:"desc"`
-	Funcname string `json:"funcname"`
-	Sequence int    `json:"sequence"`
-}
-
-func (a *Api) InitTestItems() {
-	data := make([]TestItem, 0)
-	data = append(data,
-		TestItem{1, "MCU Test", "MCU Test...", "test_mcu", 1},
-		TestItem{2, "Memory Test", "Memory Test...", "test_memory", 2},
-		TestItem{3, "Network Test", "Network Test...", "test_network", 3},
-	)
-	a.SaveTestItems(data)
-}
-
-func (a *Api) SaveTestItems(data []TestItem) {
-	_data := make(map[string]interface{})
-	_data["testitem"] = data
-	OutputConfigData(_data)
-}
-func (a *Api) LoadTestItems() []TestItem {
-	var data []TestItem
-	_data := []byte(json.Get(InputConfigData("testitem")).ToString())
-	err := json.Unmarshal(_data, &data)
+	filepaths, err := a.WalkMatch(folderpath, "*.py")
 	if err != nil {
-		fmt.Println(err)
+		panic(err)
 	}
-	return data
+	p := new(testset.Parser)
+	tgs := make([]testset.TestGroup, 0)
+	for _, fp := range filepaths {
+		fmt.Println("tgs len:", len(tgs))
+		tgs = append(tgs, (p.ParsePython(len(tgs), fp))...)
+	}
+	return tgs
 }
+
+// func (a *Api) SaveTestGroup(data []testset.TestGroup) {
+// 	_data := make(map[string]interface{})
+// 	_data["testgroup"] = data
+// 	OutputConfigData(_data)
+// }
+// func (a *Api) LoadTestGroup() []testset.TestGroup {
+// 	var data []testset.TestGroup
+// 	_data := []byte(json.Get(InputConfigData("testgroup")).ToString())
+// 	err := json.Unmarshal(_data, &data)
+// 	if err != nil {
+// 		fmt.Println(err)
+// 	}
+// 	return data
+// }
+
+// func (a *Api) InitTestItems() {
+// 	data := make([]testset.TestItem, 0)
+// 	data = append(data,
+// 		testset.TestItem{"MCU Test", "MCU Test...", "test_mcu", 1},
+// 		testset.TestItem{"Memory Test", "Memory Test...", "test_memory", 2},
+// 		testset.TestItem{"Network Test", "Network Test...", "test_network", 3},
+// 	)
+// 	a.SaveTestItems(data)
+// }
+
+// func (a *Api) SaveTestItems(data []testset.TestItem) {
+// 	_data := make(map[string]interface{})
+// 	_data["testitem"] = data
+// 	OutputConfigData(_data)
+// }
+// func (a *Api) LoadTestItems() []testset.TestItem {
+// 	var data []testset.TestItem
+// 	_data := []byte(json.Get(InputConfigData("testitem")).ToString())
+// 	err := json.Unmarshal(_data, &data)
+// 	if err != nil {
+// 		fmt.Println(err)
+// 	}
+// 	return data
+// }
 
 // 开始一个测试项
 func (a *Api) TestItemStart(id int) bool {
 	// do the real test
 
 	// add the log
-	wails.EventsEmit(*imesContext, "testitemlog", TestItemLog{1, "PASS", time.Now().Unix()})
+	wails.EventsEmit(*imesContext, "testitemlog", testset.TestItemLog{1, "PASS", time.Now().Unix()})
 	return true
 }
 
-// 测试项日志
-type TestItemLog struct {
-	TestItemId int    `json:"testItemId"`
-	Message    string `json:"message"`
-	TimeStamp  int64  `json:"timestamp"`
-}
-
-var logs = make([]TestItemLog, 0)
+var logs = make([]testset.TestItemLog, 0)
 
 // 加载日志
-func (a *Api) LoadTestItemLogs(testitemId int) []TestItemLog {
+func (a *Api) LoadTestItemLogs(testitemId int) []testset.TestItemLog {
 	return append(logs,
-		TestItemLog{1, "PASS", time.Now().Unix()},
-		TestItemLog{1, "NG", time.Now().Unix() + 1},
+		testset.TestItemLog{1, "PASS", time.Now().Unix()},
+		testset.TestItemLog{1, "NG", time.Now().Unix() + 1},
 	)
 }

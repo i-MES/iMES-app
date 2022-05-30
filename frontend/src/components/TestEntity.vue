@@ -1,6 +1,6 @@
 <template>
   <v-container class="fill-height width-100">
-    <v-row>
+    <v-row justify  ="center">
       <v-col v-for="entity in store.testEntities" :key="entity.ip.toString()"
         :cols="defcols">
         <v-card :elevation="5" @click="onclickEntity(entity.ip.toString())"
