@@ -1,37 +1,30 @@
 <template>
-  <div class="d-flex">
-    <v-hover v-slot="{ isHovering, props }" open-delay="200" close-delay="200">
-      <v-card :elevation="isHovering ? 12 : 2" class="mx-auto" v-bind="props">
-        <img class="ma-auto" alt="Vue logo" src="@/assets/images/logo.svg"
-          :style="`height:${logoheight}`" />
-        <v-card-text class="my-4 text-center text-h6">
-          {{ t('all.imes') }}
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn :icon="show ? 'mdi-chevron-up' : 'mdi-chevron-down'"
-            @click="show = !show"> </v-btn>
-        </v-card-actions>
-
-        <v-expand-transition>
-          <div v-show="show">
-            <v-divider></v-divider>
-            <v-card-text class="ma-auto pa-auto"> intelligent Manufacturing Execution
-              System
-            </v-card-text>
-          </div>
-        </v-expand-transition>
-      </v-card>
-    </v-hover>
-  </div>
+  <n-grid :cols="5" item-responsive>
+    <n-grid-item span="0 400:1"></n-grid-item>
+    <n-grid-item span="5 400:3">
+      <n-card :hoverable="true" content-style="padding: 0; text-align:center">
+        <template #cover>
+          <img class="ma-auto" alt="Vue logo" src="@/assets/images/logo.svg"
+            :style="`height:${logoheight}`" />
+        </template>
+        {{ t('all.imes') }}
+        <template #action>
+          <n-collapse>
+            <n-collapse-item>
+              <div>intelligent Manufacturing Execution System</div>
+            </n-collapse-item>
+          </n-collapse>
+        </template>
+      </n-card>
+    </n-grid-item>
+  </n-grid>
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue'
+import { NCard, NCollapse, NCollapseItem, NGrid, NGridItem } from 'naive-ui'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n({ useScope: 'global' })
 
-const show = ref(false)
 withDefaults(
   defineProps<{
     logoheight: string | number
