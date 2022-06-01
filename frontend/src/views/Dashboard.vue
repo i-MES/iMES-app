@@ -5,7 +5,7 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref, watch } from 'vue'
+import { onMounted} from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import * as echarts from 'echarts/core'
@@ -13,7 +13,6 @@ import {
   BarChart,
   // 系列类型的定义后缀都为 SeriesOption
   BarSeriesOption,
-  LineChart,
   LineSeriesOption,
 } from 'echarts/charts'
 import {

@@ -1,34 +1,37 @@
 <template>
-  <v-toolbar class="entity-toolbar" :height="store.toolbarheight">
-    <v-row class="ma-0 pa-0" align="center" align-content="center">
-      <v-col cols="3">
-        <v-select class="mt-3" filled label="产品" dense hide-details
-          v-model="selectedProd"
-          :items="store.testProductions.map((v, _) => v.id + '-' + v.title)">
-        </v-select>
-      </v-col>
-      <v-col cols="3">
-        <v-select class="mt-3" filled label="工序" dense hide-details
-          v-model="selectedStage" :items="stages">
-        </v-select>
-      </v-col>
-    </v-row>
-    <template v-slot:append>
-      <v-btn variant="text" @click="zoomOut" icon="mdi-magnify-minus-outline"></v-btn>
-      <v-btn variant="text" @click="zoomIn" icon="mdi-magnify-plus-outline"></v-btn>
-      <AddEntity />
-      <v-btn variant="text" icon="mdi-view-module" @click="onclickViewModule"> </v-btn>
-    </template>
-  </v-toolbar>
-  <v-sheet class="ma-0 pt-10 overflow-y-auto"
-    :height="store.availableHeight - store.logHeight - store.toolbarheight">
-    <TestEntity v-if="store.TEorTI" :defcols="defCols" />
-    <TestItem v-else />
-  </v-sheet>
-  <v-sheet class="ma-0 pa-0 overflow-y-auto"
-    :height="store.toolbarheight + store.logHeight">
-    <TestLog />
-  </v-sheet>
+  <div>
+    <v-toolbar class="entity-toolbar" :height="store.toolbarheight">
+      <v-row class="ma-0 pa-0" align="center" align-content="center">
+        <v-col cols="3">
+          <v-select class="mt-3" filled label="产品" dense hide-details
+            v-model="selectedProd"
+            :items="store.testProductions.map((v, _) => v.id + '-' + v.title)">
+          </v-select>
+        </v-col>
+        <v-col cols="3">
+          <v-select class="mt-3" filled label="工序" dense hide-details
+            v-model="selectedStage" :items="stages">
+          </v-select>
+        </v-col>
+      </v-row>
+      <template v-slot:append>
+        <v-btn variant="text" @click="zoomOut" icon="mdi-magnify-minus-outline"></v-btn>
+        <v-btn variant="text" @click="zoomIn" icon="mdi-magnify-plus-outline"></v-btn>
+        <add-entity />
+        <v-btn variant="text" icon="mdi-view-module" @click="onclickViewModule">
+        </v-btn>
+      </template>
+    </v-toolbar>
+    <v-sheet class="ma-0 pt-10 overflow-y-auto"
+      :height="store.availableHeight - store.logHeight - store.toolbarheight">
+      <test-entity v-if="store.TEorTI" :defcols="defCols" />
+      <test-item v-else />
+    </v-sheet>
+    <v-sheet class="ma-0 pa-0 overflow-y-auto"
+      :height="store.toolbarheight + store.logHeight">
+      <test-log />
+    </v-sheet>
+  </div>
 </template>
 
 <script lang="ts" setup>
@@ -44,7 +47,6 @@ const { t } = useI18n({ useScope: 'global' })
 const store = useBaseStore()
 
 // Toolbar 相关
-const autoLoadConfig = ref(true)
 const selectedProd = ref()
 const selectedStage = ref()
 
@@ -73,7 +75,6 @@ watch(
   }
 )
 
-const zoom = ref(0)
 const defCols = ref(3)
 const zoomOut = () => {
   defCols.value = (defCols.value - 1 < 2) ? 2 : defCols.value - 1

@@ -123,18 +123,13 @@
 </template>
 
 <script lang="ts" setup>
-import { watch } from 'vue';
-import { reactive, ref } from 'vue';
-import { useI18n } from 'vue-i18n'
+import { ref } from 'vue'
 import { useBaseStore } from '../stores/index'
 import { OpenFolder } from '../../wailsjs/go/imes/Api'
-
-const { t } = useI18n({ useScope: 'global' })
+const expand = ref(false)
 const store = useBaseStore()
 
 const items = [{ title: '模式 1' }, { title: '模式 2' }, { title: '模式 3' }]
-const username = ref('')
-const expand = ref(false)
 
 const selectConfigFolder = () => {
   OpenFolder()

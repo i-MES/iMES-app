@@ -1,7 +1,7 @@
-import { defineStore, storeToRefs } from 'pinia'
+import { defineStore } from 'pinia'
 import { useUserStore } from './user'
-import { main, imes, testset } from "../../wailsjs/go/models"
-import * as api from "../../wailsjs/go/imes/Api";
+import { main, imes, testset } from '../../wailsjs/go/models'
+import * as api from '../../wailsjs/go/imes/Api'
 
 export enum UserStatus {
   login,
@@ -45,7 +45,7 @@ export type TGlobalState = {
 export const useBaseStore = defineStore('imesBaseStore', {
   state: (): TGlobalState => {
     return {
-      sysInfo: {},
+      sysInfo: { buildtype: '', platform: '', arch: '' },
       defaultRoute: 'test',
       appTheme: 'dark',
       appBarHeight: 30,
@@ -83,7 +83,7 @@ export const useBaseStore = defineStore('imesBaseStore', {
     },
     testStageByProductionId: (state) => {
       return (id: number): imes.TestStage[] => {
-        var tss: imes.TestStage[] = []
+        const tss: imes.TestStage[] = []
         state.testStages.forEach((ts, _) => {
           if (ts.pid == id) {
             tss.push(ts)
@@ -148,7 +148,7 @@ export const useBaseStore = defineStore('imesBaseStore', {
       })
     },
     async addTestEntity(te: imes.TestEntity) {
-      var _new = true
+      let _new = true
       this.testEntities.forEach((_te, idx) => {
         if (_te.ip.toString() == te.ip.toString()) {
           this.testEntities[idx] = te

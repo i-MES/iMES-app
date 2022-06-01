@@ -1,6 +1,6 @@
 <template>
   <v-container class="fill-height width-100">
-    <v-row justify  ="center">
+    <v-row justify="center">
       <v-col v-for="entity in store.testEntities" :key="entity.ip.toString()"
         :cols="defcols">
         <v-card :elevation="5" @click="onclickEntity(entity.ip.toString())"
@@ -32,7 +32,7 @@ import { useI18n } from 'vue-i18n'
 const { t } = useI18n({ useScope: 'global' })
 const store = useBaseStore()
 
-const props = withDefaults(
+withDefaults(
   defineProps<{
     defcols: number,
   }>(),

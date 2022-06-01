@@ -6,8 +6,8 @@
         <ul class="ma-10">
           <li class="info-item">
             <div class="name">{{ t('aboutpage.project-repository') }}</div>
-            <OpenLink class="link" href="https://github.com/i-MES/iMES-app">
-              https://github.com/i-MES/iMES-app</OpenLink>
+            <open-link class="link" href="https://github.com/i-MES/iMES-app">
+              https://github.com/i-MES/iMES-app</open-link>
           </li>
         </ul>
       </v-card>
@@ -61,7 +61,6 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from "vue"
 import { useI18n } from 'vue-i18n'
 import logo from '@/assets/images/logo.svg'
 import OpenLink from '../components/public/OpenLink.vue'

@@ -12,10 +12,10 @@ class TestMemoryCache:
     def test_filters_based_on_addresses(self):
       time.sleep(randint(2,5))
 
-    def test_free_records_with_valid_addresses_that_dont_match_do_not_appear(self):
+    def test_free_records_with_valid_addresse(self):
       time.sleep(randint(2,5))
 
-    def test_free_records_with_unmatched_addresses_do_not_appear(self):
+    def test_free_records_with_unmatched_addresses(self):
       time.sleep(randint(2,5))
 
 

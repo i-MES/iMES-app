@@ -27,12 +27,12 @@
 </template>
 
 <script lang="ts" setup>
-import { withDefaults, defineProps, ref } from 'vue'
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n({ useScope: 'global' })
 
 const show = ref(false)
-const props = withDefaults(
+withDefaults(
   defineProps<{
     logoheight: string | number
     msg?: string

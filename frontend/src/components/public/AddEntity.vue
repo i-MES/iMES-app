@@ -1,29 +1,31 @@
 <template>
-  <v-dialog v-model="addEntity" persistent max-width="600px">
-    <template v-slot:activator="{ isActive, props }">
-      <v-btn class="ma-auto" icon="mdi-overscan" text @click="addEntity = true"></v-btn>
-    </template>
-    <v-card>
-      <v-card-title>
-        <span class="text-h5">添加 Entity</span>
-      </v-card-title>
-      <v-card-text>
-        <v-container>
-          <v-row align="center">
-            <v-col cols="12" sm="6" md="6">
-              <v-text-field label="产品" readonly hide-details="auto"
-                :placeholder="store.testProductionById(store.activedProductionId)?.title"
-                persistent-placeholder>
-              </v-text-field>
-            </v-col>
-            <v-col cols="12" sm="6" md="6">
-              <v-text-field label="工序" readonly hide-details="auto"
-                :placeholder="store.testStageById(store.activedTestStageId)?.title"
-                persistent-placeholder>
-              </v-text-field>
-            </v-col>
+  <v-div>
+    <v-dialog v-model="addEntity" persistent max-width="600px">
+      <template v-slot:activator>
+        <v-btn class="ma-auto" icon="mdi-overscan" text @click="addEntity = true">
+        </v-btn>
+      </template>
+      <v-card>
+        <v-card-title>
+          <span class="text-h5">添加 Entity</span>
+        </v-card-title>
+        <v-card-text>
+          <v-container>
+            <v-row align="center">
+              <v-col cols="12" sm="6" md="6">
+                <v-text-field label="产品" readonly hide-details="auto"
+                  :placeholder="store.testProductionById(store.activedProductionId)?.title"
+                  persistent-placeholder>
+                </v-text-field>
+              </v-col>
+              <v-col cols="12" sm="6" md="6">
+                <v-text-field label="工序" readonly hide-details="auto"
+                  :placeholder="store.testStageById(store.activedTestStageId)?.title"
+                  persistent-placeholder>
+                </v-text-field>
+              </v-col>
 
-            <!-- <v-col cols="12" sm="6" md="6">
+              <!-- <v-col cols="12" sm="6" md="6">
               <v-text-field v-model="ip1" label="IP Address [Start]*" required
                 hint="IP 段扫描起始地址" placeholder="127.0.0.1" persistent-placeholder>
               </v-text-field>
@@ -33,69 +35,69 @@
               </v-text-field>
             </v-col> -->
 
-            <v-col cols="2">
-              <v-text-field v-model="ip1" placeholder="127" persistent-placeholder
-                :rules="iprules" label="IP">
-              </v-text-field>
-            </v-col>
-            <v-col cols="2">
-              <v-text-field v-model="ip2" placeholder="0" persistent-placeholder
-                :rules="iprules">
-              </v-text-field>
-            </v-col>
-            <v-col cols="2">
-              <v-text-field v-model="ip3" placeholder="0" persistent-placeholder
-                :rules="iprules">
-              </v-text-field>
-            </v-col>
-            <v-col cols="2">
-              <v-text-field v-model="ip41" placeholder="1" persistent-placeholder
-                :rules="iprules">
-              </v-text-field>
-            </v-col>
-            <v-col cols="1">
-              <a>~</a>
-            </v-col>
-            <v-col cols="2">
-              <v-text-field v-model="ip42">
-              </v-text-field>
-            </v-col>
+              <v-col cols="2">
+                <v-text-field v-model="ip1" placeholder="127" persistent-placeholder
+                  :rules="iprules" label="IP">
+                </v-text-field>
+              </v-col>
+              <v-col cols="2">
+                <v-text-field v-model="ip2" placeholder="0" persistent-placeholder
+                  :rules="iprules">
+                </v-text-field>
+              </v-col>
+              <v-col cols="2">
+                <v-text-field v-model="ip3" placeholder="0" persistent-placeholder
+                  :rules="iprules">
+                </v-text-field>
+              </v-col>
+              <v-col cols="2">
+                <v-text-field v-model="ip41" placeholder="1" persistent-placeholder
+                  :rules="iprules">
+                </v-text-field>
+              </v-col>
+              <v-col cols="1">
+                <a>~</a>
+              </v-col>
+              <v-col cols="2">
+                <v-text-field v-model="ip42">
+                </v-text-field>
+              </v-col>
 
-            <v-col cols="12">
-              <v-text-field v-model="code" label="扫条码" required hint="英文" :rules="rules"
-                placeholder="entity-realme-x40"></v-text-field>
-            </v-col>
+              <v-col cols="12">
+                <v-text-field v-model="code" label="扫条码" required hint="英文"
+                  :rules="rules" placeholder="entity-realme-x40"></v-text-field>
+              </v-col>
 
-            <v-col cols="12">
-              <v-text-field v-model="tags" label="Tags" hint="支持多个标签"> </v-text-field>
-            </v-col>
-          </v-row>
-        </v-container>
-      </v-card-text>
-      <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="addEntity = false"> Close </v-btn>
-        <v-btn color="blue darken-1" text @click="progressDialog = !progressDialog">
-          Save </v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+              <v-col cols="12">
+                <v-text-field v-model="tags" label="Tags" hint="支持多个标签"> </v-text-field>
+              </v-col>
+            </v-row>
+          </v-container>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="blue darken-1" text @click="addEntity = false"> Close </v-btn>
+          <v-btn color="blue darken-1" text @click="progressDialog = !progressDialog">
+            Save </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
 
-  <v-dialog v-model="progressDialog" hide-overlay persistent width="300">
-    <template> </template>
-    <v-card color="primary" dark>
-      <v-card-text>
-        Please stand by
-        <v-progress-linear indeterminate color="white" class="mb-0">
-        </v-progress-linear>
-      </v-card-text>
-    </v-card>
-  </v-dialog>
+    <v-dialog v-model="progressDialog" hide-overlay persistent width="300">
+      <template> </template>
+      <v-card color="primary" dark>
+        <v-card-text>
+          Please stand by
+          <v-progress-linear indeterminate color="white" class="mb-0">
+          </v-progress-linear>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+  </v-div>
 </template>
 
 <script lang="ts" setup>
-import { onMounted, onUnmounted, ref, watch, reactive } from 'vue'
-import { imes } from '../../../wailsjs/go/models'
+import { ref, watch, reactive } from 'vue'
 import { useBaseStore } from '../../stores/index'
 import { MsgDialog } from '../../../wailsjs/go/imes/Api'
 const store = useBaseStore()
@@ -125,15 +127,14 @@ watch(
   (nv) => {
     if (nv) {
       document.onkeydown = function (e) {
-        let key = window.event.keyCode;
+        let key = window.event.keyCode
         console.log(key)
         if (key == 27) {
           addEntity.value = false
         }
       }
     } else {
-      document.onkeydown = function (e) {
-      }
+      document.onkeydown = null
     }
   }
 )
@@ -151,15 +152,15 @@ watch(
       var _ip41 = Number(ip41.value)
       var _ip42 = Number(ip42.value)
       console.log(_ip1, _ip2, _ip3, _ip41, _ip42)
-      if (ip1.value == "") {
-        MsgDialog("IP address 非法")
+      if (ip1.value == '') {
+        MsgDialog('IP address 非法')
         addEntity.value = true
       } else {
         for (let index = _ip41; index <= _ip42; index++) {
           store.addTestEntity({
             ip: [_ip1, _ip2, _ip3, index],
             code: code.value,
-            tags: tags.value,
+            tags: [tags.value],
           })
           addEntity.value = false
         }

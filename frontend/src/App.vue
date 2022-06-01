@@ -38,8 +38,8 @@
                 :icon="menu.meta.icon ? menu.meta.icon as string : 'mid-arrow-all'">
               </v-icon>
             </v-list-item-avatar>
-            <v-list-item-title
-              v-text="t(menu.name ? `nav.${menu.name as string}` : 'nav.home')">
+            <v-list-item-title>
+              {{ t(menu.name ? `nav.${menu.name as string}` : 'nav.home') }}
             </v-list-item-title>
           </v-list-item>
           <v-spacer></v-spacer>
@@ -55,7 +55,7 @@
       <!-- 右侧导航栏 -->
       <v-navigation-drawer width="160" v-model="toggleMore" position="right">
         <template v-slot:prepend> </template>
-        <Logo logoheight="80px" />
+        <app-logo logoheight="80px" />
         <template v-slot:append> </template>
       </v-navigation-drawer>
 
@@ -69,7 +69,7 @@
 
 <script lang="ts" setup>
 // about vue
-import { onMounted, ref, watch, reactive } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useDisplay } from 'vuetify'
 import { useI18n } from 'vue-i18n'
@@ -79,7 +79,7 @@ import { OpenGithub } from '../wailsjs/go/imes/Api'
 import { SysInfo } from '../wailsjs/go/main/App'
 // about app
 import { useBaseStore } from './stores/index'
-import Logo from './components/Logo.vue'
+import AppLogo from './components/AppLogo.vue'
 
 const router = useRouter() // router 是管理器，可以 addRoute、removeRoute、getRoutes、push...
 const route = useRoute() // route 是一个响应式对象，
@@ -104,6 +104,7 @@ const onclickToggleLanguage = () => {
   locale.value ? (locale.value == 'en' ? (locale.value = 'zh-Hans') : (locale.value = 'en')) : false
 }
 const onclickMagnify = () => {
+  console.log('onclickMagnify')
 }
 const onclickOpenGithub = () => {
   OpenGithub()
@@ -148,10 +149,10 @@ const onclickQuit = () => {
 
 onMounted(() => {
   // practise vuetify's display props
-  console.log("vuetify's display - height: ", display.height.value)
-  console.log("vuetify's display - width: ", display.width.value)
-  console.log("vuetify's display - mobile: ", display.mobile.value)
-  console.log("vuetify's display - platform: ", display.platform.value)
+  console.log('vuetify\'s display - height: ', display.height.value)
+  console.log('vuetify\'s display - width: ', display.width.value)
+  console.log('vuetify\'s display - mobile: ', display.mobile.value)
+  console.log('vuetify\'s display - platform: ', display.platform.value)
 
   // 默认导航的页面
   const _dr = store.defaultRoute
@@ -167,9 +168,7 @@ onMounted(() => {
 
   store.availableHeight = display.height.value - store.appBarHeight
 
-  if (true) {
-    store.initConfig()
-  }
+  // store.initConfig()
   // 加载已保存的数据
   store.syncTestProductions()
   store.syncTestStages()
@@ -186,7 +185,7 @@ onMounted(() => {
 })
 const breakpoint = () => {
   if (store.sysInfo.buildtype) {
-    console.log("buildtype: ", store.sysInfo.buildtype)
+    console.log('buildtype: ', store.sysInfo.buildtype)
     if (store.sysInfo.buildtype == 'dev') {
       var w: number = display.width.value
       if (w < 600) {
