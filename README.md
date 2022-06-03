@@ -2,6 +2,8 @@
 
 ## 开发环境
 
+- install [node.js](http://nodejs.cn/)、[go](https://go.dev/doc/install)、[wails](https://wails.io/docs/gettingstarted/installation)
+- `npm config set registry http://registry.npmmirror.com`
 - `git clone ...`
 - `cd frontend`
 - `yarn`
