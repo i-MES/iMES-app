@@ -81,17 +81,17 @@ watch(
     }
   }
 )
-const timer = setInterval(() => {
-  TestItemStart(1).then((val) => {
-    console.log('测试项启动：', val ? '成功' : '失败')
-  })
-}, 3000)
+// const timer = setInterval(() => {
+// TestItemStart(1).then((val) => {
+//   console.log('测试项启动：', val ? '成功' : '失败')
+// })
+// }, 3000)
 
 onMounted(() => {
   // store.appStatusBar.logHeight = logHeight.value
 })
 onUnmounted(() => {
-  clearInterval(timer)
+  // clearInterval(timer)
 })
 
 

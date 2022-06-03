@@ -2,6 +2,8 @@
 
 ## 开发环境
 
+- install [node.js](http://nodejs.cn/)、[go](https://go.dev/doc/install)、[wails](https://wails.io/docs/gettingstarted/installation)
+- `npm config set registry https://artsz.zte.com.cn/artifactory/api/npm/public-npm-virtual/`
 - `git clone ...`
 - `cd frontend`
 - `yarn`

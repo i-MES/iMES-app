@@ -81,6 +81,11 @@ export const useBaseStore = defineStore('imesBaseStore', {
         return state.testStages.find((tp) => tp.id == id)
       }
     },
+    testGroupById: (state) => {
+      return (id: number): testset.TestGroup | undefined => {
+        return state.testGroups.find((tg) => tg.id == id)
+      }
+    },
     testStageByProductionId: (state) => {
       return (id: number): imes.TestStage[] => {
         const tss: imes.TestStage[] = []
