@@ -341,7 +341,7 @@ func (a *Api) LoadPythonTestSet() []testset.TestGroup {
 // 开始一个测试项
 func (a *Api) TestItemStart(ti testset.TestItem) bool {
 	// do the real test
-	fmt.Println(ti)
+	ti.Run()
 
 	// add the log
 	wails.EventsEmit(*imesContext, "testitemlog", testset.TestItemLog{1, "PASS", time.Now().Unix()})

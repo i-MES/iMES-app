@@ -3,7 +3,7 @@
     <v-app :theme="store.appTheme">
       <!-- 底部 App-bar -->
       <v-app-bar class="app-bar" color="#1c7bc9" position="bottom"
-        :height="store.appBarHeight" data-wails-drag>
+        :height="store.appBarHeight" :data-wails-drag="true">
         <template v-slot:prepend>
           <v-app-bar-nav-icon variant="text" @click.stop="onToggleMenu = !onToggleMenu">
           </v-app-bar-nav-icon>

@@ -45,7 +45,7 @@ func (fp *Parser) ParsePython(tgidbase int, file string) []TestGroup {
 			fmt.Println("Match: ", fname[1])
 			_l := len(tgs) - 1
 			tgs[_l].TestItems = append(tgs[_l].TestItems,
-				TestItem{fname[1], file, fname[1], 0})
+				TestItem{fname[1], fname[1], file, fname[1], 0})
 		}
 	}
 	return tgs
