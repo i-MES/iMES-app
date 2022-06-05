@@ -1,5 +1,12 @@
 package main
 
+/*
+#cgo pkg-config: python-3.9-embed
+#define PY_SSIZE_T_CLEAN
+#include <Python.h>
+*/
+import "C"
+
 import (
 	"context"
 	"fmt"
@@ -55,6 +62,8 @@ func (a *App) startup(ctx context.Context) {
 	wd, _ := os.Getwd()
 	runtime.LogInfo(a.ctx, wd)
 	runtime.LogSetLogLevel(a.ctx, logger.ERROR)
+
+	C.Py_Initialize()
 }
 
 // domReady is called after the front-end dom has been loaded
@@ -71,6 +80,14 @@ func (a *App) domReady(ctx context.Context) {
 // beforeClose在单击窗口关闭按钮或调用runtime.Quit即将退出应用程序时被调用.
 // 返回 true 将导致应用程序继续，false 将继续正常关闭。
 func (a *App) beforeClose(ctx context.Context) (prevent bool) {
+	C.Py_Finalize()
+	C.PyRun_SimpleString(C.CString("import sys"))
+	C.PyRun_SimpleString(C.CString("sys.path.append('./')"))
+	pycode := `
+for path in sys.path:
+	print(path)
+`
+	C.PyRun_SimpleString(C.CString(pycode))
 	return false
 }
 

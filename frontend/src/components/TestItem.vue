@@ -77,7 +77,7 @@ onBeforeUnmount(() => {
 const starttestgroup = (id: number) => {
   console.log('tg-id: ', id)
   store.testGroupById(id)?.testItems.forEach(
-    (ti) => {
+    async (ti) => {
       console.log(ti)
       await TestItemStart(ti)
     }
