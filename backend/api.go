@@ -13,20 +13,18 @@ import (
 	wails "github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
-var imesContext *context.Context
-
-func ImesBind(ctx *context.Context) {
-	imesContext = ctx
-}
-
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 //Api struct to hold wails runtime for all Api implementations
 type Api struct {
 	// conf     map[interface{}]interface{}
 	counter int
+	ctx     *context.Context
 }
 
+func (a *Api) Context(ctx *context.Context) {
+	a.ctx = ctx
+}
 func (a *Api) InitCounter() {
 	a.counter = 0
 }
@@ -40,7 +38,7 @@ func (a *Api) AddCounter(c int) int {
 }
 func (a *Api) OpenGithub() {
 	url := "https://github.com/i-MES"
-	wails.BrowserOpenURL(*imesContext, url)
+	wails.BrowserOpenURL(*a.ctx, url)
 	// var err error
 	// switch runtime.GOOS {
 	// case "linux":
@@ -58,7 +56,7 @@ func (a *Api) OpenGithub() {
 }
 
 func (a *Api) MsgDialog(msg string) {
-	selection, _ := wails.MessageDialog(*imesContext, wails.MessageDialogOptions{
+	selection, _ := wails.MessageDialog(*a.ctx, wails.MessageDialogOptions{
 		Title:   "Infomation",
 		Message: msg,
 		Buttons: []string{"close"},
@@ -83,7 +81,7 @@ func (a *Api) OpenFile(title, filePattern string) string {
 		Title:            title,
 		Filters:          []wails.FileFilter{{DisplayName: "File Filter", Pattern: filePattern}},
 	}
-	selectedFile, err := wails.OpenFileDialog(*imesContext, _opt)
+	selectedFile, err := wails.OpenFileDialog(*a.ctx, _opt)
 	if err != nil {
 		log.Panic("Error on file opening", err.Error())
 	}
@@ -99,7 +97,7 @@ func (a *Api) OpenFolder(title string) string {
 		DefaultDirectory: GetAppPath(),
 		Title:            title,
 	}
-	selectedFolder, err := wails.OpenDirectoryDialog(*imesContext, _opt)
+	selectedFolder, err := wails.OpenDirectoryDialog(*a.ctx, _opt)
 	if err != nil {
 		log.Panic("Error on folder opening", err.Error())
 	}
@@ -338,13 +336,20 @@ func (a *Api) LoadPythonTestSet() []testset.TestGroup {
 // 	return data
 // }
 
-// 开始一个测试项
-func (a *Api) TestItemStart(ti testset.TestItem) bool {
+// 开始一个测试组
+func (a *Api) TestGroupStart(tg testset.TestGroup) bool {
 	// do the real test
-	ti.Run()
+	tg.Run(*a.ctx)
+	return true
+}
+
+// 开始一个测试项
+func (a *Api) TestItemStart(ti testset.TestItem, tg_name string) bool {
+	// do the real test
+	ti.Run(tg_name)
 
 	// add the log
-	wails.EventsEmit(*imesContext, "testitemlog", testset.TestItemLog{1, "PASS", time.Now().Unix()})
+	wails.EventsEmit(*a.ctx, "testitemlog", testset.TestItemLog{1, "PASS", time.Now().Unix()})
 	return true
 }
 

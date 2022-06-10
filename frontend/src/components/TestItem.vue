@@ -41,7 +41,7 @@
 <script lang="ts" setup>
 import { ref, onMounted, watch, onBeforeUnmount } from 'vue'
 import { useBaseStore } from '../stores/index'
-import { TestItemStart } from '../../wailsjs/go/imes/Api'
+import { TestGroupStart, TestItemStart } from '../../wailsjs/go/imes/Api'
 const store = useBaseStore()
 const activeTab = ref(store.activedTestEntityIp)
 // const props = withDefaults(
@@ -76,12 +76,13 @@ onBeforeUnmount(() => {
 
 const starttestgroup = (id: number) => {
   console.log('tg-id: ', id)
-  store.testGroupById(id)?.testItems.forEach(
-    async (ti) => {
-      console.log(ti)
-      await TestItemStart(ti)
-    }
-  )
+  TestGroupStart(store.testGroupById(id))
+  // store.testGroupById(id)?.testItems.forEach(
+  //   async (ti) => {
+  //     console.log(ti)
+  //     await TestItemStart(ti)
+  //   }
+  // )
 }
 const stoptestgroup = (id: number) => {
   console.log('tg-id: ', id)
