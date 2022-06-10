@@ -22,7 +22,7 @@ func (fp *Parser) ParsePython(tgidbase int, file string) []TestGroup {
 	defer f.Close()
 	r := bufio.NewReader(f)
 	validClass := regexp.MustCompile(`^class\ *(.*):`)
-	validFunc := regexp.MustCompile(`\ *def (test_.*)\(`)
+	validFunc := regexp.MustCompile(`^\s*def (test_.*)\(`)
 	tgs := make([]TestGroup, 0)
 	for {
 		line, err := r.ReadString('\n')
@@ -38,7 +38,8 @@ func (fp *Parser) ParsePython(tgidbase int, file string) []TestGroup {
 		if len(cname) > 1 {
 			fmt.Println("Match: ", cname[1])
 			tgs = append(tgs,
-				TestGroup{tgidbase + 1, cname[1], file, make([]TestItem, 0)})
+				TestGroup{tgidbase + 1, cname[1], "", file, cname[1], make([]TestItem, 0)})
+			continue
 		}
 		fname := validFunc.FindStringSubmatch(line)
 		if len(fname) > 1 {
