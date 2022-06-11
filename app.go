@@ -1,7 +1,7 @@
 package main
 
 /*
-#cgo pkg-config: python-3.9-embed
+#cgo pkg-config: python3-embed
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 */
