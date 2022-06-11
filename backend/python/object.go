@@ -97,7 +97,10 @@ func (pyObject *PyObject) CallObject(args *PyObject) *PyObject {
 	return togo(C.PyObject_CallObject(toc(pyObject), toc(args)))
 }
 
-// Call a  method without args
+/*
+ Call a  method without args
+ 可用于实例化 Class、调用 Function()、调用 object.method()
+*/
 func (pyObject *PyObject) CallMethod(methodName string) *PyObject {
 	return togo(C.Cgo_PyObject_CallMethod(toc(pyObject), C.CString(methodName), nil))
 }
@@ -148,6 +151,16 @@ func (pyObject *PyObject) Str() string {
 	} else {
 		return togo(_str).UTF8()
 	}
+}
+
+// 获取 PyObject 的 __dir__()
+func (pyObject *PyObject) Dir() string {
+	return pyObject.CallMethod("__dir__").Repr()
+}
+
+// 获取 PyObject 的 __name__
+func (pyObject *PyObject) Name() string {
+	return pyObject.GetAttrString("__name__").Str()
 }
 
 // 获取 PyObject 的类型并转换成字符串，与 print(type(object)) 等效

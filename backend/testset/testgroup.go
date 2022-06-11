@@ -22,7 +22,7 @@ type TestGroup struct {
 func (tg *TestGroup) Run(ctx context.Context) {
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
-	wails.LogDebug(ctx, "--------- start testgroup")
+	wails.LogDebug(ctx, "--------- start testgroup "+tg.Title)
 	wails.LogTrace(ctx, fmt.Sprint(tg))
 
 	if !py.Py_IsInitialized() {
@@ -39,15 +39,24 @@ func (tg *TestGroup) Run(ctx context.Context) {
 		defer _mod.DecRef()
 	}
 
-	_class := _mod.GetAttrString(tg.ClassName)
+	wails.LogDebug(ctx,
+		fmt.Sprintf("Does module %s has attr %s : %t", _mod.Name(), tg.Title, _mod.HasAttrString(tg.ClassName)))
+	_class := _mod.CallMethod(tg.ClassName)
 	if _class != nil {
+		wails.LogDebug(ctx, _class.Repr())
+		wails.LogDebug(ctx, _class.Dir())
 		for _, ti := range tg.TestItems {
+			wails.LogDebug(ctx, "------- start testitem "+ti.FuncName)
 			_ret := _class.CallMethod(ti.FuncName)
 			if _ret == nil {
 				wails.LogError(ctx, fmt.Sprintf("Run TI Error: %s-%s", tg.ClassName, ti.FuncName))
+				EmitTestItemLog(ctx, false, "NG")
 			} else {
 				wails.LogDebug(ctx, fmt.Sprintf("Run TI Pass: %s-%s", tg.ClassName, ti.FuncName))
+				EmitTestItemLog(ctx, true, "PASS")
 			}
 		}
+	} else {
+		wails.LogError(ctx, "--- can not get "+tg.ClassName)
 	}
 }
