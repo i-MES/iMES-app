@@ -7,7 +7,6 @@ import (
 
 	backend "github.com/i-mes/imes-app/backend"
 	py "github.com/i-mes/imes-app/backend/python"
-	"github.com/siddontang/go/log"
 	"github.com/wailsapp/wails/v2/pkg/logger"
 	"github.com/wailsapp/wails/v2/pkg/menu"
 	"github.com/wailsapp/wails/v2/pkg/menu/keys"
@@ -68,7 +67,6 @@ func (a *App) startup(ctx context.Context) {
 	if !py.Py_IsInitialized() {
 		panic(fmt.Errorf("python: could not initialize the python interpreter"))
 	}
-	log.Debug("< Initilized Python.")
 
 	// ===== CPython 高层接口 =====
 	fmt.Println("=========== Try Python High Level C API")
