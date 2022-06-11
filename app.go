@@ -1,11 +1,5 @@
 package main
 
-/*
-#cgo pkg-config: python3-embed
-#define PY_SSIZE_T_CLEAN
-#include <Python.h>
-*/
-import "C"
 import (
 	"context"
 	"fmt"
@@ -75,6 +69,9 @@ func (a *App) startup(ctx context.Context) {
 		panic(fmt.Errorf("python: could not initialize the python interpreter"))
 	}
 	log.Debug("< Initilized Python.")
+
+	// ===== CPython 高层接口 =====
+	fmt.Println("=========== Try Python High Level C API")
 	py.PyRun_SimpleString("import sys")
 	py.PyRun_SimpleString("from pathlib import Path")
 	// sys.modules: 已 loaded 到内存的 module
@@ -95,31 +92,32 @@ print("Path.cwd: ", Path.cwd())
 print("Path.home: ", Path.home())
 `)
 
-	// 用高层接口实现
-	// PyImport_ImportModule 其实只是 LoadModule，只注入到 sys.modules,并没有注入到 dir() —— 这也太坑爹了，困我好几天
-	// PyRun_SimpleString("import xxx") 才会同时生效到 sys.modules & dir()
+	// ===== CPython 低层接口 =====
+	fmt.Println("=========== Try Python Low Level C API")
+
+	// python module 的 2 步动作
+	//     1. load 到 sys.modules：module 已被创建，并全局可访问
+	//     2. 注入到 dir()：可以用 xxxmod.xxx 访问到该 module
+	// PyImport_ImportModule -- 其实只是 Load 到 sys.modules,并没有注入到 dir() —— 这也太坑爹了，困我好几天
+	// PyRun_SimpleString("import xxx") -- 才会同时生效到 sys.modules & dir()
+	// PyImport_AddModule -- 不会 load 和 import，会检查 sys.modules 中是否有，有则拿出，没有创建个 empty 的。
+	// 这逻辑也没谁了，太 TM 让人 emo 了。
+
+	fmt.Println("====== Understand PyImport_ImportModule")
 	_dtim := py.PyImport_ImportModule("datetime")
-	defer _dtim.DecRef()
-	py.PyRun_SimpleString(`print("dir():", dir())`)
-	py.PyRun_SimpleString(`print(sys.modules["datetime"])`)
+	// defer _dtim.DecRef() // 保留住，就不删除了
+	py.PyRun_SimpleString(`print(sys.modules["datetime"])`)                         // 有，可以访问到
 	py.PyRun_SimpleString(`print("Now1: ",sys.modules["datetime"].datetime.now())`) // 有效
+	py.PyRun_SimpleString(`print("dir():", dir())`)                                 // 没有 datetime
 	py.PyRun_SimpleString(`print("Now2: ",datetime.datetime.now())`)                // 无效, NameError: name 'datetime' is not defined
 
-	// 再用底层接口实现一下
-	_dtam := py.PyImport_AddModule("datetime") // AddModule 我理解为 GetModule
-	defer _dtam.DecRef()
-	fmt.Println(_dtim)                           // 指针
-	fmt.Println(_dtam)                           // 指针，且 dtim == dtam
-	fmt.Println(py.PyCallable_Check(_dtam))      // false
-	fmt.Println(_dtam.HasAttrString("datetime")) // true
-
-	_nowfunc := _dtam.GetAttrString("datetime").GetAttrString("now")
+	_nowfunc := _dtim.GetAttrString("datetime").GetAttrString("now")
 	defer _nowfunc.DecRef()
 	fmt.Println(py.PyCallable_Check(_nowfunc)) // true
 
 	_now := _nowfunc.CallObject(nil) // call now funcution
 	defer _now.DecRef()
-	fmt.Println(py.PyNumber_Check(_now))           // false, it is datetime.datetime class
+	fmt.Println(py.PyNumber_Check(_now))           // false, it's type is datetime.datetime class
 	fmt.Println(_now.HasAttrString("microsecond")) // true
 
 	_attr := _now.GetAttrString("year")
@@ -128,10 +126,41 @@ print("Path.home: ", Path.home())
 	fmt.Println(py.PyNumber_Check(_attr)) // true
 	fmt.Println(py.PyLong_Check(_attr))   // true
 	fmt.Println(_attr.Number())           // 2022
-	fmt.Println(_now.Repr())              // datetime.datetime(2022, 6, 9, 9, 52, 33, 879300)
-	fmt.Println(_now.Str())               // 2022-06-09 09:52:33.879300
-	fmt.Println(_now.Type())              // <class 'datetime.datetime'>
 
+	// PyObject 都会有的 3 个通用属性，相当于 repr()、dir()、type()
+	fmt.Println(_now.Repr()) // datetime.datetime(2022, 6, 9, 9, 52, 33, 879300)
+	fmt.Println(_now.Str())  // 2022-06-09 09:52:33.879300
+	fmt.Println(_now.Type()) // <class 'datetime.datetime'>
+
+	fmt.Println("====== Understand PyImport_GetModule & PyImport_AddModule")
+	_dtgm := py.PyImport_GetModule("datetime")
+	_dtam := py.PyImport_AddModule("datetime")
+	fmt.Println(_dtim) // 指针
+	fmt.Println(_dtgm) // 指针
+	fmt.Println(_dtam) // 指针，dtim == dtgm == dtam
+
+	_mod := py.PyImport_GetModule("math")
+	if _mod == nil {
+		fmt.Println("Module do not imported")
+	} else {
+		fmt.Println(py.PyCallable_Check(_mod))       // false
+		fmt.Println(_mod.HasAttrString("pi"))        // true
+		fmt.Println(_mod.GetAttrString("pi").Repr()) // 3.14...
+	}
+
+	_mod = py.PyImport_AddModule("random")
+	// defer _mod.DecRef() // AddModule 的是借用，不需要自己维护指针
+	if _mod == nil {
+		fmt.Println("Module can not added")
+	} else {
+		fmt.Println(py.PyCallable_Check(_mod))    // false
+		fmt.Println(_mod.HasAttrString("random")) // true
+		_v := _mod.CallMethod("random")
+		defer _v.DecRef()
+		fmt.Println(_v.Repr()) // 0.xxx....
+	}
+
+	fmt.Println("====== Understand PyImport from a file")
 	// 下面不生效，原因：
 	// PyImport_ImportModule(): 只会 import 已经在 sys.path 路径下的 *.py 文件
 	// 文档里说的仅能使用绝对路径，不是文件的绝对路径，而是module的(绝对:x.y,相对:..x.y)
@@ -140,7 +169,8 @@ print("Path.home: ", Path.home())
 	// 所以封装了下面函数:
 	// py.PyImport_ImportFile("./testcase/python/test_gpio.py")
 
-	fmt.Println("PyImport_GetModuleDict is dict: ", py.PyDict_Check(py.PyImport_GetModuleDict())) // true
+	fmt.Println("====== Understand PyXXX_Check")
+	fmt.Println("Is PyImport_GetModuleDict's output dict type? - ", py.PyDict_Check(py.PyImport_GetModuleDict())) // true
 	// python3.7 之后已废弃
 	// _tstate := C.PyGILState_GetThisThreadState()
 	// C.PyEval_ReleaseThread(_tstate)

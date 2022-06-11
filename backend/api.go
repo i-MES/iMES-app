@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/i-mes/imes-app/backend/testset"
 	jsoniter "github.com/json-iterator/go"
@@ -347,9 +346,6 @@ func (a *Api) TestGroupStart(tg testset.TestGroup) bool {
 func (a *Api) TestItemStart(ti testset.TestItem, tg_name string) bool {
 	// do the real test
 	ti.Run(tg_name)
-
-	// add the log
-	wails.EventsEmit(*a.ctx, "testitemlog", testset.TestItemLog{1, "PASS", time.Now().Unix()})
 	return true
 }
 
@@ -357,8 +353,9 @@ var logs = make([]testset.TestItemLog, 0)
 
 // 加载日志
 func (a *Api) LoadTestItemLogs(testitemId int) []testset.TestItemLog {
-	return append(logs,
-		testset.TestItemLog{1, "PASS", time.Now().Unix()},
-		testset.TestItemLog{1, "NG", time.Now().Unix() + 1},
-	)
+	// logs = append(logs,
+	// 	testset.TestItemLog{1, "PASS", time.Now().Unix()},
+	// 	testset.TestItemLog{1, "NG", time.Now().Unix() + 1},
+	// )
+	return logs
 }
