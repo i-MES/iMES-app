@@ -10,8 +10,8 @@ class Test_GPIO:
     def test_gpio_buff(self):
       time.sleep(randint(2,5))
       
-    def test_gpio_flash(self):
-      time.sleep(randint(2,5))
+    # def test_gpio_flash(self):
+    #   time.sleep(randint(2,5))
 
     def teardown_class(self):
       pass
