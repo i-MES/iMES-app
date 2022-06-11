@@ -2,7 +2,7 @@
   <v-layout>
     <v-app :theme="store.appTheme">
       <!-- 底部 App-bar -->
-      <v-app-bar class="app-bar" color="#1c7bc9" position="bottom"
+      <v-app-bar class="app-bar" color="#1c7bc9" absolute location="bottom"
         :height="store.appBarHeight" :data-wails-drag="true">
         <template v-slot:prepend>
           <v-app-bar-nav-icon variant="text" @click.stop="onToggleMenu = !onToggleMenu">
@@ -53,7 +53,7 @@
       </v-navigation-drawer>
 
       <!-- 右侧导航栏 -->
-      <v-navigation-drawer width="160" v-model="toggleMore" position="right">
+      <v-navigation-drawer width="160" v-model="toggleMore" location="right">
         <template v-slot:prepend> </template>
         <app-logo logoheight="80px" />
         <template v-slot:append> </template>
@@ -221,15 +221,5 @@ window.onresize = () => {
   position: relative;
   height: 100%;
   overflow: hidden;
-}
-
-.app-bar {
-  align-items: center;
-  bottom: 0;
-  justify-content: center;
-  opacity: 0.9;
-  position: absolute;
-  width: 100%;
-  z-index: 1;
 }
 </style>
