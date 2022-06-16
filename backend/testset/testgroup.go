@@ -34,7 +34,8 @@ func (tg *TestGroup) Run(ctx context.Context) {
 
 	_mod := py.PyImport_ImportFile(tg.FileName)
 	if _mod == nil {
-		panic("mod error")
+		wails.LogError(ctx, "import module error")
+		return
 	} else {
 		defer _mod.DecRef()
 	}
@@ -49,6 +50,7 @@ func (tg *TestGroup) Run(ctx context.Context) {
 			wails.LogDebug(ctx, "------- start testitem "+ti.FuncName)
 			_ret := _class.CallMethod(ti.FuncName)
 			if _ret == nil {
+				py.PyErr_Occurred()
 				wails.LogError(ctx, fmt.Sprintf("Run TI Error: %s-%s", tg.ClassName, ti.FuncName))
 				EmitTestItemLog(ctx, false, "NG")
 			} else {
@@ -57,6 +59,7 @@ func (tg *TestGroup) Run(ctx context.Context) {
 			}
 		}
 	} else {
+		py.PyErr_Occurred()
 		wails.LogError(ctx, "--- can not get "+tg.ClassName)
 	}
 }

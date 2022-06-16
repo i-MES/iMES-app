@@ -101,19 +101,21 @@ print("Path.home: ", Path.home())
 	// PyImport_AddModule -- 不会 load 和 import，会检查 sys.modules 中是否有，有则拿出，没有创建个 empty 的。
 	// 这逻辑也没谁了，太 TM 让人 emo 了。
 
-	fmt.Println("====== Understand PyImport_ImportModule")
-	_dtim := py.PyImport_ImportModule("datetime")
-	// defer _dtim.DecRef() // 保留住，就不删除了
+	fmt.Println("====== Try PyImport_ImportModule")
+	_mod_dt := py.PyImport_ImportModule("datetime")
+	// defer _mod_dt.DecRef() // 保留住，就不删除了
 	py.PyRun_SimpleString(`print(sys.modules["datetime"])`)                         // 有，可以访问到
 	py.PyRun_SimpleString(`print("Now1: ",sys.modules["datetime"].datetime.now())`) // 有效
 	py.PyRun_SimpleString(`print("dir():", dir())`)                                 // 没有 datetime
 	py.PyRun_SimpleString(`print("Now2: ",datetime.datetime.now())`)                // 无效, NameError: name 'datetime' is not defined
 
-	_nowfunc := _dtim.GetAttrString("datetime").GetAttrString("now")
-	defer _nowfunc.DecRef()
-	fmt.Println(py.PyCallable_Check(_nowfunc)) // true
+	_type_dt := _mod_dt.GetAttrString("datetime")
+	defer _type_dt.DecRef()
+	_func_now := _type_dt.GetAttrString("now")
+	// defer _func_now.DecRef()
+	fmt.Println(py.PyCallable_Check(_func_now)) // true
 
-	_now := _nowfunc.CallObject(nil) // call now funcution
+	_now := _func_now.CallObject(nil) // call now funcution
 	defer _now.DecRef()
 	fmt.Println(py.PyNumber_Check(_now))           // false, it's type is datetime.datetime class
 	fmt.Println(_now.HasAttrString("microsecond")) // true
@@ -130,50 +132,65 @@ print("Path.home: ", Path.home())
 	fmt.Println(_now.Str())  // 2022-06-09 09:52:33.879300
 	fmt.Println(_now.Type()) // <class 'datetime.datetime'>
 
-	fmt.Println("====== Understand PyImport_GetModule & PyImport_AddModule")
-	_dtgm := py.PyImport_GetModule("datetime")
-	_dtam := py.PyImport_AddModule("datetime")
-	fmt.Println(_dtim) // 指针
-	fmt.Println(_dtgm) // 指针
-	fmt.Println(_dtam) // 指针，dtim == dtgm == dtam
+	fmt.Println("====== Try PyImport_GetModule & PyImport_AddModule")
+	_mod_dt_get := py.PyImport_GetModule("datetime")
+	_mod_dt_add := py.PyImport_AddModule("datetime")
+	fmt.Println(_mod_dt)     // 指针
+	fmt.Println(_mod_dt_get) // 指针
+	fmt.Println(_mod_dt_add) // _mod_dt == _mod_dt_get == _mod_dt_add
 
 	_mod := py.PyImport_GetModule("math")
 	if _mod == nil {
-		fmt.Println("Module do not imported")
+		py.PyErr_Occurred()
+		fmt.Println("Module math can not imported")
 	} else {
 		fmt.Println(py.PyCallable_Check(_mod))       // false
 		fmt.Println(_mod.HasAttrString("pi"))        // true
 		fmt.Println(_mod.GetAttrString("pi").Repr()) // 3.14...
 	}
 
-	_mod = py.PyImport_AddModule("random")
+	_mod = py.PyImport_ImportModule("random")
 	// defer _mod.DecRef() // AddModule 的是借用，不需要自己维护指针
 	if _mod == nil {
-		fmt.Println("Module can not added")
+		py.PyErr_Occurred()
+		fmt.Println("Module random can not added")
 	} else {
 		fmt.Println(py.PyCallable_Check(_mod))    // false
 		fmt.Println(_mod.HasAttrString("random")) // true
 		_v := _mod.CallMethod("random")
-		defer _v.DecRef()
-		fmt.Println(_v.Repr()) // 0.xxx....
+		if _v == nil {
+			py.PyErr_Occurred()
+		} else {
+			if !py.Version_Check("3.10") {
+				defer _v.DecRef()
+			}
+			fmt.Println(_v.Repr()) // 0.xxx....
+		}
 	}
 
-	fmt.Println("====== Understand PyImport from a file")
+	fmt.Println("====== Try PyImport from a file")
 	// 下面不生效，原因：
 	// PyImport_ImportModule(): 只会 import 已经在 sys.path 路径下的 *.py 文件
 	// 文档里说的仅能使用绝对路径，不是文件的绝对路径，而是module的(绝对:x.y,相对:..x.y)
 	// _gpio := py.PyImport_ImportModule("/data/kevin/workspace/kproject/imes/iMES-app/testcase/python/test_gpio.py")
 	// defer _gpio.DecRef()
 	// 所以封装了下面函数:
-	// py.PyImport_ImportFile("./testcase/python/test_gpio.py")
+	_mod_gpio := py.PyImport_ImportFile("./testcase/python/test_gpio.py")
+	if _mod_gpio == nil {
+		fmt.Println("Module test_gpio can not imported from file")
+	} else {
+		fmt.Println(_mod_gpio.Name())
+		py.PyRun_SimpleString(`print(sys.modules["test_gpio"])`)
+	}
 
-	fmt.Println("====== Understand PyXXX_Check")
+	fmt.Println("====== Try PyXXX_Check")
 	fmt.Println("Is PyImport_GetModuleDict's output dict type? - ", py.PyDict_Check(py.PyImport_GetModuleDict())) // true
+
+	fmt.Println("Python version: ", py.Py_GetVersion())
+
 	// python3.7 之后已废弃
 	// _tstate := C.PyGILState_GetThisThreadState()
 	// C.PyEval_ReleaseThread(_tstate)
-
-	fmt.Println("Python version: ", py.Py_GetVersion())
 
 	// Py_Initialize() 会占用 GIL，此处不放弃，其他地方抢占不到。
 	py.PyEval_SaveThread()
