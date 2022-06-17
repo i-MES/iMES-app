@@ -3,9 +3,10 @@ package testset
 import (
 	"context"
 	"fmt"
-	"runtime"
+	"strconv"
 
 	py "github.com/i-mes/imes-app/backend/python"
+	"github.com/i-mes/imes-app/backend/utils"
 	wails "github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
@@ -20,18 +21,27 @@ type TestGroup struct {
 }
 
 func (tg *TestGroup) Run(ctx context.Context) {
-	runtime.LockOSThread()
-	defer runtime.UnlockOSThread()
+	// 上锁 goroutine —— 似乎并不需要
+	// runtime.LockOSThread()
+	// defer runtime.UnlockOSThread()
+
+	// 上锁 python 解释器线程
+	_gil := py.PyGILState_Ensure()
+	defer py.PyGILState_Release(_gil)
+	wails.LogDebug(ctx, "Get Python GIL lock")
+	// debug info
 	wails.LogDebug(ctx, "--------- start testgroup "+tg.Title)
-	wails.LogTrace(ctx, fmt.Sprint(tg))
+	wails.LogDebug(ctx, "go process id: "+strconv.Itoa(utils.GetProcessId()))
+	wails.LogDebug(ctx, "go threading id: "+strconv.Itoa(utils.GetThreadId()))
+	py.LogProcessId()
+	py.LogThreadId()     // 与 go threading id 相同
+	py.LogInfo(tg.Title) // 其中的 threading id 与上面 2 个不同
 
 	if !py.Py_IsInitialized() {
 		py.Py_Initialize()
 	}
-	_gil := py.PyGILState_Ensure()
-	defer py.PyGILState_Release(_gil)
-	wails.LogDebug(ctx, "Get Python GIL lock")
 
+	// 导入 py 脚本
 	_mod := py.PyImport_ImportFile(tg.FileName)
 	if _mod == nil {
 		wails.LogError(ctx, "import module error")
@@ -42,6 +52,8 @@ func (tg *TestGroup) Run(ctx context.Context) {
 
 	wails.LogDebug(ctx,
 		fmt.Sprintf("Does module %s has attr %s : %t", _mod.Name(), tg.Title, _mod.HasAttrString(tg.ClassName)))
+
+	// Py3 C-API 使用 PyObject_CallMethod 实例化 class
 	_class := _mod.CallMethod(tg.ClassName)
 	if _class != nil {
 		wails.LogDebug(ctx, _class.Repr())
@@ -49,8 +61,9 @@ func (tg *TestGroup) Run(ctx context.Context) {
 		for _, ti := range tg.TestItems {
 			wails.LogDebug(ctx, "------- start testitem "+ti.FuncName)
 			_ret := _class.CallMethod(ti.FuncName)
+			py.LogInfo(ti.FuncName)
 			if _ret == nil {
-				py.PyErr_Occurred()
+				py.PyErr_Print()
 				wails.LogError(ctx, fmt.Sprintf("Run TI Error: %s-%s", tg.ClassName, ti.FuncName))
 				EmitTestItemLog(ctx, false, "NG")
 			} else {
@@ -59,7 +72,7 @@ func (tg *TestGroup) Run(ctx context.Context) {
 			}
 		}
 	} else {
-		py.PyErr_Occurred()
+		py.PyErr_Print()
 		wails.LogError(ctx, "--- can not get "+tg.ClassName)
 	}
 }
