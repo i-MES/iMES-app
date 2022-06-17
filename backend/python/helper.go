@@ -25,14 +25,49 @@ func Version_Check(ver string) bool {
 	return false
 }
 
-func PyErr_Occurred() string {
+// 打印 python 中的 stderr
+func PyErr_Print() string {
 	errstr := ""
 	if err := C.PyErr_Occurred(); togo(err) != nil {
 		fmt.Println("------ python exception ------")
+		// sys.stdout = io.StringIO() // 修改 stdout 为 StringIO 实例
+		// sys.stderr = io.StringIO()
 		C.PyErr_Print()
+		// errstr := sys.stderr.getvalue() // 读出 stdout 的错误打印
+		// sys.stdout.close()
+		// sys.stderr.close()
 		fmt.Println("------")
 		fmt.Println("sys.path: ", PyImport_GetModule("sys").GetAttrString("path").Repr())
 		fmt.Println("------ end ------")
 	}
 	return errstr
+}
+
+func InitLog() {
+	py := `
+from logging import getLogger, getLevelName, Formatter, StreamHandler
+
+log = getLogger()
+log.setLevel(getLevelName('INFO'))
+log_formatter = Formatter("%(asctime)s [%(process)d] [%(thread)d] [%(levelname)s] %(name)s: %(message)s")
+
+console_handler = StreamHandler()
+console_handler.setFormatter(log_formatter)
+log.addHandler(console_handler)
+
+log.info("Set Python Log")
+`
+	PyRun_SimpleString(py)
+}
+
+func LogInfo(msg string) {
+	PyRun_SimpleString(fmt.Sprintf("getLogger().info('%s: ')", msg))
+}
+
+func LogProcessId() {
+	PyRun_SimpleString("print('Python process id: ', os.getpid())")
+}
+
+func LogThreadId() {
+	PyRun_SimpleString("print('Python threading id: ', threading.current_thread().native_id)")
 }

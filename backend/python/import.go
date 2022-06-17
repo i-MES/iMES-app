@@ -116,7 +116,7 @@ func PyImport_ImportFile(filename string) *PyObject {
 		// _mod = PyImport_AddModule(f) // Error! 只会添加一个 empty 的
 	}
 	if _mod == nil {
-		PyErr_Occurred()
+		PyErr_Print()
 		fmt.Println(filename)
 	}
 	// return PyImport_GetModule(f)

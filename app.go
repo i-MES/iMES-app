@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strconv"
+
+	"github.com/i-mes/imes-app/backend/utils"
 
 	backend "github.com/i-mes/imes-app/backend"
 	py "github.com/i-mes/imes-app/backend/python"
@@ -15,8 +18,9 @@ import (
 
 // App struct
 type App struct {
-	ctx context.Context
-	api *backend.Api
+	ctx         context.Context
+	api         *backend.Api
+	threadState *py.PyThreadState
 }
 
 // NewApp creates a new App application struct
@@ -56,8 +60,10 @@ func (a *App) startup(ctx context.Context) {
 	} else {
 		wails.LogSetLogLevel(a.ctx, logger.INFO)
 	}
+	utils.InitPlatform(envInfo.Platform, envInfo.Arch)
 	wails.LogInfo(a.ctx, envInfo.Platform)
 	wails.LogInfo(a.ctx, envInfo.Arch)
+	wails.LogInfo(ctx, strconv.Itoa(utils.GetProcessId()))
 	wd, _ := os.Getwd()
 	wails.LogInfo(a.ctx, wd)
 
@@ -70,7 +76,9 @@ func (a *App) startup(ctx context.Context) {
 
 	// ===== CPython 高层接口 =====
 	fmt.Println("=========== Try Python High Level C API")
+	py.PyRun_SimpleString("import os")
 	py.PyRun_SimpleString("import sys")
+	py.PyRun_SimpleString("import threading")
 	py.PyRun_SimpleString("from pathlib import Path")
 	// sys.modules: 已 loaded 到内存的 module
 	// 建议不要直接使用 sys.modules,而是 copy 后使用
@@ -100,6 +108,12 @@ print("Path.home: ", Path.home())
 	// PyRun_SimpleString("import xxx") -- 才会同时生效到 sys.modules & dir()
 	// PyImport_AddModule -- 不会 load 和 import，会检查 sys.modules 中是否有，有则拿出，没有创建个 empty 的。
 	// 这逻辑也没谁了，太 TM 让人 emo 了。
+	// 文档中有一段：
+	// module = PyImport_ImportModule("<modulename>");
+	// 如果模块尚未被导入（即它还不存在于 sys.modules 中），这会初始化该模块；否则它只是简单地返回 sys.modules["<modulename>"] 的值。
+	// 请注意它并不会将模块加入任何命名空间 —— 它只是确保模块被初始化并存在于 sys.modules 中。
+	// 之后你就可以通过如下方式来访问模块的属性（即模块中定义的任何名称）:
+	// attr = PyObject_GetAttrString(module, "<attrname>");
 
 	fmt.Println("====== Try PyImport_ImportModule")
 	_mod_dt := py.PyImport_ImportModule("datetime")
@@ -141,7 +155,7 @@ print("Path.home: ", Path.home())
 
 	_mod := py.PyImport_GetModule("math")
 	if _mod == nil {
-		py.PyErr_Occurred()
+		py.PyErr_Print()
 		fmt.Println("Module math can not imported")
 	} else {
 		fmt.Println(py.PyCallable_Check(_mod))       // false
@@ -152,14 +166,14 @@ print("Path.home: ", Path.home())
 	_mod = py.PyImport_ImportModule("random")
 	// defer _mod.DecRef() // AddModule 的是借用，不需要自己维护指针
 	if _mod == nil {
-		py.PyErr_Occurred()
+		py.PyErr_Print()
 		fmt.Println("Module random can not added")
 	} else {
 		fmt.Println(py.PyCallable_Check(_mod))    // false
 		fmt.Println(_mod.HasAttrString("random")) // true
 		_v := _mod.CallMethod("random")
 		if _v == nil {
-			py.PyErr_Occurred()
+			py.PyErr_Print()
 		} else {
 			if !py.Version_Check("3.10") {
 				defer _v.DecRef()
@@ -188,19 +202,19 @@ print("Path.home: ", Path.home())
 
 	fmt.Println("Python version: ", py.Py_GetVersion())
 
+	py.InitLog()
+
 	// python3.7 之后已废弃
 	// _tstate := C.PyGILState_GetThisThreadState()
 	// C.PyEval_ReleaseThread(_tstate)
 
 	// Py_Initialize() 会占用 GIL，此处不放弃，其他地方抢占不到。
-	py.PyEval_SaveThread()
+	a.threadState = py.PyEval_SaveThread()
 }
 
 // domReady is called after the front-end dom has been loaded
 // domReady 在前端Dom加载完毕后调用
 func (a *App) domReady(ctx context.Context) {
-	// Add your action here
-	// 在这里添加你的操作
 }
 
 // beforeClose is called when the application is about to quit,
@@ -210,6 +224,7 @@ func (a *App) domReady(ctx context.Context) {
 // beforeClose在单击窗口关闭按钮或调用runtime.Quit即将退出应用程序时被调用.
 // 返回 true 将导致应用程序继续，false 将继续正常关闭。
 func (a *App) beforeClose(ctx context.Context) (prevent bool) {
+	py.PyEval_RestoreThread(a.threadState) // 貌似也没啥意义了哦 :)
 	py.Py_Finalize()
 	return false
 }
