@@ -46,7 +46,7 @@ export const useBaseStore = defineStore('imesBaseStore', {
   state: (): TGlobalState => {
     return {
       sysInfo: { buildtype: '', platform: '', arch: '' },
-      defaultRoute: 'test',
+      defaultRoute: 'home',
       appTheme: 'dark',
       appBarHeight: 30,
       appStatusBar: {},

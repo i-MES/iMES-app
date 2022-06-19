@@ -6,8 +6,6 @@ import "C"
 import (
 	"path/filepath"
 	"runtime"
-
-	"golang.org/x/sys/unix"
 )
 
 func GetAppPath() string {
@@ -38,7 +36,8 @@ func GetProcessId() int {
 
 func GetThreadId() int {
 	if _platform == "linux" {
-		return unix.Gettid()
+		// return unix.Gettid()
+		return 0
 	}
 	if _platform == "windows" {
 		// var user32 *syscall.DLL

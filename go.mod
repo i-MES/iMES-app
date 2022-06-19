@@ -5,7 +5,6 @@ go 1.17
 require (
 	github.com/json-iterator/go v1.1.12
 	github.com/wailsapp/wails/v2 v2.0.0-beta.37
-	golang.org/x/sys v0.0.0-20220114195835-da31bd327af9
 )
 
 require (
@@ -31,6 +30,7 @@ require (
 	github.com/wailsapp/mimetype v1.4.1 // indirect
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5 // indirect
 	golang.org/x/net v0.0.0-20211015210444-4f30a5c0130f // indirect
+	golang.org/x/sys v0.0.0-20220114195835-da31bd327af9 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	gopkg.in/yaml.v3 v3.0.0 // indirect
 )

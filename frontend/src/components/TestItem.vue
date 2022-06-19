@@ -41,7 +41,7 @@
 <script lang="ts" setup>
 import { ref, onMounted, watch, onBeforeUnmount } from 'vue'
 import { useBaseStore } from '../stores/index'
-import { TestGroupStart, TestItemStart } from '../../wailsjs/go/imes/Api'
+import { TestGroupStart } from '../../wailsjs/go/imes/Api'
 const store = useBaseStore()
 const activeTab = ref(store.activedTestEntityIp)
 // const props = withDefaults(
