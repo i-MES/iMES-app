@@ -27,12 +27,12 @@
 
       <!-- 左侧 APP 导航栏 -->
       <v-navigation-drawer v-model="onToggleMenu" temporar rail expand-on-hover>
-        <v-list>
+        <v-list :selected="listSelected" nav>
           <v-list-subheader class="h3">{{ t('nav.mainmenu') }}</v-list-subheader>
           <v-list-item v-for="(menu, i) in router.getRoutes().sort((a, b) => {
             return (a ? a.meta.sort as number : 0) - (b ? b.meta.sort as number : 0);
           })" :key="i" :value="menu" active-color="primary" density="comfortable"
-            :to="menu.path" @click="onclickMenuListItem(menu.meta.icon)">
+            :to="menu.path" @click="onclickMenuListItem()">
             <v-list-item-avatar start>
               <v-icon
                 :icon="menu.meta.icon ? menu.meta.icon as string : 'mid-arrow-all'">
@@ -114,11 +114,9 @@ const onclickOpenGithub = () => {
 const onToggleMenu = ref(true)
 const disableToggleMore = ref(true)
 const activeMenuIcon = ref('mdi-home')
-const onclickMenuListItem = (val: string | unknown) => {
-  if (val) {
-    // console.log(val);
-    activeMenuIcon.value = val as string
-  }
+const listSelected = ref([])
+const onclickMenuListItem = () => {
+  console.log('-0-0-', listSelected.value)
 }
 watch(
   () => route.path,
@@ -131,6 +129,13 @@ watch(
       disableToggleMore.value = true
       console.log('disableToggleMore watch:', newPath, 'true')
     }
+  }
+)
+
+watch(
+  () => route.meta.icon,
+  (newIcon) => {
+    activeMenuIcon.value = newIcon
   }
 )
 

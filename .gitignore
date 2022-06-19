@@ -6,4 +6,3 @@ package-lock.json
 package.json.md5
 .vim.*
 *.pyc
-yarn.lock

@@ -1,11 +1,23 @@
 #!/bin/sh
 
+un=`uname -s`
+os="unknown"
+if [ $un == "Darwin" ];then
+	os="macos"
+elif [ $un == "Linux" ];then
+	os="linux"
+elif [ $un == "windows" ];then 
+	os="windows"
+elif [ $un == "MINGW" ];then 
+	os="windows"
+fi
+
 # 1. 准备工作
 #     build python in pyenv:
 #     env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install -v 3.y.z
 
 # 2. 查找 pyenv 中有共享库的 python 版本，并检查入参合法性
-vers=`find $HOME/.pyenv/versions -name "libpython3.so"| \
+vers=`find $HOME/.pyenv/versions -name "libpython3.*[so|dylib]"| \
       awk -F'versions/3.' '{print "3."$2}'| \
       awk -F'/' '{print $1}' | sort -t. -n -k2`
 
@@ -34,9 +46,17 @@ echo $x $y $z
 # 3. 配置 pkg-config pc file
 #    (A) 在 /usr/lib/x86_64-linux-gnu/pkgconfig/ 创建指定 pc 文件的链接
 #    (B) 设置 PKG_CONFIG_PATH 环境变量 —— 存在多个 python3-embed.pc 的问题
-sudo ln -sf $HOME/.pyenv/versions/${1}/lib/pkgconfig/python-$x.$y-embed.pc \
-            /usr/lib/x86_64-linux-gnu/pkgconfig/python3-embed.pc
-# ls -l /usr/lib/x86_64-linux-gnu/pkgconfig/python3-embed.pc
+pkgdir="."
+if [ $os == "linux" ];then
+pkgdir=/usr/lib/x86_64-linux-gnu/pkgconfig
+elif [ $os == "macos" ];then
+pkgdir=/usr/local/lib/pkgconfig
+else
+echo can not find pkgconfig path
+exit 1
+fi
+
+sudo ln -sf $HOME/.pyenv/versions/${1}/lib/pkgconfig/python-$x.$y-embed.pc $pkgdir/python3-embed.pc
 go clean --cache
 echo New python pkg-config config:
 echo `pkg-config --libs python3-embed`

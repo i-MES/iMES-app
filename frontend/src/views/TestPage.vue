@@ -81,7 +81,7 @@ const zoomOut = () => {
   // console.log(defCols.value)
 }
 const zoomIn = () => {
-  defCols.value = (defCols.value + 1 > 6) ? 6 : defCols.value + 1
+  defCols.value = (defCols.value + 1 > 12) ? 12 : defCols.value + 1
   // console.log(defCols.value)
 }
 
