@@ -6,7 +6,7 @@
         <v-spacer></v-spacer>
         <v-text-field hide-details append-icon="mdi-magnify"> </v-text-field>
         <v-btn icon="mdi-upload-outline"
-          @click="logHeight + 50 > (store.availableHeight - store.toolbarheight) ? (logHeight = store.availableHeight - store.toolbarheight) : logHeight += 50">
+          @click="logHeight + 50 > (store.mainWindowHeight - store.toolbarheight) ? (logHeight = store.mainWindowHeight - store.toolbarheight) : logHeight += 50">
         </v-btn>
         <v-btn icon="mdi-download-outline"
           @click="logHeight - 50 < 0 ? (logHeight = 0) : (logHeight -= 50)">
@@ -47,7 +47,7 @@ import { useI18n } from 'vue-i18n'
 import { DateTime } from 'luxon'
 
 // const props = defineProps<{
-//   availableHeight: number
+//   mainWindowHeight: number
 // }>()
 const { t } = useI18n({ useScope: 'global' })
 const store = useBaseStore()
@@ -61,7 +61,7 @@ const onclickMax = () => {
   if (!logHeightMaxed.value) {
     // max log window
     logHeightBak.value = logHeight.value
-    logHeight.value = store.availableHeight - store.toolbarheight
+    logHeight.value = store.mainWindowHeight - store.toolbarheight
     pinBak.value = pin.value
     pin.value = true
   } else {

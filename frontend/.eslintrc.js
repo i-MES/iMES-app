@@ -31,7 +31,8 @@ module.exports = {
     withDefaults: 'readonly',
   },
   'rules': {
-    'semi': ['error', 'never'],
-    'quotes': ['error', 'single']
-  }
+    'semi': ['warn', 'never'],
+    'quotes': ['error', 'single'],
+    'vue/no-v-model-argument': 'off',
+  },
 }

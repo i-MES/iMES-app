@@ -10,7 +10,10 @@
     "user": "用户",
     "settings": "配置",
     "about": "关于",
-    "loadconfig": "加载配置"
+    "foobar": "试验",
+    "loadconfig": "加载配置",
+    "production": "产品",
+    "stage": "工序"
   },
   "languages": {
     "en": "En",

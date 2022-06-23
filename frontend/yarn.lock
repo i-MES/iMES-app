@@ -2478,6 +2478,11 @@ vue-router@^4.0.12:
   dependencies:
     "@vue/devtools-api" "^6.0.0"
 
+vue-slicksort@^2.0.0-alpha.5:
+  version "2.0.0-alpha.5"
+  resolved "https://registry.npmmirror.com/vue-slicksort/-/vue-slicksort-2.0.0-alpha.5.tgz#b1c09ed1882105001b1ea5f7fea0e81efadf3c70"
+  integrity sha512-OETVkNwC/w7nfW/5xKl5wnvuKYG7Ml+lFOxbcqo0ETpcgNv30e/+rkwaXakb6PVkpr+v+1jbKP8nbkYObtyooQ==
+
 vue-tsc@^0.28.10:
   version "0.28.10"
   resolved "https://registry.npmmirror.com/vue-tsc/-/vue-tsc-0.28.10.tgz#2fc0154537bef5004e86002b117758af4b2b066c"

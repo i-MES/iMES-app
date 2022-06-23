@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 un=`uname -s`
 os="unknown"
@@ -66,12 +66,14 @@ echo `pkg-config --libs python3-embed`
 #       find ~/.pyenv/versions -name "libpython*.so" |xargs -I{} sh -c 'sudo ln -s {} /usr/lib/x86_64-linux-gnu/'
 #       ln -s $HOME/.pyenv/versions/${1}/lib/libpython* /usr/lib/x86_64-linux-gnu/
 #    (B) 提示用户设置 LD_LIBRARY_PATH —— 适合 dev 环境
-echo Run
 cmd="LD_LIBRARY_PATH=$HOME/.pyenv/versions/${1}/lib"
-echo $cmd
-type xclip >/dev/null 2>&1 && echo $cmd |xclip -in -selection clipboard && echo "已拷贝到粘贴板，请复制到 wails 窗口"
+echo "===== if you use libpythonX.Y.so(such as: wails), you need:"
+cped=""
+type xclip >/dev/null 2>&1 && echo $cmd |xclip -in -selection clipboard && cped=" # 已拷贝到粘贴板"
+echo $cmd $cped
 
 # 5. Tips
-echo "you may need"
-echo "  pyenv shell $1"
-echo "  pip install requirement package"
+echo "===== if you run python bin file(such as: terminal), you need:"
+echo "pyenv shell $1"
+echo "===== please check:"
+echo "pip install <requirement package(such as: pytest)>"

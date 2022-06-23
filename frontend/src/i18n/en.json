@@ -10,7 +10,10 @@
     "user": "User",
     "settings": "Settings",
     "about": "About",
-    "loadconfig": "Load Config"
+    "foobar": "FooBar",
+    "loadconfig": "Load Config",
+    "production": "Production",
+    "stage": "Stage"
   },
   "languages": {
     "en": "En",

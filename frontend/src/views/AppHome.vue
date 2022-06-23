@@ -2,20 +2,19 @@
   <div>
     <app-logo :msg="t('homepage.welcome')" logoheight="250px" />
     <v-container>
-      <v-row></v-row>
-      <v-row>
-        <v-col cols="4">
+      <v-row justify="center">
+        <v-col cols="4" xl="2">
           <v-btn block flat variant="outlined" color="primary" height="80px"
-            @click="onclickJump('test')">
-            测试</v-btn>
+            @click="router.push({ name: 'test' })">
+            {{ t("nav.test") }}</v-btn>
         </v-col>
-        <v-col cols="4">
+        <v-col cols="4" xl="2">
           <v-btn block flat variant="outlined" color="primary" height="80px"
-            @click="onclickJump('dashboard')">看板</v-btn>
+            @click="router.push({ name: 'dashboard' })">{{ t('nav.dashboard') }}</v-btn>
         </v-col>
-        <v-col cols="4">
+        <v-col cols="4" xl="2">
           <v-btn block flat variant="outlined" color="primary" height="80px"
-            @click="onclickJump('settings')">配置</v-btn>
+            @click="router.push({ name: 'settings' })">{{ t('nav.settings') }}</v-btn>
         </v-col>
       </v-row>
     </v-container>
@@ -28,12 +27,6 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 const router = useRouter()
 const { t } = useI18n({ useScope: 'global' })
-
-const onclickJump = (target: string) => {
-  router.push({
-    name: target,
-  })
-}
 </script>
 
 
