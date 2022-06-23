@@ -12,6 +12,10 @@
 
 html {
   font-size: 1rem !important;
+  user-select: none;  
+  -webkit-user-seletct: none;
+  -moz-user-seletct: none;
+  -ms-user-seletct: none;
 }
 
 .result {
@@ -55,4 +59,9 @@ html {
 .input-box .input:focus {
     border: none;
     background-color: rgba(255, 255, 255, 1);
+}
+
+/* https://github.com/Jexordexan/vue-slicksort/issues/77 */
+.slicksort-helper {
+  z-index: 9999
 }

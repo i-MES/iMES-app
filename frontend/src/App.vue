@@ -60,9 +60,12 @@
       </v-navigation-drawer>
 
       <!-- 主窗口 -->
-      <v-main>
-        <router-view />
-      </v-main>
+      <v-sheet class="ma-0 pa-0 overflow-y-auto " :height="store.mainWindowHeight"
+        :color="store.appTheme == 'dark' ? '#101010' : 'grey-lighten-4'">
+        <v-main :height="store.mainWindowHeight">
+          <router-view />
+        </v-main>
+      </v-sheet>
     </v-app>
   </v-layout>
 </template>
@@ -171,7 +174,7 @@ onMounted(() => {
     }
   })
 
-  store.availableHeight = display.height.value - store.appBarHeight
+  store.mainWindowHeight = display.height.value - store.appBarHeight
 
   // store.initConfig()
   // 加载已保存的数据
@@ -209,8 +212,8 @@ const breakpoint = () => {
 }
 breakpoint()
 window.onresize = () => {
-  store.availableHeight = display.height.value - store.appBarHeight
-  console.log('store.availableHeight changed: ', store.availableHeight)
+  store.mainWindowHeight = display.height.value - store.appBarHeight
+  console.log('store.mainWindowHeight changed: ', store.mainWindowHeight)
   store.appStatusBar.width = display.width.value
   breakpoint()
 }

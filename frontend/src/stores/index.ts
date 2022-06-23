@@ -26,7 +26,7 @@ export type TGlobalState = {
   appConfDefaultLang: string,   // 默认语言
   toolbarheight: number,
   logHeight: number,
-  availableHeight: number,
+  mainWindowHeight: number,
   userStatus: UserStatus,
   appStatus: AppStatus,
   testProductions: imes.TestProduction[], // 所有产品
@@ -54,7 +54,7 @@ export const useBaseStore = defineStore('imesBaseStore', {
       appConfDefaultLang: '1',
       toolbarheight: 38,
       logHeight: 0,
-      availableHeight: 0,
+      mainWindowHeight: 0,
       userStatus: UserStatus.login,
       appStatus: AppStatus.init,
       testProductions: [],

@@ -4,6 +4,7 @@ import UserManage from '../views/UserManage.vue'
 import TestPage from '../views/TestPage.vue'
 import AppSettings from '../views/AppSettings.vue'
 import DashBoard from '../views/DashBoard.vue'
+import FooBar from '../views/FooBar.vue'
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -64,6 +65,15 @@ const routes: Array<RouteRecordRaw> = [
       sort: 6,
       icon: 'mdi-flag'
     }
+  },
+  {
+    path: '/foobar',
+    name: 'foobar',
+    component: FooBar,
+    meta: {
+      sort: 7,
+      icon: 'mdi-test-tube'
+    },
   },
 ]
 

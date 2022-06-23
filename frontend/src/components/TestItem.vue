@@ -11,7 +11,7 @@
         <v-container class="fill-height width-100 mt-10">
           <v-row>
             <v-col v-for="tg in store.testGroups" :key="tg.id" cols="4">
-              <v-sheet
+              <v-sheet onselectstart="return flase"
                 :color="store.appTheme == 'dark' ? 'blue-grey-darken-2' : 'blue-grey-lighten-3'">
                 <v-toolbar height="20">
                   <v-toolbar-title>{{ tg.title }}</v-toolbar-title>
