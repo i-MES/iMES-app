@@ -1,5 +1,7 @@
 <template>
-  <div>
+  <v-card class="ma-0">
+
+    <!-- 顶部 toolbar -->
     <v-toolbar class="entity-toolbar" :height="store.toolbarheight">
       <v-row class="ma-0 pa-0" align="center" align-content="center">
         <v-col cols="3">
@@ -23,26 +25,30 @@
         </v-btn>
       </template>
     </v-toolbar>
-    <v-sheet class="ma-0 pt-10 overflow-y-auto"
+
+    <!-- TestSet 主窗口 -->
+    <v-sheet class="ma-0 pt-5 overflow-y-auto"
       :height="store.mainWindowHeight - store.logHeight - store.toolbarheight">
       <test-entity v-if="store.TEorTI" :defcols="defCols" />
-      <test-item v-else />
+      <test-set v-else />
     </v-sheet>
+
+    <!-- TestLog 可扩展窗口 -->
     <v-sheet class="ma-0 pa-0 overflow-y-auto"
       :height="store.toolbarheight + store.logHeight">
       <test-log />
     </v-sheet>
-  </div>
+  </v-card>
 </template>
 
 <script lang="ts" setup>
 import { reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useBaseStore } from '../stores/index'
-import TestItem from '../components/TestItem.vue'
+import TestSet from '../components/TestSet.vue'
 import TestEntity from '../components/TestEntity.vue'
 import TestLog from '../components/TestLog.vue'
-import AddEntity from '../components/public/AddEntity.vue'
+import AddEntity from '../components/forms/AddEntity.vue'
 
 const { t } = useI18n({ useScope: 'global' })
 const store = useBaseStore()

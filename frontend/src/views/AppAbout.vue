@@ -63,7 +63,9 @@
 <script lang="ts" setup>
 import { useI18n } from 'vue-i18n'
 import logo from '@/assets/images/logo.svg'
-import OpenLink from '../components/public/OpenLink.vue'
+
+// 已结通过 app.use() 注册，此处不再需要单独 import
+// import OpenLink from '../components/plugin/OpenLink.vue'
 
 const { t } = useI18n({ useScope: 'global' })
 

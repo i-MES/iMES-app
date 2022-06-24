@@ -60,12 +60,12 @@
       </v-navigation-drawer>
 
       <!-- 主窗口 -->
-      <v-sheet class="ma-0 pa-0 overflow-y-auto " :height="store.mainWindowHeight"
-        :color="store.appTheme == 'dark' ? '#101010' : 'grey-lighten-4'">
-        <v-main :height="store.mainWindowHeight">
+      <v-main>
+        <v-sheet class="ma-0 pa-0 overflow-y-auto " :height="store.mainWindowHeight"
+          :color="store.appTheme == 'dark' ? '#101010' : 'grey-lighten-4'">
           <router-view />
-        </v-main>
-      </v-sheet>
+        </v-sheet>
+      </v-main>
     </v-app>
   </v-layout>
 </template>
