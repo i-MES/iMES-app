@@ -16,7 +16,7 @@
           {{ ti.filename }}
         </v-expansion-panel-text>
         <div>
-          <v-progress-linear v-model="value" :buffer-value="bufferValue">
+          <v-progress-linear v-model="value" :indeterminate="running">
           </v-progress-linear>
         </div>
       </v-expansion-panel>
@@ -47,8 +47,8 @@ export default {
 <script lang="ts" setup>
 import { ref, watch, onBeforeUnmount } from 'vue'
 
-const value = ref(10)
-const bufferValue = ref(20)
+const value = ref(0)
+const running = ref(false)
 
 const interval = setInterval(() => {
   // value.value += Math.random() * (15 - 5) + 5;
