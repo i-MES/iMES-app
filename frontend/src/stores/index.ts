@@ -15,6 +15,21 @@ export enum AppStatus {
 export interface IAppStatusBar {
   [key: string]: number | string
 }
+enum TestStatus {
+  ready,
+  running,
+  passed,
+  failed
+}
+interface ITestStatus {
+  testGroupTitle: string,
+  testClassId: number,
+  testItemId: number,
+  status: TestStatus
+}
+interface ITestStatuses {
+  [entityId: number]: ITestStatus[]
+}
 
 export type TGlobalState = {
   sysInfo: main.SysInfo,
@@ -40,13 +55,14 @@ export type TGlobalState = {
   testitemsLogs: testset.TestItemLog[],
   addEntity: boolean,
   TEorTI: boolean,
+  testStatuses: ITestStatuses
 }
 
 export const useBaseStore = defineStore('imesBaseStore', {
   state: (): TGlobalState => {
     return {
       sysInfo: { buildtype: '', platform: '', arch: '' },
-      defaultRoute: 'test',
+      defaultRoute: 'home',
       appTheme: 'dark',
       appBarHeight: 30,
       appStatusBar: {},
@@ -67,7 +83,8 @@ export const useBaseStore = defineStore('imesBaseStore', {
       testGroups: [],
       testitemsLogs: [],
       addEntity: false,
-      TEorTI: true
+      TEorTI: true,
+      testStatuses: {}
     }
   },
   getters: {
