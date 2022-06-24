@@ -46,7 +46,7 @@ export const useBaseStore = defineStore('imesBaseStore', {
   state: (): TGlobalState => {
     return {
       sysInfo: { buildtype: '', platform: '', arch: '' },
-      defaultRoute: 'home',
+      defaultRoute: 'test',
       appTheme: 'dark',
       appBarHeight: 30,
       appStatusBar: {},
@@ -188,7 +188,7 @@ export const useBaseStore = defineStore('imesBaseStore', {
     },
     async syncTestSet() {
       // sync: 加载 & 去重 & 去脏 & 写回
-      api.LoadPythonTestSet().then((tgs) => {
+      api.LoadPythonTestGroup(false).then((tgs) => {
         if (tgs) {
           console.log(tgs)
           this.testGroups = tgs

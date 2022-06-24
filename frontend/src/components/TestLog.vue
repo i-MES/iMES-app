@@ -42,7 +42,7 @@
 <script lang="ts" setup>
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { useBaseStore } from '../stores/index'
-import { TestItemStart } from '../../wailsjs/go/imes/Api'
+// import { TestItemStart } from '../../wailsjs/go/imes/Api'
 import { useI18n } from 'vue-i18n'
 import { DateTime } from 'luxon'
 

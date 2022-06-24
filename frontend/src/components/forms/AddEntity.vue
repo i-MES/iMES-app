@@ -1,5 +1,5 @@
 <template>
-  <v-div>
+  <div>
     <v-dialog v-model="addEntity" persistent max-width="600px">
       <template v-slot:activator>
         <v-btn class="ma-auto" icon="mdi-creation" text @click="addEntity = true">
@@ -93,7 +93,7 @@
         </v-card-text>
       </v-card>
     </v-dialog>
-  </v-div>
+  </div>
 </template>
 
 <script lang="ts" setup>

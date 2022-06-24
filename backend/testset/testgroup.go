@@ -1,78 +1,101 @@
 package testset
 
 import (
+	"bufio"
 	"context"
 	"fmt"
-	"strconv"
-
-	py "github.com/i-mes/imes-app/backend/python"
-	"github.com/i-mes/imes-app/backend/utils"
-	wails "github.com/wailsapp/wails/v2/pkg/runtime"
+	"io"
+	"os"
+	"path"
+	"regexp"
 )
 
 // 测试组
 type TestGroup struct {
-	Id        int        `json:"id"`
-	Title     string     `json:"title"`
-	Desc      string     `json:"desc"`
-	FileName  string     `json:"filename"`
-	ClassName string     `json:"classname"`
-	TestItems []TestItem `json:"testItems"`
+	Title       string      `json:"title"`
+	Desc        string      `json:"desc"`
+	TestClasses []TestClass `json:"testclasses"`
 }
 
-func (tg *TestGroup) Run(ctx context.Context) {
-	// 上锁 goroutine —— 似乎并不需要
-	// runtime.LockOSThread()
-	// defer runtime.UnlockOSThread()
-
-	// 上锁 python 解释器线程
-	_gil := py.PyGILState_Ensure()
-	defer py.PyGILState_Release(_gil)
-	wails.LogDebug(ctx, "Get Python GIL lock")
-	// debug info
-	wails.LogDebug(ctx, "--------- start testgroup "+tg.Title)
-	wails.LogDebug(ctx, "go process id: "+strconv.Itoa(utils.GetProcessId()))
-	wails.LogDebug(ctx, "go threading id: "+strconv.Itoa(utils.GetThreadId()))
-	py.LogProcessId()
-	py.LogThreadId()     // 与 go threading id 相同
-	py.LogInfo(tg.Title) // 其中的 threading id 与上面 2 个不同
-
-	if !py.Py_IsInitialized() {
-		py.Py_Initialize()
+// 解析 Python 文件，提取 TestGroup
+// 对应关系：
+// TestGroup -- file.py
+// TestClass -- class Test_XXX
+// TestItem  -- func test_xxx
+func ParsePython(file string) TestGroup {
+	var err error
+	f, err := os.Open(file)
+	if err != nil {
+		panic(err)
 	}
-
-	// 导入 py 脚本
-	_mod := py.PyImport_ImportFile(tg.FileName)
-	if _mod == nil {
-		wails.LogError(ctx, "import module error")
-		return
-	} else {
-		defer _mod.DecRef()
-	}
-
-	wails.LogDebug(ctx,
-		fmt.Sprintf("Does module %s has attr %s : %t", _mod.Name(), tg.Title, _mod.HasAttrString(tg.ClassName)))
-
-	// Py3 C-API 使用 PyObject_CallMethod 实例化 class
-	_class := _mod.CallMethod(tg.ClassName)
-	if _class != nil {
-		wails.LogDebug(ctx, _class.Repr())
-		wails.LogDebug(ctx, _class.Dir())
-		for _, ti := range tg.TestItems {
-			wails.LogDebug(ctx, "------- start testitem "+ti.FuncName)
-			_ret := _class.CallMethod(ti.FuncName)
-			py.LogInfo(ti.FuncName)
-			if _ret == nil {
-				py.PyErr_Print()
-				wails.LogError(ctx, fmt.Sprintf("Run TI Error: %s-%s", tg.ClassName, ti.FuncName))
-				EmitTestItemLog(ctx, false, "NG")
-			} else {
-				wails.LogDebug(ctx, fmt.Sprintf("Run TI Pass: %s-%s", tg.ClassName, ti.FuncName))
-				EmitTestItemLog(ctx, true, "PASS")
-			}
+	defer f.Close()
+	r := bufio.NewReader(f)
+	validClass := regexp.MustCompile(`^class\ *(.*):`)
+	validFunc := regexp.MustCompile(`^\s*def (test_.*)\(`)
+	tcs := make([]TestClass, 0)
+	for {
+		line, err := r.ReadString('\n')
+		if err == io.EOF {
+			fmt.Println("EoF of", file)
+			break
+		} else if err != nil {
+			fmt.Printf("error reading file %s", err)
+			break
 		}
-	} else {
-		py.PyErr_Print()
-		wails.LogError(ctx, "--- can not get "+tg.ClassName)
+
+		cname := validClass.FindStringSubmatch(line)
+		if len(cname) > 1 {
+			fmt.Println("Match: ", cname[1])
+			tcs = append(tcs,
+				TestClass{1, cname[1], "", file, cname[1], make([]TestItem, 0)})
+			continue
+		}
+		fname := validFunc.FindStringSubmatch(line)
+		if len(fname) > 1 {
+			fmt.Println("Match: ", fname[1])
+			_l := len(tcs) - 1
+			tcs[_l].TestItems = append(tcs[_l].TestItems,
+				TestItem{fname[1], fname[1], file, fname[1], 0})
+		}
 	}
+	return TestGroup{path.Base(file), file, tcs}
+}
+
+// 每个路径对应1个 TestGroup
+func ParsePythons(filepaths []string) []TestGroup {
+	tgs := make([]TestGroup, 0)
+	// 默认
+	for _, fp := range filepaths {
+		tgs = append(tgs, ParsePython(fp))
+	}
+	fmt.Println("tgs len:", len(tgs))
+	return tgs
+}
+
+// 解析 go 文件，提取 TestGroup
+func ParseGolang(file string) error {
+	return nil
+}
+
+// 保存 TestGroup 信息
+func (tg *TestGroup) Save(ctx context.Context) {
+
+}
+
+// 在本地保存信息、网络保存信息、源码文件中寻找差异，并进行 merge
+func (tg *TestGroup) Merge(ctx context.Context) {
+
+}
+
+// 执行 TestGroup 内 TestClass 的测试，Group 内串行，Group 间并行
+func (tg *TestGroup) Run(ctx context.Context) {
+	for _, tc := range tg.TestClasses {
+		tc.Run(ctx)
+	}
+}
+
+func (tg *TestGroup) Pause(ctx context.Context) {
+}
+
+func (tg *TestGroup) Stop(ctx context.Context) {
 }

@@ -8,7 +8,7 @@ import en from './i18n/en.json'
 import vuetify from './plugins/vuetify'
 import { plugin as Slicksort } from 'vue-slicksort'
 // Register global common components
-import publicComponents from './components/public/'
+import omponentsPlugin from './components/plugin/'
 const i18n = createI18n({
   locale: 'zh-Hans',
   fallbackLocale: 'zh-Hans',
@@ -22,7 +22,7 @@ const pinia = createPinia()
 
 
 createApp(App)
-  .use(publicComponents)
+  .use(omponentsPlugin)
   .use(pinia)
   .use(router)
   .use(i18n)
