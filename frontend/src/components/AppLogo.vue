@@ -17,7 +17,8 @@
           <div v-show="show">
             <v-divider></v-divider>
             <v-card-text class="ma-auto pa-auto"> intelligent Manufacturing Execution
-              System
+              System<br />
+              专心服务中小微生产制造企业的 MES 系统
             </v-card-text>
           </div>
         </v-expand-transition>

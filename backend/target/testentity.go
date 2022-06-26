@@ -1,4 +1,4 @@
-package imes
+package target
 
 import (
 	"fmt"
@@ -11,24 +11,26 @@ var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 // 被测实体
 type TestEntity struct {
+	Id   string   `json:"id"`
 	Ip   []int    `json:"ip"`
 	Code string   `json:"code"` // 条码
 	Tags []string `json:"tags"`
 }
 
-func (a *Api) InitTestEntity() {
-	a.SaveTestEntity([]TestEntity{{
+func CreateTestEntityExample() {
+	SaveTestEntity([]TestEntity{{
+		Id:   utils.UUID(),
 		Ip:   []int{127, 0, 0, 1},
 		Code: "foobar123",
 		Tags: []string{"高端PC"},
 	}})
 }
-func (a *Api) SaveTestEntity(data []TestEntity) {
+func SaveTestEntity(data []TestEntity) {
 	_data := make(map[string]interface{})
 	_data["entity"] = data
 	utils.OutputConfigData(_data)
 }
-func (a *Api) LoadTestEntity() []TestEntity {
+func LoadTestEntity() []TestEntity {
 	var data []TestEntity
 	_data := []byte(json.Get(utils.InputConfigData("entity")).ToString())
 	err := json.Unmarshal(_data, &data)
@@ -38,7 +40,7 @@ func (a *Api) LoadTestEntity() []TestEntity {
 	return data
 }
 
-func (a *Api) ConnectTestEntity(ip []int) bool {
+func ConnectTestEntity(ip []int) bool {
 	if len(ip) == 4 {
 		fmt.Println("IP V4")
 	} else if len(ip) == 6 {

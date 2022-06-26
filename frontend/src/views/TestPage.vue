@@ -17,20 +17,22 @@
         </v-col>
       </v-row>
       <template v-slot:append>
-        <v-btn variant="text" @click="zoomOut" icon="mdi-magnify-minus-outline"></v-btn>
-        <v-btn variant="text" @click="zoomIn" icon="mdi-magnify-plus-outline"></v-btn>
+        <v-btn v-if="store.TEsNotTE" variant="text" @click="zoomOut"
+          icon="mdi-magnify-minus-outline"></v-btn>
+        <v-btn v-if="store.TEsNotTE" variant="text" @click="zoomIn"
+          icon="mdi-magnify-plus-outline"></v-btn>
         <add-entity />
         <v-btn variant="text" icon="mdi-view-module"
-          @click="store.TEorTI = !store.TEorTI">
+          @click="store.TEsNotTE = !store.TEsNotTE">
         </v-btn>
       </template>
     </v-toolbar>
 
     <!-- TestSet 主窗口 -->
-    <v-sheet class="ma-0 pt-5 overflow-y-auto"
+    <v-sheet class="ma-0 pt-10 overflow-y-auto"
       :height="store.mainWindowHeight - store.logHeight - store.toolbarheight">
-      <test-entity v-if="store.TEorTI" :defcols="defCols" />
-      <test-set v-else />
+      <test-entities v-if="store.TEsNotTE" :defcols="defCols" />
+      <test-entity v-else />
     </v-sheet>
 
     <!-- TestLog 可扩展窗口 -->
@@ -45,7 +47,7 @@
 import { reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useBaseStore } from '../stores/index'
-import TestSet from '../components/TestSet.vue'
+import TestEntities from '../components/TestEntities.vue'
 import TestEntity from '../components/TestEntity.vue'
 import TestLog from '../components/TestLog.vue'
 import AddEntity from '../components/forms/AddEntity.vue'
@@ -93,3 +95,13 @@ const zoomIn = () => {
 }
 
 </script>
+
+<style>
+.entity-toolbar {
+  top: 0;
+  position: absolute;
+  width: 100%;
+  /* opacity: 0.95; */
+  z-index: 10000;
+}
+</style>

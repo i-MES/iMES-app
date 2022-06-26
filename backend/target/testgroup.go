@@ -1,4 +1,4 @@
-package testset
+package target
 
 import (
 	"bufio"
@@ -8,21 +8,24 @@ import (
 	"os"
 	"path"
 	"regexp"
+
+	"github.com/google/uuid"
+	wails "github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 // 测试组
 type TestGroup struct {
+	Id          string      `json:"id"`
 	Title       string      `json:"title"`
 	Desc        string      `json:"desc"`
 	TestClasses []TestClass `json:"testclasses"`
 }
 
-// 解析 Python 文件，提取 TestGroup
+// 解析 Python 文件，提取 TestClass
 // 对应关系：
-// TestGroup -- file.py
 // TestClass -- class Test_XXX
 // TestItem  -- func test_xxx
-func ParsePython(file string) TestGroup {
+func ParsePython(file string) []TestClass {
 	var err error
 	f, err := os.Open(file)
 	if err != nil {
@@ -43,30 +46,52 @@ func ParsePython(file string) TestGroup {
 			break
 		}
 
+		// 匹配出 Class 名称
 		cname := validClass.FindStringSubmatch(line)
 		if len(cname) > 1 {
-			fmt.Println("Match: ", cname[1])
+			fmt.Println("Match class: ", cname[1])
+			_uuid, _ := uuid.NewUUID()
 			tcs = append(tcs,
-				TestClass{1, cname[1], "", file, cname[1], make([]TestItem, 0)})
+				TestClass{_uuid.String(), cname[1], "", file, cname[1], make([]TestItem, 0)})
 			continue
 		}
+
+		// 匹配出 Function 名称
 		fname := validFunc.FindStringSubmatch(line)
 		if len(fname) > 1 {
-			fmt.Println("Match: ", fname[1])
+			fmt.Println("Match function: ", fname[1])
 			_l := len(tcs) - 1
+			_uuid, _ := uuid.NewUUID()
 			tcs[_l].TestItems = append(tcs[_l].TestItems,
-				TestItem{fname[1], fname[1], file, fname[1], 0})
+				TestItem{_uuid.String(), fname[1], fname[1], file, fname[1], 0})
 		}
 	}
-	return TestGroup{path.Base(file), file, tcs}
+	return tcs
 }
 
-// 每个路径对应1个 TestGroup
-func ParsePythons(filepaths []string) []TestGroup {
+// strategy(策略)
+// 1. 所有 py 文件生成 1 个 TestGroup
+// 2. 每个 py 文件生成 1 个 TestGroup
+func ParsePythons(filepaths []string, strategy int) []TestGroup {
 	tgs := make([]TestGroup, 0)
-	// 默认
-	for _, fp := range filepaths {
-		tgs = append(tgs, ParsePython(fp))
+	if strategy == 1 {
+		if _uuid, err := uuid.NewUUID(); err == nil {
+			tg := TestGroup{_uuid.String(), "", "", make([]TestClass, 0)}
+			for _, fp := range filepaths {
+				tg.TestClasses = append(tg.TestClasses, ParsePython(fp)...)
+			}
+			tgs = append(tgs, tg)
+		} else {
+			fmt.Println("error uuid get: ", err)
+		}
+	} else if strategy == 2 {
+		for _, fp := range filepaths {
+			if _uuid, err := uuid.NewUUID(); err == nil {
+				tgs = append(tgs, TestGroup{_uuid.String(), path.Base(fp), fp, ParsePython(fp)})
+			} else {
+				fmt.Println("error uuid get: ", err)
+			}
+		}
 	}
 	fmt.Println("tgs len:", len(tgs))
 	return tgs
@@ -88,10 +113,11 @@ func (tg *TestGroup) Merge(ctx context.Context) {
 }
 
 // 执行 TestGroup 内 TestClass 的测试，Group 内串行，Group 间并行
-func (tg *TestGroup) Run(ctx context.Context) {
+func (tg *TestGroup) Run(ctx context.Context, teid string) {
 	for _, tc := range tg.TestClasses {
-		tc.Run(ctx)
+		tc.Run(ctx, teid, tg.Id)
 	}
+	wails.EventsEmit(ctx, "testgroupfinished", tg.Id)
 }
 
 func (tg *TestGroup) Pause(ctx context.Context) {
