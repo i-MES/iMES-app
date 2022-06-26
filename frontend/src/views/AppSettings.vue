@@ -122,18 +122,18 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
 import { useBaseStore } from '../stores/index'
-import { OpenFolder } from '../../wailsjs/go/imes/Api'
+import { OpenFolder, CreateTargetExample } from '../../wailsjs/go/imes/Api'
 const expand = ref(false)
 const store = useBaseStore()
 
 const items = [{ title: '模式 1' }, { title: '模式 2' }, { title: '模式 3' }]
 
 const selectConfigFolder = () => {
-  OpenFolder()
+  OpenFolder('')
 }
 
 const onclickInitConfigData = () => {
-  store.initConfig()
+  CreateTargetExample()
   expand.value = true
 }
 </script>

@@ -1,61 +1,53 @@
 <template>
-  <v-container class="fill-height width-100">
-    <v-row justify="center">
-      <v-col v-for="entity in store.testEntities" :key="entity.ip.toString()"
-        :cols="defcols">
-        <v-card :elevation="5" @click="onclickEntity(entity.ip.toString())"
-          :color="store.appTheme == 'dark' ? 'blue-grey-darken-2' : 'blue-grey-lighten-3'">
-          <!-- <v-card-avatar></v-card-avatar> -->
-          <template v-slot:title>{{ entity.ip.toString().replaceAll(',', '.')
-          }}</template>
-          <template v-slot:subtitle>code: {{ entity.code }}<br />tags:{{
-              entity.tags
-          }}</template>
-          <template v-slot:text>
-            <v-row>
-              <v-col cols="12">
-                状态：测试中……
-              </v-col>
-            </v-row>
-          </template>
-          <v-card-actions>
-          </v-card-actions>
-        </v-card>
+  <v-container>
+    <!-- <v-tabs class="sticky" centered v-model="activeTab" color="deep-purple-accent-4">
+      <v-tab v-for="e in store.testEntities" :key="e.ip.toString()"
+        :value="e.ip.toString()"> {{ e.ip.toString().replaceAll(',', '.') }}
+      </v-tab>
+    </v-tabs>
+    <v-window v-model="activeTab">
+      <v-window-item v-for="te in store.testEntities" :key="te.ip.toString()"
+        :value="te.ip.toString()"> -->
+    <!-- <v-container class="fill-height width-100 mt-10"> -->
+    <v-row>
+      <v-col v-for="(tg, idx) in store.testGroups" :key="tg.title"
+        :cols="12 / store.testGroups.length">
+        <test-group v-model:list="tg.testclasses" axis="y" group="tg" :distance="10"
+          helper-class="slicksort-helper" :tg="tg" :tgidx="idx">
+          <test-class v-for="(tc, i) in tg.testclasses" :key="tc.id" :index="i"
+            :teid="store.activedTestEntityId" :tgid="tg.id" :tc="tc" />
+        </test-group>
       </v-col>
     </v-row>
+    <!-- </v-container>
+      </v-window-item>
+    </v-window> -->
   </v-container>
 </template>
 
 <script lang="ts" setup>
+import { onMounted, } from 'vue'
 import { useBaseStore } from '../stores/index'
-import { useI18n } from 'vue-i18n'
-const { t } = useI18n({ useScope: 'global' })
+import TestGroup from './testset/TestGroup.vue'
+import TestClass from './testset/TestClass.vue'
+
 const store = useBaseStore()
+// const activeTab = ref(store.activedTestEntityId)
+// const props = withDefaults(
+//   defineProps<{
+//     entityId: string,
+//   }>(),
+//   {
+//     entityId: '127.0.0.1'
+//   }
+// )
 
-withDefaults(
-  defineProps<{
-    defcols: number,
-  }>(),
-  {
-    defcols: 3
-  }
-)
-
-const onclickEntity = (ip) => {
-  console.log(ip)
-  store.activedTestEntityIp = ip
-  store.TEorTI = false
-}
-
-
+onMounted(() => {
+  // 加载 TestGroup、TestClass、TestItem 数据
+  store.syncTestSet()
+  console.log('TestEntity onMounted: ')
+})
 </script>
 
 <style>
-.entity-toolbar {
-  top: 0;
-  position: absolute;
-  width: 100%;
-  /* opacity: 0.95; */
-  z-index: 1;
-}
 </style>

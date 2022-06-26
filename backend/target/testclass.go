@@ -1,8 +1,10 @@
-package testset
+package target
 
 import (
 	"context"
 	"fmt"
+	"path"
+	"runtime"
 	"strconv"
 
 	py "github.com/i-mes/imes-app/backend/python"
@@ -12,7 +14,7 @@ import (
 
 // 测试组
 type TestClass struct {
-	Id        int        `json:"id"`
+	Id        string     `json:"id"`
 	Title     string     `json:"title"`
 	Desc      string     `json:"desc"`
 	FileName  string     `json:"filename"`
@@ -20,10 +22,10 @@ type TestClass struct {
 	TestItems []TestItem `json:"testitems"`
 }
 
-func (tc *TestClass) Run(ctx context.Context) {
+func (tc *TestClass) RunPython(ctx context.Context, entityid string, groupid string) {
 	// 上锁 goroutine —— 似乎并不需要
-	// runtime.LockOSThread()
-	// defer runtime.UnlockOSThread()
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
 
 	// 上锁 python 解释器线程
 	_gil := py.PyGILState_Ensure()
@@ -60,16 +62,19 @@ func (tc *TestClass) Run(ctx context.Context) {
 		wails.LogDebug(ctx, _class.Dir())
 		for _, ti := range tc.TestItems {
 			wails.LogDebug(ctx, "------- start testitem "+ti.FuncName)
+			ti.EmitStatus(ctx, entityid, groupid, "started")
+			// 调用对象的方法，执行具体的测试项
 			_ret := _class.CallMethod(ti.FuncName)
 			py.LogInfo(ti.FuncName)
 			if _ret == nil {
 				py.PyErr_Print()
 				wails.LogError(ctx, fmt.Sprintf("Run TI Error: %s-%s", tc.ClassName, ti.FuncName))
-				EmitTestItemLog(ctx, false, "NG")
+				ti.EmitLog(ctx, entityid, groupid, false, "NG")
 			} else {
 				wails.LogDebug(ctx, fmt.Sprintf("Run TI Pass: %s-%s", tc.ClassName, ti.FuncName))
-				EmitTestItemLog(ctx, true, "PASS")
+				ti.EmitLog(ctx, entityid, groupid, true, "PASS")
 			}
+			ti.EmitStatus(ctx, entityid, groupid, "finished")
 		}
 	} else {
 		py.PyErr_Print()
@@ -77,6 +82,25 @@ func (tc *TestClass) Run(ctx context.Context) {
 	}
 }
 
+func (tc *TestClass) RunGo(ctx context.Context, entityid string, groupid string) {
+	// todo
+}
+
+func (tc *TestClass) Run(ctx context.Context, entityid string, groupid string) {
+	wails.LogInfo(ctx, entityid)
+	wails.LogInfo(ctx, groupid)
+	wails.LogInfo(ctx, path.Ext(tc.FileName))
+	switch path.Ext(tc.FileName) {
+	case ".py":
+		tc.RunPython(ctx, entityid, groupid)
+	case ".go":
+		tc.RunGo(ctx, entityid, groupid)
+	default:
+		wails.LogError(ctx, "can not run testitem")
+	}
+
+	wails.EventsEmit(ctx, "testclassfinished", tc.Id)
+}
 func (tc *TestClass) Pause(ctx context.Context) {
 }
 

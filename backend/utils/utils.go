@@ -4,8 +4,11 @@ package utils
 import "C"
 
 import (
+	"os"
 	"path/filepath"
 	"runtime"
+
+	"github.com/google/uuid"
 )
 
 func GetAppPath() string {
@@ -63,4 +66,36 @@ func GetThreadId() int {
 	}
 
 	return 0
+}
+
+// 遍历查找符合正则的文件
+func WalkMatch(root, pattern string) ([]string, error) {
+	var matches []string
+	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			return nil
+		}
+		if matched, err := filepath.Match(pattern, filepath.Base(path)); err != nil {
+			return err
+		} else if matched {
+			matches = append(matches, path)
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return matches, nil
+
+}
+
+func UUID() string {
+	if id, err := uuid.NewUUID(); err == nil {
+		return id.String()
+	} else {
+		return ""
+	}
 }

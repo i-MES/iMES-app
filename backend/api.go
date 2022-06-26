@@ -2,14 +2,16 @@ package imes
 
 import (
 	"context"
+	"fmt"
 	"log"
-	"os"
-	"path/filepath"
 
-	"github.com/i-mes/imes-app/backend/testset"
+	"github.com/i-mes/imes-app/backend/target"
 	"github.com/i-mes/imes-app/backend/utils"
+	jsoniter "github.com/json-iterator/go"
 	wails "github.com/wailsapp/wails/v2/pkg/runtime"
 )
+
+var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 //Api struct to hold wails runtime for all Api implementations
 type Api struct {
@@ -90,31 +92,8 @@ func (a *Api) OpenFolder(title string) string {
 	return selectedFolder
 }
 
-func (a *Api) WalkMatch(root, pattern string) ([]string, error) {
-	var matches []string
-	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if info.IsDir() {
-			return nil
-		}
-		if matched, err := filepath.Match(pattern, filepath.Base(path)); err != nil {
-			return err
-		} else if matched {
-			matches = append(matches, path)
-		}
-		return nil
-	})
-	if err != nil {
-		return nil, err
-	}
-	return matches, nil
-
-}
-
 // 读取 Pytest 兼容的 python 文件夹，生成 TestGroup 数组
-func (a *Api) LoadPythonTestGroup(selectPath bool) []testset.TestGroup {
+func (a *Api) LoadPythonTestGroup(selectPath bool) []target.TestGroup {
 	folderpath := ""
 	if selectPath {
 		// 用户选择文件夹
@@ -123,20 +102,20 @@ func (a *Api) LoadPythonTestGroup(selectPath bool) []testset.TestGroup {
 		// 使用默认文件夹
 		folderpath = utils.GetAppPath() + "/testcase/python/"
 	}
-	filepaths, err := a.WalkMatch(folderpath, "*.py")
+	filepaths, err := utils.WalkMatch(folderpath, "*.py")
 	if err != nil {
 		panic(err)
 	}
-	return testset.ParsePythons(filepaths)
+	return target.ParsePythons(filepaths, 1)
 }
 
-// func (a *Api) SaveTestGroup(data []testset.TestGroup) {
+// func (a *Api) SaveTestGroup(data []target.TestGroup) {
 // 	_data := make(map[string]interface{})
 // 	_data["testgroup"] = data
 // 	OutputConfigData(_data)
 // }
-// func (a *Api) LoadTestGroup() []testset.TestGroup {
-// 	var data []testset.TestGroup
+// func (a *Api) LoadTestGroup() []target.TestGroup {
+// 	var data []target.TestGroup
 // 	_data := []byte(json.Get(InputConfigData("testgroup")).ToString())
 // 	err := json.Unmarshal(_data, &data)
 // 	if err != nil {
@@ -145,27 +124,60 @@ func (a *Api) LoadPythonTestGroup(selectPath bool) []testset.TestGroup {
 // 	return data
 // }
 
-// 开始一个测试组
-func (a *Api) TestGroupStart(tg testset.TestGroup) bool {
+// wails 会以新线程的方式开启本函数；
+// 所以是每个 Entity 的 每个 Group 一个测试线程。
+func (a *Api) RunTestGroup(teid string, tg target.TestGroup) bool {
 	// do the real test
-	tg.Run(*a.ctx)
+	tg.Run(*a.ctx, teid)
 	return true
 }
 
-// 开始一个测试项
-func (a *Api) TestItemStart(ti testset.TestItem, tg_name string) bool {
+func (a *Api) StopTestGroup(teid string, tgid string) bool {
 	// do the real test
-	ti.Run(tg_name)
+	// tg.Run(*a.ctx)
 	return true
 }
 
-var logs = make([]testset.TestItemLog, 0)
+// wails 会以新线程的方式开启本函数；
+// 所以是每个 Entity 的 每个 Group 的每个 Item 一个测试线程。
+// func (a *Api) RunTestItem(teid string, tgid string, ti target.TestItem) bool {
+// 	// do the real test
+// 	ti.Run(tg_name)
+// 	return true
+// }
+// func (a *Api) StopTestItem(ti target.TestItem, tg_name string) bool {
+// 	// do the real test
+// 	ti.Run(tg_name)
+// 	return true
+// }
+
+var logs = make([]target.TestItemLog, 0)
 
 // 加载日志
-func (a *Api) LoadTestItemLogs(testitemId int) []testset.TestItemLog {
+func (a *Api) LoadTestItemLogs(testitemId int) []target.TestItemLog {
 	// logs = append(logs,
-	// 	testset.TestItemLog{1, "PASS", time.Now().Unix()},
-	// 	testset.TestItemLog{1, "NG", time.Now().Unix() + 1},
+	// 	target.TestItemLog{1, "PASS", time.Now().Unix()},
+	// 	target.TestItemLog{1, "NG", time.Now().Unix() + 1},
 	// )
 	return logs
+}
+
+func (a *Api) UUID() string {
+	return utils.UUID()
+}
+
+// 创建 config file example，供用户修改基础和参考
+func (a *Api) CreateTargetExample() {
+	target.CreateTestEntityExample()
+	target.CreateTestItemExample()
+}
+
+func (a *Api) LoadTestEntity() []target.TestEntity {
+	return target.LoadTestEntity()
+}
+
+// 触发 binding 相关 struct
+
+func (a *Api) NeedStruct(tistatus target.TestItemStatus) {
+	fmt.Println("Just need these struct")
 }

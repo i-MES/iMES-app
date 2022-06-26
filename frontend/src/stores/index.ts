@@ -1,6 +1,6 @@
-import { defineStore } from 'pinia'
+import { defineStore, storeToRefs } from 'pinia'
 import { useUserStore } from './user'
-import { main, imes, testset } from '../../wailsjs/go/models'
+import { main, imes, target } from '../../wailsjs/go/models'
 import * as api from '../../wailsjs/go/imes/Api'
 
 export enum UserStatus {
@@ -30,7 +30,11 @@ interface ITestStatus {
 interface ITestStatuses {
   [entityId: number]: ITestStatus[]
 }
-
+export interface ITestGroupComponentStatus {
+  disableStartBtn: boolean
+  disableStopBtn: boolean
+  disableNewBtn: boolean
+}
 export type TGlobalState = {
   sysInfo: main.SysInfo,
   defaultRoute: string, // 默认导航的页面
@@ -49,12 +53,13 @@ export type TGlobalState = {
   testStages: imes.TestStage[],     // 所有工序
   activedTestStageId: number,       // 选中工序
   testStation: imes.TestStation,  // 工位(only one)
-  testEntities: imes.TestEntity[],  // 所有被测实体
-  activedTestEntityIp: string,      // 选中实体
-  testGroups: testset.TestGroup[]
-  testitemsLogs: testset.TestItemLog[],
+  testEntities: target.TestEntity[],  // 所有被测实体
+  activedTestEntityId: string,      // 选中实体
+  testGroups: target.TestGroup[],
+  testGroupsStatus: ITestGroupComponentStatus[],
+  testitemsLogs: target.TestItemLog[],
   addEntity: boolean,
-  TEorTI: boolean,
+  TEsNotTE: boolean,
   testStatuses: ITestStatuses
 }
 
@@ -62,7 +67,7 @@ export const useBaseStore = defineStore('imesBaseStore', {
   state: (): TGlobalState => {
     return {
       sysInfo: { buildtype: '', platform: '', arch: '' },
-      defaultRoute: 'home',
+      defaultRoute: 'test',
       appTheme: 'dark',
       appBarHeight: 30,
       appStatusBar: {},
@@ -79,11 +84,12 @@ export const useBaseStore = defineStore('imesBaseStore', {
       activedTestStageId: 0,
       testStation: { id: 0, title: '', desc: '', enabledTestStageIds: [], activedTestStageIds: [] },
       testEntities: [],
-      activedTestEntityIp: '',
+      activedTestEntityId: '',
       testGroups: [],
+      testGroupsStatus: [],
       testitemsLogs: [],
       addEntity: false,
-      TEorTI: true,
+      TEsNotTE: true,
       testStatuses: {}
     }
   },
@@ -99,7 +105,7 @@ export const useBaseStore = defineStore('imesBaseStore', {
       }
     },
     testGroupById: (state) => {
-      return (id: number): testset.TestGroup | undefined => {
+      return (id: number): target.TestGroup | undefined => {
         return state.testGroups.find((tg) => tg.id == id)
       }
     },
@@ -122,12 +128,6 @@ export const useBaseStore = defineStore('imesBaseStore', {
     },
   },
   actions: {
-    async initConfig() {
-      api.InitTestProductions()
-      api.InitTestStage()
-      api.InitTestStation()
-      api.InitTestEntity()
-    },
     async syncTestProductions() {
       // sync: 加载 & 去重 & 去脏 & 写回
       api.LoadTestProductions().then(
@@ -169,7 +169,7 @@ export const useBaseStore = defineStore('imesBaseStore', {
         }
       })
     },
-    async addTestEntity(te: imes.TestEntity) {
+    async addTestEntity(te: target.TestEntity) {
       let _new = true
       this.testEntities.forEach((_te, idx) => {
         if (_te.ip.toString() == te.ip.toString()) {
@@ -207,10 +207,38 @@ export const useBaseStore = defineStore('imesBaseStore', {
       // sync: 加载 & 去重 & 去脏 & 写回
       api.LoadPythonTestGroup(false).then((tgs) => {
         if (tgs) {
-          console.log(tgs)
+          // console.log('load testgroup:', tgs)
           this.testGroups = tgs
+          for (let index = 0; index < tgs.length; index++) {
+            this.testGroupsStatus.push({
+              disableStartBtn: false,
+              disableStopBtn: false,
+              disableNewBtn: false,
+            })
+          }
+          // console.log('store testgroup:', this.testGroups)
         }
       })
     },
+    async newTestGroup(preid: string) {
+      this.testGroups.forEach((tg, idx) => {
+        if (tg.id == preid) {
+          api.UUID().then(
+            (_id) => {
+              this.testGroups.splice(idx + 1, 0, {
+                id: _id,
+                title: '',
+                desc: '',
+                testclasses: []
+              })
+              this.testGroupsStatus.splice(idx + 1, 0, {
+                disableStartBtn: false,
+                disableStopBtn: false,
+                disableNewBtn: false,
+              })
+            })
+        }
+      })
+    }
   }
 })

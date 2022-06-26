@@ -1,4 +1,4 @@
-package testset
+package target
 
 import (
 	"testing"
