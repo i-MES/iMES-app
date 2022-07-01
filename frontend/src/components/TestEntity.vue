@@ -9,16 +9,20 @@
       <v-window-item v-for="te in store.testEntities" :key="te.ip.toString()"
         :value="te.ip.toString()"> -->
     <!-- <v-container class="fill-height width-100 mt-10"> -->
-    <v-row>
-      <v-col v-for="(tg, idx) in store.testGroups" :key="tg.title"
+    <slick-row v-model:list="store.testGroups" axis="x" lock-axis="x" use-drag-handle
+      useWindowAsScrollContainer helper-class="slicksort-helper">
+      <slick-col v-for="(tg, idx) in store.testGroups" :key="tg.id" :index="idx"
         :cols="12 / store.testGroups.length">
-        <test-group v-model:list="tg.testclasses" axis="y" group="tg" :distance="10"
-          helper-class="slicksort-helper" :tg="tg" :tgidx="idx">
-          <test-class v-for="(tc, i) in tg.testclasses" :key="tc.id" :index="i"
-            :teid="store.activedTestEntityId" :tgid="tg.id" :tc="tc" />
-        </test-group>
-      </v-col>
-    </v-row>
+        <slick-list v-model:list="tg.testclasses" axis="y" group="tg" :distance="10"
+          helper-class="slicksort-helper">
+          <test-group :tg="tg">
+            <slick-item v-for="(tc, i) in tg.testclasses" :key="tc.id" :index="i">
+              <test-class :teid="store.activedTestEntityId" :tgid="tg.id" :tc="tc" />
+            </slick-item>
+          </test-group>
+        </slick-list>
+      </slick-col>
+    </slick-row>
     <!-- </v-container>
       </v-window-item>
     </v-window> -->
@@ -30,6 +34,9 @@ import { onMounted, } from 'vue'
 import { useBaseStore } from '../stores/index'
 import TestGroup from './testset/TestGroup.vue'
 import TestClass from './testset/TestClass.vue'
+import { SlickList, SlickItem } from 'vue-slicksort'
+import SlickRow from './utils/SlickRow.vue'
+import SlickCol from './utils/SlickCol.vue'
 
 const store = useBaseStore()
 // const activeTab = ref(store.activedTestEntityId)
@@ -50,4 +57,8 @@ onMounted(() => {
 </script>
 
 <style>
+.column-container {
+  display: flex;
+  align-items: start;
+}
 </style>
