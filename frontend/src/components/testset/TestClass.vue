@@ -11,22 +11,12 @@
   </div>
 </template>
 
-<script lang="ts">
-import { ElementMixin } from 'vue-slicksort'
-import DragHandle from '../../example/slicksort/components/DragHandle.vue'
-
-export default {
-  mixins: [ElementMixin],
-  components: {
-    DragHandle,
-  }
-}
-</script>
 
 <script lang="ts" setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { target } from '../../../wailsjs/go/models'
 import TestItem from './TestItem.vue'
+import DragHandle from '../utils/DragHandle.vue'
 
 const props = defineProps<{
   teid: string,
@@ -35,7 +25,6 @@ const props = defineProps<{
 }>()
 
 const showHandle = ref(false)
-
 
 onMounted(() => {
   console.log('++++ TestClass: ', props.tc, props.tgid)

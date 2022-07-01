@@ -30,11 +30,6 @@ interface ITestStatus {
 interface ITestStatuses {
   [entityId: number]: ITestStatus[]
 }
-export interface ITestGroupComponentStatus {
-  disableStartBtn: boolean
-  disableStopBtn: boolean
-  disableNewBtn: boolean
-}
 export type TGlobalState = {
   sysInfo: main.SysInfo,
   defaultRoute: string, // 默认导航的页面
@@ -56,7 +51,6 @@ export type TGlobalState = {
   testEntities: target.TestEntity[],  // 所有被测实体
   activedTestEntityId: string,      // 选中实体
   testGroups: target.TestGroup[],
-  testGroupsStatus: ITestGroupComponentStatus[],
   testitemsLogs: target.TestItemLog[],
   addEntity: boolean,
   TEsNotTE: boolean,
@@ -86,7 +80,6 @@ export const useBaseStore = defineStore('imesBaseStore', {
       testEntities: [],
       activedTestEntityId: '',
       testGroups: [],
-      testGroupsStatus: [],
       testitemsLogs: [],
       addEntity: false,
       TEsNotTE: true,
@@ -209,14 +202,6 @@ export const useBaseStore = defineStore('imesBaseStore', {
         if (tgs) {
           // console.log('load testgroup:', tgs)
           this.testGroups = tgs
-          for (let index = 0; index < tgs.length; index++) {
-            this.testGroupsStatus.push({
-              disableStartBtn: false,
-              disableStopBtn: false,
-              disableNewBtn: false,
-            })
-          }
-          // console.log('store testgroup:', this.testGroups)
         }
       })
     },
@@ -231,12 +216,25 @@ export const useBaseStore = defineStore('imesBaseStore', {
                 desc: '',
                 testclasses: []
               })
-              this.testGroupsStatus.splice(idx + 1, 0, {
-                disableStartBtn: false,
-                disableStopBtn: false,
-                disableNewBtn: false,
-              })
-            })
+            }
+          )
+        }
+      })
+    },
+    async delTestGroup(id: string) {
+      this.testGroups.forEach((tg, idx) => {
+        if (tg.id == id) {
+          console.log('-=-=', this.testGroups[idx].testclasses.length)
+          if (this.testGroups[idx].testclasses.length == 0) {
+            this.testGroups.splice(idx, 1)
+            this.appStatusBar.Tips = ''
+          } else {
+            this.appStatusBar.Tips = '只有空组才允许删除'
+            setTimeout(() => {
+              delete this.appStatusBar.Tips
+            }, 5000)
+          }
+          return
         }
       })
     }
