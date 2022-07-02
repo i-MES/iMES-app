@@ -8,10 +8,14 @@ class Test_GPIO:
       pass
 
     def test_gpio_buff(self):
-      time.sleep(randint(2,5))
+      i = randint(1,5)
+      time.sleep(i)
+      assert i < 5
       
-    # def test_gpio_flash(self):
-    #   time.sleep(randint(2,5))
+    def test_gpio_flash(self):
+      i = randint(1,5)
+      time.sleep(i)
+      assert i < 5
 
     def teardown_class(self):
       pass

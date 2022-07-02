@@ -10,13 +10,16 @@
         :value="te.ip.toString()"> -->
     <!-- <v-container class="fill-height width-100 mt-10"> -->
     <slick-row v-model:list="store.testGroups" axis="x" lock-axis="x" use-drag-handle
-      useWindowAsScrollContainer helper-class="slicksort-helper">
+      useWindowAsScrollContainer helper-class="slicksort-helper"
+      @update:list="store.SaveTestGroup" :accept="store.canSortTestClass">
       <slick-col v-for="(tg, idx) in store.testGroups" :key="tg.id" :index="idx"
-        :cols="12 / store.testGroups.length">
+        :cols="12 / store.testGroups.length" :disabled="!store.canSortTestClass">
         <slick-list v-model:list="tg.testclasses" axis="y" group="tg" :distance="10"
-          helper-class="slicksort-helper">
+          helper-class="slicksort-helper" @update:list="store.SaveTestGroup"
+          :accept="store.canSortTestClass">
           <test-group :tg="tg">
-            <slick-item v-for="(tc, i) in tg.testclasses" :key="tc.id" :index="i">
+            <slick-item v-for="(tc, i) in tg.testclasses" :key="tc.id" :index="i"
+              :disabled="!store.canSortTestClass">
               <test-class :teid="store.activedTestEntityId" :tgid="tg.id" :tc="tc" />
             </slick-item>
           </test-group>
@@ -51,7 +54,7 @@ const store = useBaseStore()
 
 onMounted(() => {
   // 加载 TestGroup、TestClass、TestItem 数据
-  store.syncTestSet()
+  store.LoadTestGroup()
   console.log('TestEntity onMounted: ')
 })
 </script>

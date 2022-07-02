@@ -4,13 +4,13 @@
     <!-- 顶部 toolbar -->
     <v-toolbar class="entity-toolbar" :height="store.toolbarheight">
       <v-row class="ma-0 pa-0" align="center" align-content="center">
-        <v-col cols="3">
+        <v-col cols="4">
           <v-select class="mt-3" filled :label="t('nav.production')" dense hide-details
             v-model="selectedProd"
             :items="store.testProductions.map((v, _) => v.id + '-' + v.title)">
           </v-select>
         </v-col>
-        <v-col cols="3">
+        <v-col cols="4">
           <v-select class="mt-3" filled :label="t('nav.stage')" dense hide-details
             v-model="selectedStage" :items="stages">
           </v-select>
@@ -21,7 +21,15 @@
           icon="mdi-magnify-minus-outline"></v-btn>
         <v-btn v-if="store.TEsNotTE" variant="text" @click="zoomIn"
           icon="mdi-magnify-plus-outline"></v-btn>
-        <add-entity />
+        <add-entity v-if="store.TEsNotTE" />
+        <v-btn variant="text" v-if="!store.TEsNotTE"
+          :icon="store.canSortTestClass ? `mdi-hand-back-left` : `mdi-hand-back-left-off`"
+          @click="store.canSortTestClass = !store.canSortTestClass">
+        </v-btn>
+        <v-btn @click="startallgroup" icon="mdi-arrow-right-bold-circle-outline">
+        </v-btn>
+        <v-btn @click="stopallgroup" icon="mdi-stop-circle-outline">
+        </v-btn>
         <v-btn variant="text" icon="mdi-view-module"
           @click="store.TEsNotTE = !store.TEsNotTE">
         </v-btn>
@@ -93,7 +101,21 @@ const zoomIn = () => {
   defCols.value = (defCols.value + 1 > 12) ? 12 : defCols.value + 1
   // console.log(defCols.value)
 }
-
+const startallgroup = () => {
+  if (store.TEsNotTE) {
+    console.log('run all entity\'s all group')
+  } else {
+    console.log('run activity entity\'s all group')
+    window.runtime.EventsEmit('startallgroup')
+  }
+}
+const stopallgroup = () => {
+  if (store.TEsNotTE) {
+    console.log('stop all entity\'s all group')
+  } else {
+    console.log('stop activity entity\'s all group')
+  }
+}
 </script>
 
 <style>

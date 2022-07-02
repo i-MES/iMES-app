@@ -35,6 +35,8 @@
         </v-list>
       </v-menu>
     </v-toolbar>
+    <v-progress-linear model-value="0" color="light-green darken-4" height="10" striped>
+    </v-progress-linear>
     <div style="min-height:100px">
       <slot />
     </div>
@@ -111,6 +113,9 @@ onMounted(() => {
       disableBtnStopGroup.value = true
       disableBtnNewGroup.value = false
     }
+  })
+  window.runtime.EventsOn('startallgroup', () => {
+    starttestgroup(props.tg)
   })
 })
 onBeforeUnmount(() => {

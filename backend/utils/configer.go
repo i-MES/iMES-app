@@ -37,23 +37,36 @@ func OutputConfigData(data map[string]interface{}) {
 }
 
 // 读取序列化的字符串（不做解析）
-func InputConfigData(dataType string) []byte {
+func InputConfigData(dataType string) ([]byte, error) {
 	// JSON
 	if dataType == "" {
-		return nil
+		return nil, nil
 	}
+
+	// 组合路径，并判断是否合法
 	filePath := GetAppPath() + "/config/" + dataType + ".json"
 	matched, err := regexp.Match(`/.*`, []byte(filePath))
 	if !matched {
 		log.Fatalf("config file path(%v) invalled, err: %v", filePath, err)
 	}
-	fmt.Println("Input config data from: ", filePath)
-	data, err := os.ReadFile(filePath)
-	if err != nil {
-		log.Fatalf("ReadFile error: %v", err)
-		return nil
+
+	// 判断是否存在
+	if _, err := os.Stat(filePath); err == nil {
+		// 文件存在
+		fmt.Println("Input config data from: ", filePath)
+		data, err2 := os.ReadFile(filePath)
+		if err2 != nil {
+			log.Fatalf("ReadFile error: %v", err)
+			return nil, err2
+		} else {
+			return data, nil
+		}
+	} else if os.IsNotExist(err) {
+		// 文件不存在
+		return nil, err
 	} else {
-		return data
+		fmt.Println("其他 Error")
+		return nil, nil
 	}
 
 	// YAML

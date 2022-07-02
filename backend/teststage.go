@@ -42,13 +42,16 @@ func (a *Api) SaveTestStages(data []TestStage) {
 }
 
 func (a *Api) LoadTestStages() []TestStage {
-	var data []TestStage
-	_data := []byte(json.Get(utils.InputConfigData("stages")).ToString())
-	err := json.Unmarshal(_data, &data)
-	if err == nil {
-		return data
-	} else {
-		fmt.Println(err)
-		return nil
+	if data, err := utils.InputConfigData("stages"); err == nil {
+		var ts []TestStage
+		_ts := []byte(json.Get(data).ToString())
+		err := json.Unmarshal(_ts, &ts)
+		if err == nil {
+			return ts
+		} else {
+			fmt.Println(err)
+			return nil
+		}
 	}
+	return nil
 }
