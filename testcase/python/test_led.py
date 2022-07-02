@@ -9,13 +9,19 @@ class Test_LED:
       pass
 
     def test_led_on(self):
-      time.sleep(randint(2,5))
+      i = randint(1,5)
+      time.sleep(i)
+      assert i < 5
       
     def test_led_off(self):
-      time.sleep(randint(2,5))
+      i = randint(1,5)
+      time.sleep(i)
+      assert i < 5
 
     def test_led_flash(self):
-      time.sleep(randint(2,5))
+      i = randint(1,5)
+      time.sleep(i)
+      assert i < 5
 
     def teardown_class(self):
       pass

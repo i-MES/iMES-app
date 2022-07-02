@@ -54,7 +54,8 @@ export type TGlobalState = {
   testitemsLogs: target.TestItemLog[],
   addEntity: boolean,
   TEsNotTE: boolean,
-  testStatuses: ITestStatuses
+  testStatuses: ITestStatuses,
+  canSortTestClass: boolean
 }
 
 export const useBaseStore = defineStore('imesBaseStore', {
@@ -83,7 +84,8 @@ export const useBaseStore = defineStore('imesBaseStore', {
       testitemsLogs: [],
       addEntity: false,
       TEsNotTE: true,
-      testStatuses: {}
+      testStatuses: {},
+      canSortTestClass: false
     }
   },
   getters: {
@@ -196,14 +198,18 @@ export const useBaseStore = defineStore('imesBaseStore', {
         }
       })
     },
-    async syncTestSet() {
+    async LoadTestGroup() {
       // sync: 加载 & 去重 & 去脏 & 写回
-      api.LoadPythonTestGroup(false).then((tgs) => {
+      api.LoadTestGroup(false).then((tgs) => {
         if (tgs) {
           // console.log('load testgroup:', tgs)
           this.testGroups = tgs
         }
       })
+    },
+    async SaveTestGroup() {
+      // sync: 加载 & 去重 & 去脏 & 写回
+      api.SaveTestGroup(this.testGroups)
     },
     async newTestGroup(preid: string) {
       this.testGroups.forEach((tg, idx) => {
@@ -216,6 +222,8 @@ export const useBaseStore = defineStore('imesBaseStore', {
                 desc: '',
                 testclasses: []
               })
+              api.SaveTestGroup(this.testGroups)
+              return
             }
           )
         }
@@ -234,6 +242,7 @@ export const useBaseStore = defineStore('imesBaseStore', {
               delete this.appStatusBar.Tips
             }, 5000)
           }
+          api.SaveTestGroup(this.testGroups)
           return
         }
       })

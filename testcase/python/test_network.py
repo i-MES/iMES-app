@@ -9,16 +9,24 @@ class Test_Network:
       pass
 
     def test_tcp(self):
-      time.sleep(randint(2,5))
+      i = randint(1,5)
+      time.sleep(i)
+      assert i < 5
       
     def test_udp(self):
-      time.sleep(randint(2,5))
+      i = randint(1,5)
+      time.sleep(i)
+      assert i < 5
 
     def test_socket(self):
-      time.sleep(randint(2,5))
+      i = randint(1,5)
+      time.sleep(i)
+      assert i < 5
 
     def test_icmp(self):
-      time.sleep(randint(2,5))
+      i = randint(1,5)
+      time.sleep(i)
+      assert i < 5
       
     def teardown_class(self):
       pass

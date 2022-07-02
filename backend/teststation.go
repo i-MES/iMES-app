@@ -32,11 +32,13 @@ func (a *Api) SaveTestStation(data TestStation) {
 
 // 获取工位信息，通常即本机
 func (a *Api) LoadTestStation() TestStation {
-	var data TestStation
-	_data := []byte(json.Get(utils.InputConfigData("station")).ToString())
-	err := json.Unmarshal(_data, &data)
-	if err != nil {
-		fmt.Println(err)
+	var ts TestStation
+	if data, err := utils.InputConfigData("station"); err == nil {
+		_ts := []byte(json.Get(data).ToString())
+		err := json.Unmarshal(_ts, &ts)
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
-	return data
+	return ts
 }

@@ -31,13 +31,16 @@ func SaveTestEntity(data []TestEntity) {
 	utils.OutputConfigData(_data)
 }
 func LoadTestEntity() []TestEntity {
-	var data []TestEntity
-	_data := []byte(json.Get(utils.InputConfigData("entity")).ToString())
-	err := json.Unmarshal(_data, &data)
-	if err != nil {
-		fmt.Println(err)
+	if data, err := utils.InputConfigData("entity"); err == nil {
+		var te []TestEntity
+		_te := []byte(json.Get(data).ToString())
+		err := json.Unmarshal(_te, &te)
+		if err != nil {
+			fmt.Println(err)
+		}
+		return te
 	}
-	return data
+	return nil
 }
 
 func ConnectTestEntity(ip []int) bool {

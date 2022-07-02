@@ -11,7 +11,8 @@
       {{ ti.filename }}
     </v-expansion-panel-text>
     <div>
-      <v-progress-linear v-model="progressdata" :indeterminate="isrunning">
+      <v-progress-linear v-model="progressdata" :indeterminate="isrunning"
+        :color="pcolor">
       </v-progress-linear>
     </div>
   </v-expansion-panel>
@@ -29,6 +30,7 @@ const props = defineProps<{
 }>()
 const progressdata = ref(0)
 const isrunning = ref(false)
+const pcolor = ref('')
 
 // watch(progressdata, (n) => {
 //   if (n < 100) return
@@ -41,14 +43,20 @@ const isrunning = ref(false)
 onMounted(() => {
   console.log('++ TestItem:', props.ti)
   window.runtime.EventsOn('testitemstatus', (tistatus: target.TestItemStatus) => {
-    // console.log('receive event', props.tc.title, props.tc.id, tistatus)
+    console.log('receive event', tistatus)
     if (props.ti.id == tistatus.testitemid) {
       console.log('==', props.ti.title, tistatus.status)
       if (tistatus.status == 'started') {
         isrunning.value = true
-      } else if (tistatus.status == 'finished') {
+        pcolor.value = ''
+      } else if (tistatus.status == 'pass') {
         isrunning.value = false
         progressdata.value = 100
+        pcolor.value = 'green'
+      } else if (tistatus.status == 'ng') {
+        isrunning.value = false
+        progressdata.value = 100
+        pcolor.value = 'red'
       }
     } else {
       // 同 group、同 tc 的 ti 需要……

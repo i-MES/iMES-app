@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/i-mes/imes-app/backend/target"
 	"github.com/i-mes/imes-app/backend/utils"
@@ -92,37 +93,45 @@ func (a *Api) OpenFolder(title string) string {
 	return selectedFolder
 }
 
-// 读取 Pytest 兼容的 python 文件夹，生成 TestGroup 数组
-func (a *Api) LoadPythonTestGroup(selectPath bool) []target.TestGroup {
-	folderpath := ""
-	if selectPath {
-		// 用户选择文件夹
-		folderpath = a.OpenFolder("Open TestCase Folder")
-	} else {
-		// 使用默认文件夹
-		folderpath = utils.GetAppPath() + "/testcase/python/"
+/*
+加载 TestGroup
+*/
+func (a *Api) LoadTestGroup(selectPath bool) []target.TestGroup {
+	if data, err := utils.InputConfigData("testgroup"); err == nil {
+		// 找到 json 文件
+		// 首先加载，然后与 读取 python 文件中的 tc 和 tg
+		var tg []target.TestGroup
+		_tg := []byte(json.Get(data).ToString())
+		if json.Unmarshal(_tg, &tg) != nil {
+			fmt.Println("can not Unmarshal json data")
+		}
+		// Merge 后返回
+		// Merge 策略：……
+		return tg
+	} else if os.IsNotExist(err) {
+		// json 文件不存在，从源代码中解析获取
+		folderpath := ""
+		if selectPath {
+			// 用户选择文件夹
+			folderpath = a.OpenFolder("Open TestCase Folder")
+		} else {
+			// 使用默认文件夹
+			folderpath = utils.GetAppPath() + "/testcase/python/"
+		}
+		filepaths, err := utils.WalkMatch(folderpath, "*.py")
+		if err != nil {
+			panic(err)
+		}
+		return target.ParsePythons(filepaths, 1)
 	}
-	filepaths, err := utils.WalkMatch(folderpath, "*.py")
-	if err != nil {
-		panic(err)
-	}
-	return target.ParsePythons(filepaths, 1)
+	return nil
 }
 
-// func (a *Api) SaveTestGroup(data []target.TestGroup) {
-// 	_data := make(map[string]interface{})
-// 	_data["testgroup"] = data
-// 	OutputConfigData(_data)
-// }
-// func (a *Api) LoadTestGroup() []target.TestGroup {
-// 	var data []target.TestGroup
-// 	_data := []byte(json.Get(InputConfigData("testgroup")).ToString())
-// 	err := json.Unmarshal(_data, &data)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 	}
-// 	return data
-// }
+func (a *Api) SaveTestGroup(data []target.TestGroup) {
+	_data := make(map[string]interface{})
+	_data["testgroup"] = data
+	utils.OutputConfigData(_data)
+}
 
 // wails 会以新线程的方式开启本函数；
 // 所以是每个 Entity 的 每个 Group 一个测试线程。
@@ -169,7 +178,7 @@ func (a *Api) UUID() string {
 // 创建 config file example，供用户修改基础和参考
 func (a *Api) CreateTargetExample() {
 	target.CreateTestEntityExample()
-	target.CreateTestItemExample()
+	// target.CreateTestItemExample()
 }
 
 func (a *Api) LoadTestEntity() []target.TestEntity {
