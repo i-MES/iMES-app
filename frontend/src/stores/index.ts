@@ -129,7 +129,7 @@ export const useBaseStore = defineStore('imesBaseStore', {
         (_tps) => {
           if (_tps) {
             this.testProductions = _tps
-            console.log(this.testProductions)
+            console.log('LoadTestProductions', this.testProductions)
           }
         }
       )
@@ -143,7 +143,7 @@ export const useBaseStore = defineStore('imesBaseStore', {
       })
       api.LoadTestStages().then(
         (tss) => {
-          console.log(tss)
+          console.log('LoadTestStages', tss)
           tss.forEach((ts) => {
             if (_ids) {
               if (_ids.indexOf(ts.id) < 0) {
