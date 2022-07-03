@@ -21,7 +21,7 @@ func (a *Api) SaveTestProductions(data []TestProduction) {
 }
 
 func (a *Api) LoadTestProductions() []TestProduction {
-	if data, err := utils.InputConfigData("testproduct"); err == nil {
+	if data, err := utils.InputConfigData("productions"); err == nil {
 		// 找到 json 文件
 		// 首先加载，然后与 读取 python 文件中的 tc 和 tg
 		var tp []TestProduction
