@@ -2,7 +2,9 @@
   <div>
     <v-dialog v-model="addEntity" persistent max-width="600px">
       <template v-slot:activator>
-        <v-btn class="ma-auto" icon="mdi-creation" text @click="addEntity = true">
+        <v-btn class="ma-0 pa-0" min-width="30" min-height="30" stacked
+          @click="addEntity = true">
+          <v-icon>mdi-creation</v-icon>
         </v-btn>
       </template>
       <v-card>

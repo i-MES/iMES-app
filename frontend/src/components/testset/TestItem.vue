@@ -7,8 +7,7 @@
       </template>
     </v-expansion-panel-title>
     <v-expansion-panel-text>
-      {{ ti.title }}<br /><br />
-      {{ ti.filename }}
+      {{ ti.desc }}
     </v-expansion-panel-text>
     <div>
       <v-progress-linear v-model="progressdata" :indeterminate="isrunning"

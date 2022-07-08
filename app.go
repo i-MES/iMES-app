@@ -6,32 +6,21 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/i-mes/imes-app/backend/utils"
+	"github.com/i-mes/imes-app/backend/target"
 
-	backend "github.com/i-mes/imes-app/backend"
+	imes "github.com/i-mes/imes-app/backend"
 	py "github.com/i-mes/imes-app/backend/python"
+	"github.com/i-mes/imes-app/backend/utils"
 	"github.com/wailsapp/wails/v2/pkg/logger"
 	"github.com/wailsapp/wails/v2/pkg/menu"
-	"github.com/wailsapp/wails/v2/pkg/menu/keys"
 	wails "github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 // App struct
 type App struct {
 	ctx         context.Context
-	api         *backend.Api
+	api         *imes.Api
 	threadState *py.PyThreadState
-}
-
-// NewApp creates a new App application struct
-func NewApp(api *backend.Api) *App {
-	app := &App{}
-	app.api = api
-	return app
-}
-
-func (a *App) loadConfigFileCallback(data *menu.CallbackData) {
-	fmt.Println(data.MenuItem.Label)
 }
 
 // startup is called when the app starts. The context is saved
@@ -40,32 +29,22 @@ func (a *App) startup(ctx context.Context) {
 	// wails 通过这里将上下文回吐给 user
 	// user 后续用该上下文(a.ctx) 与 wails runtime 交互
 	a.ctx = ctx
-	a.api.Context(&ctx)
-	myMenu := menu.NewMenuFromItems(
-		menu.SubMenu("File", menu.NewMenuFromItems(
-			menu.Text("Load Config File", keys.CmdOrCtrl("o"), a.loadConfigFileCallback),
-			menu.Separator(),
-			menu.Text("Quit", keys.CmdOrCtrl("q"), func(_ *menu.CallbackData) {
-				wails.Quit(a.ctx)
-			}),
-		)),
-	)
-	wails.MenuSetApplicationMenu(a.ctx, myMenu)
+	a.api.Context(ctx)
 
 	// 不是 log 到文件，而是到 stdout
-	envInfo := wails.Environment(a.ctx)
-	wails.LogInfo(a.ctx, envInfo.BuildType)
+	envInfo := wails.Environment(ctx)
+	wails.LogInfo(ctx, envInfo.BuildType)
 	if envInfo.BuildType == "dev" {
-		wails.LogSetLogLevel(a.ctx, logger.DEBUG)
+		wails.LogSetLogLevel(ctx, logger.DEBUG)
 	} else {
-		wails.LogSetLogLevel(a.ctx, logger.INFO)
+		wails.LogSetLogLevel(ctx, logger.INFO)
 	}
 	utils.InitPlatform(envInfo.Platform, envInfo.Arch)
-	wails.LogInfo(a.ctx, envInfo.Platform)
-	wails.LogInfo(a.ctx, envInfo.Arch)
+	wails.LogInfo(ctx, envInfo.Platform)
+	wails.LogInfo(ctx, envInfo.Arch)
 	wails.LogInfo(ctx, strconv.Itoa(utils.GetProcessId()))
 	wd, _ := os.Getwd()
-	wails.LogInfo(a.ctx, wd)
+	wails.LogInfo(ctx, wd)
 
 	if !py.Py_IsInitialized() {
 		py.Py_Initialize()
@@ -249,4 +228,12 @@ func (a *App) SysInfo() SysInfo {
 		Platform:  envInfo.Platform,
 		Arch:      envInfo.Arch,
 	}
+}
+
+func (a *App) loadConfigFileCallback(data *menu.CallbackData) {
+	target.LoadTestGroup(&a.ctx, "src", true)
+}
+
+func (a *App) msgDialog(data *menu.CallbackData) {
+	a.api.MsgDialog(data.MenuItem.Label)
 }

@@ -3,6 +3,8 @@
     <DragHandle v-if="showHandle" />
     <div class="mt-2 ml-2">
       {{ tc.title }}
+      {{ tc.parametrizes }}
+      {{ tc.fixtures }}
     </div>
     <v-expansion-panels class="px-2 mt-1" multiple>
       <test-item v-for="(ti, i) in tc.testitems" :key="ti.title" :id="i" :teid="teid"

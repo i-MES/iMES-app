@@ -6,8 +6,8 @@
         <v-card :elevation="5" @click="onclickEntity(entity.id)"
           :color="store.appTheme == 'dark' ? 'blue-grey-darken-2' : 'blue-grey-lighten-3'">
           <!-- <v-card-avatar></v-card-avatar> -->
-          <template v-slot:title>{{ entity.ip.toString().replaceAll(',', '.')
-          }}</template>
+          <template v-slot:title>{{ entity.ip.toString().replaceAll(',', '.') }}
+          </template>
           <template v-slot:subtitle>code: {{ entity.code }}<br />tags:{{
               entity.tags
           }}</template>

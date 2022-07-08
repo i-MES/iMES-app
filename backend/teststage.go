@@ -15,7 +15,7 @@ type TestStage struct {
 	Sequence int    `json:"sequence"`
 }
 
-func (a *Api) InitTestStage() {
+func (a *Api) CreateTestStageExample() {
 	data := make([]TestStage, 0)
 	data = append(data,
 		TestStage{01, 1, "Boot测试", "测试工序", 2},

@@ -68,7 +68,7 @@ export const useBaseStore = defineStore('imesBaseStore', {
       appStatusBar: {},
       appConfWorkModel: '1',
       appConfDefaultLang: '1',
-      toolbarheight: 38,
+      toolbarheight: 30,
       logHeight: 0,
       mainWindowHeight: 0,
       userStatus: UserStatus.login,
@@ -198,20 +198,20 @@ export const useBaseStore = defineStore('imesBaseStore', {
         }
       })
     },
-    async LoadTestGroup() {
+    async LoadTestGroup(loadFlag: string, selectPath: boolean) {
       // sync: 加载 & 去重 & 去脏 & 写回
-      api.LoadTestGroup(false).then((tgs) => {
+      api.LoadTestGroup(loadFlag, selectPath).then((tgs) => {
         if (tgs) {
-          // console.log('load testgroup:', tgs)
+          console.log('load testgroup:', tgs)
           this.testGroups = tgs
+          api.SaveTestGroup(this.testGroups)
         }
       })
     },
     async SaveTestGroup() {
-      // sync: 加载 & 去重 & 去脏 & 写回
       api.SaveTestGroup(this.testGroups)
     },
-    async newTestGroup(preid: string) {
+    async NewTestGroup(preid: string) {
       this.testGroups.forEach((tg, idx) => {
         if (tg.id == preid) {
           api.UUID().then(
@@ -229,7 +229,7 @@ export const useBaseStore = defineStore('imesBaseStore', {
         }
       })
     },
-    async delTestGroup(id: string) {
+    async DelTestGroup(id: string) {
       this.testGroups.forEach((tg, idx) => {
         if (tg.id == id) {
           console.log('-=-=', this.testGroups[idx].testclasses.length)

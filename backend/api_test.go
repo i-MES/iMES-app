@@ -46,7 +46,7 @@ func ExampleApi_AddCounter() {
 
 func TestFileWalk(t *testing.T) {
 	a := new(Api)
-	fs, err := a.WalkMatch(GetAppPath(), "*.py")
+	fs, err := a.GetAllFile(GetAppPath(), "*.py")
 	if err != nil {
 		panic(err)
 	}

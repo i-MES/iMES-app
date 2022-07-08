@@ -13,9 +13,10 @@ type TestProduction struct {
 	Desc  string `json:"desc"`
 }
 
-func (a *Api) InitTestProductions() {
+func (a *Api) CreateTestProductionExample() {
 	// ...
 }
+
 func (a *Api) SaveTestProductions(data []TestProduction) {
 	// ...
 }
