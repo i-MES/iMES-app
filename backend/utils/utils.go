@@ -4,11 +4,16 @@ package utils
 import "C"
 
 import (
-	"os"
+	"context"
+	"fmt"
+	"io/fs"
+	"io/ioutil"
+	"log"
 	"path/filepath"
 	"runtime"
 
 	"github.com/google/uuid"
+	wails "github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 func GetAppPath() string {
@@ -69,27 +74,68 @@ func GetThreadId() int {
 }
 
 // 遍历查找符合正则的文件
-func WalkMatch(root, pattern string) ([]string, error) {
-	var matches []string
-	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+func getAllFile_Walk(root, pattern string, recursion bool) ([]string, error) {
+	var result []string
+	err := filepath.Walk(root, func(path string, info fs.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 		if info.IsDir() {
-			return nil
-		}
-		if matched, err := filepath.Match(pattern, filepath.Base(path)); err != nil {
+			if recursion {
+				if temps, err := getAllFile_Walk(root+"/"+info.Name(), pattern, recursion); err == nil {
+					result = append(result, temps...)
+				}
+			}
+		} else if matched, err := filepath.Match(pattern, filepath.Base(path)); err != nil {
 			return err
 		} else if matched {
-			matches = append(matches, path)
+			result = append(result, path)
 		}
 		return nil
 	})
 	if err != nil {
 		return nil, err
 	}
-	return matches, nil
+	return result, nil
+}
 
+func getAllFile_IOUtil(root, pattern string, recursion bool) ([]string, error) {
+	result := []string{}
+
+	// func ReadDir(dirname string) ([]fs.FileInfo, error)
+	infos, err := ioutil.ReadDir(root)
+	if err != nil {
+		fmt.Printf("读取文件目录失败，root=%v, err=%v \n", root, err)
+		return result, err
+	}
+
+	for _, info := range infos {
+		if info.IsDir() {
+			if temp, err := getAllFile_IOUtil(root+"/"+info.Name(), pattern, recursion); err != nil {
+				return result, err
+			} else {
+				result = append(result, temp...)
+			}
+		} else {
+			if matched, err := filepath.Match(pattern, filepath.Base(info.Name())); matched && err == nil {
+				result = append(result, info.Name())
+			} else {
+				return nil, err
+			}
+		}
+	}
+	return result, nil
+}
+
+// 获取指定目录下满足匹配规则的文件
+// pattern
+// recursion: 是否递归
+func GetAllFile(root, pattern string, recursion bool) ([]string, error) {
+	if runtime.GOOS == "windows" {
+		return getAllFile_IOUtil(root, pattern, recursion)
+	} else {
+		return getAllFile_Walk(root, pattern, recursion)
+	}
 }
 
 func UUID() string {
@@ -98,4 +144,39 @@ func UUID() string {
 	} else {
 		return ""
 	}
+}
+
+// 通过对话框 UI 得到用户选择
+func OpenFolder(ctx *context.Context, title string) string {
+	if title == "" {
+		title = "Open Config Folder"
+	}
+	_opt := wails.OpenDialogOptions{
+		DefaultDirectory: GetAppPath(),
+		Title:            title,
+	}
+	selectedFolder, err := wails.OpenDirectoryDialog(*ctx, _opt)
+	if err != nil {
+		log.Panic("Error on folder opening", err.Error())
+	}
+	return selectedFolder
+}
+
+func OpenFile(ctx *context.Context, title, filePattern string) string {
+	if title == "" {
+		title = "Open Config File"
+	}
+	if filePattern == "" {
+		filePattern = "*.json"
+	}
+	_opt := wails.OpenDialogOptions{
+		DefaultDirectory: "./",
+		Title:            title,
+		Filters:          []wails.FileFilter{{DisplayName: "File Filter", Pattern: filePattern}},
+	}
+	selectedFile, err := wails.OpenFileDialog(*ctx, _opt)
+	if err != nil {
+		log.Panic("Error on file opening", err.Error())
+	}
+	return selectedFile
 }

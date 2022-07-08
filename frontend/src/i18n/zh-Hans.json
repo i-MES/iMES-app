@@ -8,12 +8,25 @@
     "test": "测试",
     "dashboard": "看板",
     "user": "用户",
+    "plugin": "插件",
     "settings": "配置",
     "about": "关于",
     "foobar": "试验",
     "loadconfig": "加载配置",
     "production": "产品",
-    "stage": "工序"
+    "stage": "工序",
+    "login": "登录",
+    "logout": "登出"
+  },
+  "test": {
+    "loadtestgroup": "加载解析测试项文件",
+    "zoomout": "缩小",
+    "zoomin": "放大",
+    "addentity": "新增被测实体",
+    "cansorttestclass": "是否可拖拽",
+    "startallgroup": "开始测试所有组",
+    "stopallgroup": "停止测试所有组",
+    "viewmode": "视图模式"
   },
   "languages": {
     "en": "En",

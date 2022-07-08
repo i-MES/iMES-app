@@ -16,23 +16,95 @@
           </v-select>
         </v-col>
       </v-row>
+
       <template v-slot:append>
-        <v-btn v-if="store.TEsNotTE" variant="text" @click="zoomOut"
-          icon="mdi-magnify-minus-outline"></v-btn>
-        <v-btn v-if="store.TEsNotTE" variant="text" @click="zoomIn"
-          icon="mdi-magnify-plus-outline"></v-btn>
-        <add-entity v-if="store.TEsNotTE" />
-        <v-btn variant="text" v-if="!store.TEsNotTE"
-          :icon="store.canSortTestClass ? `mdi-hand-back-left` : `mdi-hand-back-left-off`"
-          @click="store.canSortTestClass = !store.canSortTestClass">
-        </v-btn>
-        <v-btn @click="startallgroup" icon="mdi-arrow-right-bold-circle-outline">
-        </v-btn>
-        <v-btn @click="stopallgroup" icon="mdi-stop-circle-outline">
-        </v-btn>
-        <v-btn variant="text" icon="mdi-view-module"
-          @click="store.TEsNotTE = !store.TEsNotTE">
-        </v-btn>
+
+        <!-- TestEntities 专用 Button -->
+        <v-tooltip location="bottom">
+          <template v-slot:activator="{ props }">
+            <v-btn class="ma-0 pa-0" min-width="30" min-height="30" stacked
+              v-bind="props" v-if="store.TEsNotTE" @click="zoomOut">
+              <v-icon>mdi-magnify-minus-outline</v-icon>
+            </v-btn>
+          </template>
+          <span>{{ t('test.zoomout') }}</span>
+        </v-tooltip>
+
+        <v-tooltip location="bottom">
+          <template v-slot:activator="{ props }">
+            <v-btn class="ma-0 pa-0" min-width="30" min-height="30" stacked
+              v-bind="props" v-if="store.TEsNotTE" @click="zoomIn">
+              <v-icon>mdi-magnify-plus-outline</v-icon>
+            </v-btn>
+          </template>
+          <span>{{ t('test.zoomin') }}</span>
+        </v-tooltip>
+
+        <v-tooltip location="bottom">
+          <template v-slot:activator="{ props }">
+            <add-entity v-if="store.TEsNotTE" v-bind="props" />
+          </template>
+          <span>{{ t('test.addentity') }}</span>
+        </v-tooltip>
+
+        <!-- TestEntity 专用 Button -->
+        <v-tooltip location="bottom">
+          <template v-slot:activator="{ props }">
+            <v-btn class="ma-0 pa-0" min-width="30" min-height="30" stacked
+              v-bind="props" v-if="!store.TEsNotTE"
+              @click="store.LoadTestGroup('src', true)">
+              <v-badge v-if="testgroupsrcnewer" dot color="error">
+                <v-icon>mdi-file-document-edit</v-icon>
+              </v-badge>
+              <v-icon v-else>mdi-file-document-edit</v-icon>
+            </v-btn>
+          </template>
+          <span>{{ t('test.loadtestgroup') }}</span>
+        </v-tooltip>
+
+        <v-tooltip location="bottom">
+          <template v-slot:activator="{ props }">
+            <v-btn class="ma-0 pa-0" min-width="30" min-height="30" stacked
+              v-bind="props" v-if="!store.TEsNotTE"
+              @click="store.canSortTestClass = !store.canSortTestClass">
+              <v-icon>{{ store.canSortTestClass ? `mdi-hand-back-left` :
+                  `mdi-hand-back-left-off`
+              }}</v-icon>
+            </v-btn>
+          </template>
+          <span>{{ t('test.cansorttestclass') }}</span>
+        </v-tooltip>
+
+        <!-- TestEntities & TestEntity 都可用 Button -->
+        <v-tooltip location="bottom">
+          <template v-slot:activator="{ props }">
+            <v-btn class="ma-0 pa-0" min-width="30" min-height="30" stacked
+              v-bind="props" @click="startallgroup">
+              <v-icon>mdi-arrow-right-bold-circle-outline</v-icon>
+            </v-btn>
+          </template>
+          <span>{{ t('test.startallgroup') }}</span>
+        </v-tooltip>
+
+        <v-tooltip location="bottom">
+          <template v-slot:activator="{ props }">
+            <v-btn class="ma-0 pa-0" min-width="30" min-height="30" stacked
+              v-bind="props" @click="stopallgroup">
+              <v-icon>mdi-stop-circle-outline</v-icon>
+            </v-btn>
+          </template>
+          <span>{{ t('test.stopallgroup') }}</span>
+        </v-tooltip>
+
+        <v-tooltip location="bottom">
+          <template v-slot:activator="{ props }">
+            <v-btn class="ma-0 pa-0" min-width="30" min-height="30" stacked
+              v-bind="props" @click="store.TEsNotTE = !store.TEsNotTE">
+              <v-icon>mdi-view-module</v-icon>
+            </v-btn>
+          </template>
+          <span>{{ t('test.viewmode') }}</span>
+        </v-tooltip>
       </template>
     </v-toolbar>
 
@@ -52,13 +124,14 @@
 </template>
 
 <script lang="ts" setup>
-import { reactive, ref, watch } from 'vue'
+import { onUnmounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useBaseStore } from '../stores/index'
 import TestEntities from '../components/TestEntities.vue'
 import TestEntity from '../components/TestEntity.vue'
 import TestLog from '../components/TestLog.vue'
 import AddEntity from '../components/forms/AddEntity.vue'
+import { StopTestGroupSyncMonitor } from '../../wailsjs/go/imes/Api'
 
 const { t } = useI18n({ useScope: 'global' })
 const store = useBaseStore()
@@ -66,6 +139,7 @@ const store = useBaseStore()
 // Toolbar 相关
 const selectedProd = ref()
 const selectedStage = ref()
+const testgroupsrcnewer = ref(false)
 
 const stages = reactive([])
 watch(
@@ -116,6 +190,18 @@ const stopallgroup = () => {
     console.log('stop activity entity\'s all group')
   }
 }
+window.runtime.EventsOn('testgroupmonitor', (x: string) => {
+  if (x == 'srcnewer') {
+    testgroupsrcnewer.value = true
+    store.LoadTestGroup('config', true)
+  } else {
+    testgroupsrcnewer.value = false
+  }
+})
+
+onUnmounted(() => {
+  StopTestGroupSyncMonitor()
+})
 </script>
 
 <style>

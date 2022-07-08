@@ -19,14 +19,14 @@
         </template>
         <v-list>
           <v-list-item density="compact" active-color="primary"
-            @click="store.newTestGroup(tg.id)" :disabled="disableBtnNewGroup">
+            @click="store.NewTestGroup(tg.id)" :disabled="disableBtnNewGroup">
             <v-list-item-avatar>
               <v-icon icon="mdi-format-horizontal-align-right"></v-icon>
             </v-list-item-avatar>
             <v-list-item-title>新建组</v-list-item-title>
           </v-list-item>
           <v-list-item density="compact" active-color="primary"
-            @click="store.delTestGroup(tg.id)" :disabled="disableBtnDelGroup">
+            @click="store.DelTestGroup(tg.id)" :disabled="disableBtnDelGroup">
             <v-list-item-avatar>
               <v-icon icon="mdi-delete-circle-outline"></v-icon>
             </v-list-item-avatar>

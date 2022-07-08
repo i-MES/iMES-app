@@ -18,11 +18,8 @@
           <div class="font-weight-bold ml-1 mb-2">
             {{ t('aboutpage.history') }}
           </div>
-          <v-timeline truncate-line="none" direction="vertical" side="before">
+          <v-timeline direction="vertical" side="end">
             <v-timeline-item fill-dot dot-color="orange">
-              <template v-slot:icon>
-                <span>^_^</span>
-              </template>
               <template v-slot:opposite>
                 {{ t('aboutpage.h1-date') }}
               </template>

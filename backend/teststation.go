@@ -15,7 +15,7 @@ type TestStation struct {
 	ActivedTestStageIds []int  `json:"activedTestStageIds"`
 }
 
-func (a *Api) InitTestStation() {
+func (a *Api) CreateTestStationExample() {
 	a.SaveTestStation(TestStation{
 		Id:                  789,
 		Title:               "Station1",

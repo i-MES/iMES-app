@@ -12,6 +12,7 @@ const routes: Array<RouteRecordRaw> = [
     name: 'home', // 与 i18n/x.json 中 nav.xxx 中自动对应
     component: AppHome,
     meta: {
+      location: 'top',
       sort: 1,
       icon: 'mdi-home'
     }
@@ -21,6 +22,7 @@ const routes: Array<RouteRecordRaw> = [
     name: 'test',
     component: TestPage,
     meta: {
+      location: 'top',
       sort: 2,
       icon: 'mdi-arrow-right-bold-circle-outline'
     }
@@ -30,16 +32,28 @@ const routes: Array<RouteRecordRaw> = [
     name: 'dashboard',
     component: DashBoard,
     meta: {
+      location: 'top',
       sort: 3,
-      icon: 'mdi-view-dashboard'
+      icon: 'mdi-finance'
     }
   },
+  // {
+  //   path: '/plguin',
+  //   name: 'plugin',
+  //   component: FooBar,
+  //   meta: {
+  //     location: 'top',
+  //     sort: 4,
+  //     icon: 'mdi-checkbox-blank-badge'
+  //   }
+  // },
   {
     path: '/user/:id',
     name: 'user',
     component: UserManage,
     meta: {
-      sort: 4,
+      location: 'bottom',
+      sort: 1,
       icon: 'mdi-account'
     },
   },
@@ -48,7 +62,8 @@ const routes: Array<RouteRecordRaw> = [
     name: 'settings',
     component: AppSettings,
     meta: {
-      sort: 5,
+      location: 'bottom',
+      sort: 2,
       icon: 'mdi-cog-outline'
     },
   },
@@ -62,19 +77,20 @@ const routes: Array<RouteRecordRaw> = [
       return import(/* webpackChunkName: 'about' */ '../views/AppAbout.vue')
     },
     meta: {
-      sort: 6,
-      icon: 'mdi-flag'
+      location: 'bottom',
+      sort: 3,
+      icon: 'mdi-information-outline'
     }
   },
-  {
-    path: '/foobar',
-    name: 'foobar',
-    component: FooBar,
-    meta: {
-      sort: 7,
-      icon: 'mdi-test-tube'
-    },
-  },
+  // {
+  //   path: '/foobar',
+  //   name: 'foobar',
+  //   component: FooBar,
+  //   meta: {
+  //     sort: 7,
+  //     icon: 'mdi-test-tube'
+  //   },
+  // },
 ]
 
 const router = createRouter({

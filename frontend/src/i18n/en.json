@@ -7,13 +7,26 @@
     "home": "Home",
     "test": "Test",
     "dashboard": "DashBaord",
+    "plugin": "PlugIns",
     "user": "User",
     "settings": "Settings",
     "about": "About",
     "foobar": "FooBar",
     "loadconfig": "Load Config",
     "production": "Production",
-    "stage": "Stage"
+    "stage": "Stage",
+    "login": "Log In",
+    "logout": "Log Out"
+  },
+  "test": {
+    "loadtestgroup": "Load and Parse Test File",
+    "zoomout": "Zoom Out",
+    "zoomin": "Zoom In",
+    "addentity": "Add Entity",
+    "cansorttestclass": "Can Sort TestClass",
+    "startallgroup": "Start All Group",
+    "stopallgroup": "Stop All Group",
+    "viewmode": "View Mode"
   },
   "languages": {
     "en": "En",

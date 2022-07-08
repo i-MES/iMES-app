@@ -5,58 +5,62 @@
       <v-app-bar class="app-bar" color="#1c7bc9" absolute location="bottom"
         :height="store.appBarHeight" :data-wails-drag="true">
         <template v-slot:prepend>
-          <v-app-bar-nav-icon variant="text" @click.stop="onToggleMenu = !onToggleMenu">
-          </v-app-bar-nav-icon>
+          <!-- <v-app-bar-nav-icon variant="text" @click.stop="onToggleMenu = !onToggleMenu">
+          </v-app-bar-nav-icon> -->
+          <img class="ml-n3 my-0 pa-0"
+            :style="`height:` + (store.appBarHeight + 2) + `px; background: lightblue; `"
+            src="@/assets/images/logo.svg" />
         </template>
-        <v-icon :icon="activeMenuIcon"> </v-icon>
         <v-app-bar-title class="ml-5">{{ store.appStatusBar }}</v-app-bar-title>
         <v-spacer></v-spacer>
         <template v-slot:append>
-          <v-btn variant="text" icon="mdi-translate" @click="onclickToggleLanguage">
+          <v-btn variant="text"
+            :icon="locale == `en` ? `mdi-translate-off` : `mdi-translate`"
+            @click="onclickToggleLanguage">
           </v-btn>
           <v-btn variant="text" icon="mdi-invert-colors" @click="onclickToggleTheme">
           </v-btn>
           <v-btn variant="text" icon="mdi-magnify" @click="onclickMagnify">
           </v-btn>
           <v-btn variant="text" icon="mdi-github" @click="onclickOpenGithub"></v-btn>
-          <v-btn variant="text" icon="mdi-dots-vertical"
-            @click.stop="toggleMore = !toggleMore" :disabled="disableToggleMore">
-          </v-btn>
         </template>
       </v-app-bar>
 
       <!-- 左侧 APP 导航栏 -->
-      <v-navigation-drawer v-model="onToggleMenu" temporar rail expand-on-hover>
+      <v-navigation-drawer :v-model="true" rail rail-width="55" permanent>
         <v-list :selected="listSelected" nav>
-          <v-list-subheader class="h3">{{ t('nav.mainmenu') }}</v-list-subheader>
-          <v-list-item v-for="(menu, i) in router.getRoutes().sort((a, b) => {
+          <!-- <v-list-subheader class="ma-0 pa-0"> </v-list-subheader> -->
+          <v-list-item v-for="(menu, i) in router.getRoutes().filter((v) => { return v.meta.location == `top` }).sort((a, b) => {
             return (a ? a.meta.sort as number : 0) - (b ? b.meta.sort as number : 0);
           })" :key="i" :value="menu" active-color="primary" density="comfortable"
-            :to="menu.path" @click="onclickMenuListItem()">
-            <v-list-item-avatar start>
-              <v-icon
-                :icon="menu.meta.icon ? menu.meta.icon as string : 'mid-arrow-all'">
-              </v-icon>
-            </v-list-item-avatar>
-            <v-list-item-title>
-              {{ t(menu.name ? `nav.${menu.name as string}` : 'nav.home') }}
-            </v-list-item-title>
+            :to="menu.path" @click="onclickMenuListItem(menu)">
+            <v-tooltip location="end">
+              <template v-slot:activator="{ props }">
+                <!-- v-list-item-avastar 无法调整 icon 尺寸 -->
+                <v-icon v-bind="props" :icon="menu.meta.icon as string" size="large">
+                </v-icon>
+              </template>
+              <span>{{ t(`nav.${menu.name as string}`) }}</span>
+            </v-tooltip>
           </v-list-item>
-          <v-spacer></v-spacer>
         </v-list>
 
         <template v-slot:append>
-          <div class="pa-2">
-            <v-btn block> Logout </v-btn>
-          </div>
+          <v-list :selected="listSelected" nav>
+            <v-list-item v-for="(menu, i) in router.getRoutes().filter((v) => { return v.meta.location == `bottom` }).sort((a, b) => {
+              return (a ? a.meta.sort as number : 0) - (b ? b.meta.sort as number : 0);
+            })" :key="i" :value="menu" active-color="primary" density="comfortable"
+              :to="menu.path" @click="onclickMenuListItem(menu)">
+              <v-tooltip location="end">
+                <template v-slot:activator="{ props }">
+                  <v-icon v-bind="props" :icon="menu.meta.icon as string" size="large">
+                  </v-icon>
+                </template>
+                <span>{{ t(`nav.${menu.name as string}`) }}</span>
+              </v-tooltip>
+            </v-list-item>
+          </v-list>
         </template>
-      </v-navigation-drawer>
-
-      <!-- 右侧导航栏 -->
-      <v-navigation-drawer width="160" v-model="toggleMore" location="right">
-        <template v-slot:prepend> </template>
-        <app-logo logoheight="80px" />
-        <template v-slot:append> </template>
       </v-navigation-drawer>
 
       <!-- 主窗口 -->
@@ -73,7 +77,7 @@
 <script lang="ts" setup>
 // about vue
 import { onMounted, ref, watch } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { useRouter, useRoute, RouteRecordRaw } from 'vue-router'
 import { useDisplay } from 'vuetify'
 import { useI18n } from 'vue-i18n'
 // about wails
@@ -82,7 +86,6 @@ import { OpenGithub } from '../wailsjs/go/imes/Api'
 import { SysInfo } from '../wailsjs/go/main/App'
 // about app
 import { useBaseStore } from './stores/index'
-import AppLogo from './components/AppLogo.vue'
 
 const router = useRouter() // router 是管理器，可以 addRoute、removeRoute、getRoutes、push...
 const route = useRoute() // route 是一个响应式对象，
@@ -90,7 +93,6 @@ const store = useBaseStore()
 const { t, availableLocales, locale } = useI18n({ useScope: 'global' })
 
 //********** 底部 App-bar 相关 **********/
-const toggleMore = ref(false)
 // change theme
 const onclickToggleTheme = () => {
   store.appTheme = store.appTheme === 'light' ? 'dark' : 'light'
@@ -116,10 +118,9 @@ const onclickOpenGithub = () => {
 //********** 左侧 APP 导航栏相关 **********/
 const onToggleMenu = ref(true)
 const disableToggleMore = ref(true)
-const activeMenuIcon = ref('mdi-home')
 const listSelected = ref([])
-const onclickMenuListItem = () => {
-  console.log('-0-0-', listSelected.value)
+const onclickMenuListItem = (menu: RouteRecordRaw) => {
+  console.log('-0-0-', listSelected.value, menu)
 }
 watch(
   () => route.path,
@@ -132,13 +133,6 @@ watch(
       disableToggleMore.value = true
       console.log('disableToggleMore watch:', newPath, 'true')
     }
-  }
-)
-
-watch(
-  () => route.meta.icon,
-  (newIcon) => {
-    activeMenuIcon.value = newIcon
   }
 )
 
@@ -170,7 +164,7 @@ onMounted(() => {
   // console.log('===', router.getRoutes())
   router.getRoutes().forEach((val) => {
     if (val.name === _dr) {
-      activeMenuIcon.value = val.meta.icon as string
+      // activeMenuIcon.value = val.meta.icon as string
     }
   })
 
