@@ -4,18 +4,22 @@
     <v-toolbar height="40">
       <drag-handle />
       <v-toolbar-title>
-        G{{ tg.title == '' ? tg.id.substring(0, 4) : tg.title }}
+        G-{{ tg.title == '' ? tg.id.substring(0, 4) : tg.title }}
       </v-toolbar-title>
-      <v-spacer />
-      <v-btn @click="starttestgroup(tg)" icon="mdi-arrow-right-bold-circle-outline"
-        :disabled="disableBtnRunGroup">
+      <v-btn class="ma-0 pa-0" min-width="30" min-height="30" stacked
+        @click="starttestgroup(tg)" :disabled="disableBtnRunGroup">
+        <v-icon>mdi-arrow-right-bold-circle-outline</v-icon>
       </v-btn>
-      <v-btn @click="stoptestgroup(tg)" icon="mdi-stop-circle-outline"
-        :disabled="disableBtnStopGroup">
+      <v-btn class="ma-0 pa-0" min-width="30" min-height="30" stacked
+        @click="stoptestgroup(tg)" :disabled="disableBtnStopGroup">
+        <v-icon>mdi-stop-circle-outline</v-icon>
       </v-btn>
       <v-menu open-on-hover>
         <template v-slot:activator="{ props }">
-          <v-btn v-bind="props" icon="mdi-dots-horizontal" />
+          <v-btn class="ma-0 pa-0" min-width="30" min-height="30" stacked
+            v-bind="props">
+            <v-icon>mdi-dots-horizontal</v-icon>
+          </v-btn>
         </template>
         <v-list>
           <v-list-item density="compact" active-color="primary"
@@ -49,6 +53,8 @@ import { target } from '../../../wailsjs/go/models'
 import { RunTestGroup } from '../../../wailsjs/go/imes/Api'
 import { useBaseStore } from '../../stores/index'
 import DragHandle from '../utils/DragHandle.vue'
+import * as runtime from '../../../wailsjs/runtime/runtime'
+
 const props = defineProps<{
   tg: target.TestGroup,
 }>()
@@ -89,7 +95,7 @@ onMounted(() => {
     disableBtnNewGroup.value = false
     disableBtnDelGroup.value = true
   }
-  window.runtime.EventsOn('testclasscreated', (tgid: string) => {
+  runtime.EventsOn('testclasscreated', (tgid: string) => {
     if (tgid == props.tg.id) {
       // 在当前 group 中放入了 testclass：使能测试
       disableBtnRunGroup.value = false
@@ -97,7 +103,7 @@ onMounted(() => {
       disableBtnDelGroup.value = true
     }
   })
-  window.runtime.EventsOn('testclassdeleted', (tgid: string) => {
+  runtime.EventsOn('testclassdeleted', (tgid: string) => {
     if (tgid == props.tg.id) {
       // 在当前 group 中移走了 testclass：去使能测试
       if (props.tg.testclasses.length == 0) {
@@ -106,7 +112,7 @@ onMounted(() => {
       }
     }
   })
-  window.runtime.EventsOn('testgroupfinished', (tgid: string) => {
+  runtime.EventsOn('testgroupfinished', (tgid: string) => {
     if (tgid == props.tg.id) {
       // 后端（go）组测试完毕：使能测试
       disableBtnRunGroup.value = false
@@ -114,7 +120,7 @@ onMounted(() => {
       disableBtnNewGroup.value = false
     }
   })
-  window.runtime.EventsOn('startallgroup', () => {
+  runtime.EventsOn('startallgroup', () => {
     starttestgroup(props.tg)
   })
 })
@@ -132,7 +138,7 @@ const starttestgroup = (tg: target.TestGroup) => {
   // 只有 activedTestEntityId 才会被用户点击
   RunTestGroup(store.activedTestEntityId, tg)
   // 将 grop 内所有 ti 的滚动条清零
-  window.runtime.EventsEmit('clearprocessbar', {
+  runtime.EventsEmit('clearprocessbar', {
     teid: store.activedTestEntityId,
     tgid: tg.id,
   })

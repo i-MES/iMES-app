@@ -8,6 +8,10 @@ int Cgo_PyDict_Check(PyObject *o){
 	return PyDict_Check(o);
 }
 PyObject* Cgo_PyObject_CallMethod(PyObject *o, const char *name, const char *format){
+	// PyObject_CallMethod:
+	// 		调用 obj 对象中名为 name 的方法并附带可变数量的 C 参数。
+	// 		这些 C 参数由 Py_BuildValue() 格式字符串来描述并应当生成一个元组。
+	// 		如果参数都是 PyObject*，没有 C 型的，则 PyObject_CallMethodObjArgs() 是更快速的选择。
 	return PyObject_CallMethod(o, name, format);
 }
 PyObject* Cgo_PyObject_CallMethodObjArgs(PyObject *obj, PyObject *name, int argc, PyObject **argv) {

@@ -74,22 +74,30 @@ func GetThreadId() int {
 }
 
 // 遍历查找符合正则的文件
-func getAllFile_Walk(root, pattern string, recursion bool) ([]string, error) {
+func getAllFile_Walk(root, pattern string) ([]string, error) {
 	var result []string
 	err := filepath.Walk(root, func(path string, info fs.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 		if info.IsDir() {
-			if recursion {
-				if temps, err := getAllFile_Walk(root+"/"+info.Name(), pattern, recursion); err == nil {
-					result = append(result, temps...)
-				}
+			return nil
+			// 过滤文件夹，such as: __pycache__
+			// if _med, _err := filepath.Match("[_|.]*", info.Name()); _err == nil && _med {
+			// 	return nil
+			// }
+			// Walk 函数自己会递归,不需要用户递归，否则子文件夹中会重复找到
+			// if recursion {
+			// 	if temps, err := getAllFile_Walk(root+"/"+info.Name(), pattern, recursion); err == nil {
+			// 		result = append(result, temps...)
+			// 	}
+			// }
+		} else {
+			if matched, err := filepath.Match(pattern, filepath.Base(path)); err != nil {
+				return err
+			} else if matched {
+				result = append(result, path)
 			}
-		} else if matched, err := filepath.Match(pattern, filepath.Base(path)); err != nil {
-			return err
-		} else if matched {
-			result = append(result, path)
 		}
 		return nil
 	})
@@ -105,7 +113,7 @@ func getAllFile_IOUtil(root, pattern string, recursion bool) ([]string, error) {
 	// func ReadDir(dirname string) ([]fs.FileInfo, error)
 	infos, err := ioutil.ReadDir(root)
 	if err != nil {
-		fmt.Printf("读取文件目录失败，root=%v, err=%v \n", root, err)
+		fmt.Printf("读取文件目录失败, root=%v, err=%v \n", root, err)
 		return result, err
 	}
 
@@ -134,7 +142,7 @@ func GetAllFile(root, pattern string, recursion bool) ([]string, error) {
 	if runtime.GOOS == "windows" {
 		return getAllFile_IOUtil(root, pattern, recursion)
 	} else {
-		return getAllFile_Walk(root, pattern, recursion)
+		return getAllFile_Walk(root, pattern)
 	}
 }
 
@@ -147,7 +155,7 @@ func UUID() string {
 }
 
 // 通过对话框 UI 得到用户选择
-func OpenFolder(ctx *context.Context, title string) string {
+func SelectFolder(ctx *context.Context, title string) string {
 	if title == "" {
 		title = "Open Config Folder"
 	}
@@ -162,7 +170,7 @@ func OpenFolder(ctx *context.Context, title string) string {
 	return selectedFolder
 }
 
-func OpenFile(ctx *context.Context, title, filePattern string) string {
+func SelectFile(ctx *context.Context, title, filePattern string) string {
 	if title == "" {
 		title = "Open Config File"
 	}

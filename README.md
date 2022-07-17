@@ -69,10 +69,10 @@ main.go:14:12: pattern frontend/dist: cannot embed directory frontend/dist: cont
 
 解决方法：
 
-```sh
-$ cd frontend/dist
-$ yarn build
-```
+1. `wails build`
+2. `cd frontend && yarn build`
+
+两种方法都会重新生成 `frontend/dist` 路径及文件，`wails dev` 不会重新生成。
 
 ### How to view vuetify docs locally?
 

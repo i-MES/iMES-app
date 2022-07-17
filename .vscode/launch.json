@@ -19,7 +19,25 @@
       "program": "${workspaceFolder}/build/bin/iMES-app",
       "preLaunchTask": "build debug",
       "cwd": "${workspaceFolder}",
-      "env": {}
+      "env": {
+        "LD_LIBRARY_PATH": "home/me/.pyenv/versions/3.10.4/lib"
+      }
+    },
+    {
+      "name": "Python: Remote Attach",
+      "type": "python",
+      "request": "attach",
+      "connect": {
+        "host": "127.0.0.1",
+        "port": 8899
+      },
+      "pathMappings": [
+        {
+          "localRoot": "${workspaceFolder}",
+          "remoteRoot": "."
+        }
+      ],
+      "justMyCode": true
     }
   ]
 }

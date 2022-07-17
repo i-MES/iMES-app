@@ -50,16 +50,40 @@
         <!-- TestEntity 专用 Button -->
         <v-tooltip location="bottom">
           <template v-slot:activator="{ props }">
+            <v-switch class="ma-0 pa-0 mt-4 mr-3" min-width="30" min-height="30"
+              density="compact" v-if="!store.TEsNotTE" v-model="store.enableTCTooltip"
+              color="success" hide-details flat v-bind="props">
+            </v-switch>
+          </template>
+          <span>Enable TC Tooltip</span>
+        </v-tooltip>
+
+        <v-tooltip location="bottom">
+          <template v-slot:activator="{ props }">
             <v-btn class="ma-0 pa-0" min-width="30" min-height="30" stacked
               v-bind="props" v-if="!store.TEsNotTE"
-              @click="store.LoadTestGroup('src', true)">
+              @click="store.LoadTestGroup('src', true, true)">
               <v-badge v-if="testgroupsrcnewer" dot color="error">
-                <v-icon>mdi-file-document-edit</v-icon>
+                <v-icon>mdi-folder-search</v-icon>
               </v-badge>
-              <v-icon v-else>mdi-file-document-edit</v-icon>
+              <v-icon v-else>mdi-folder-search</v-icon>
             </v-btn>
           </template>
-          <span>{{ t('test.loadtestgroup') }}</span>
+          <span>{{ t('test.loadtestgroupfromfolder') }}</span>
+        </v-tooltip>
+
+        <v-tooltip location="bottom">
+          <template v-slot:activator="{ props }">
+            <v-btn class="ma-0 pa-0" min-width="30" min-height="30" stacked
+              v-bind="props" v-if="!store.TEsNotTE"
+              @click="store.LoadTestGroup('src', false, false)">
+              <v-badge v-if="testgroupsrcnewer" dot color="error">
+                <v-icon>mdi-file-search</v-icon>
+              </v-badge>
+              <v-icon v-else>mdi-file-search</v-icon>
+            </v-btn>
+          </template>
+          <span>{{ t('test.loadtestgroupfromfile') }}</span>
         </v-tooltip>
 
         <v-tooltip location="bottom">
@@ -67,12 +91,15 @@
             <v-btn class="ma-0 pa-0" min-width="30" min-height="30" stacked
               v-bind="props" v-if="!store.TEsNotTE"
               @click="store.canSortTestClass = !store.canSortTestClass">
-              <v-icon>{{ store.canSortTestClass ? `mdi-hand-back-left` :
-                  `mdi-hand-back-left-off`
-              }}</v-icon>
+              <v-icon>{{ store.canSortTestClass ? "mdi-cursor-move" :
+                  "mdi-drag-variant"
+              }}
+              </v-icon>
             </v-btn>
           </template>
-          <span>{{ t('test.cansorttestclass') }}</span>
+          <span>{{ store.canSortTestClass ? t('test.cansorttestclass') :
+              t('test.cannotsorttestclass')
+          }}</span>
         </v-tooltip>
 
         <!-- TestEntities & TestEntity 都可用 Button -->
@@ -132,6 +159,7 @@ import TestEntity from '../components/TestEntity.vue'
 import TestLog from '../components/TestLog.vue'
 import AddEntity from '../components/forms/AddEntity.vue'
 import { StopTestGroupSyncMonitor } from '../../wailsjs/go/imes/Api'
+import * as runtime from '../../wailsjs/runtime/runtime'
 
 const { t } = useI18n({ useScope: 'global' })
 const store = useBaseStore()
@@ -141,7 +169,7 @@ const selectedProd = ref()
 const selectedStage = ref()
 const testgroupsrcnewer = ref(false)
 
-const stages = reactive([])
+const stages: [string] = reactive([''])
 watch(
   () => selectedProd.value,
   (nv) => {
@@ -154,8 +182,8 @@ watch(
     }
     store
       .testStageByProductionId(pid)
-      .map((v, _) => v.id + '-' + v.title)
-      .forEach((n) => stages.push(n))
+      .map((v) => v.id + '-' + v.title)
+      .forEach((n: string) => stages.push(n))
   }
 )
 watch(
@@ -180,7 +208,7 @@ const startallgroup = () => {
     console.log('run all entity\'s all group')
   } else {
     console.log('run activity entity\'s all group')
-    window.runtime.EventsEmit('startallgroup')
+    runtime.EventsEmit('startallgroup')
   }
 }
 const stopallgroup = () => {
@@ -190,7 +218,7 @@ const stopallgroup = () => {
     console.log('stop activity entity\'s all group')
   }
 }
-window.runtime.EventsOn('testgroupmonitor', (x: string) => {
+runtime.EventsOn('testgroupmonitor', (x: string) => {
   if (x == 'srcnewer') {
     testgroupsrcnewer.value = true
     store.LoadTestGroup('config', true)
@@ -201,7 +229,7 @@ window.runtime.EventsOn('testgroupmonitor', (x: string) => {
 
 onUnmounted(() => {
   StopTestGroupSyncMonitor()
-})
+})  
 </script>
 
 <style>

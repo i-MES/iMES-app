@@ -19,11 +19,13 @@
     "logout": "登出"
   },
   "test": {
-    "loadtestgroup": "加载解析测试项文件",
+    "loadtestgroupfromfile": "加载解析测试项文件",
+    "loadtestgroupfromfolder": "加载解析测试项目录",
     "zoomout": "缩小",
     "zoomin": "放大",
     "addentity": "新增被测实体",
-    "cansorttestclass": "是否可拖拽",
+    "cansorttestclass": "允许拖拽",
+    "cannotsorttestclass": "禁止拖拽",
     "startallgroup": "开始测试所有组",
     "stopallgroup": "停止测试所有组",
     "viewmode": "视图模式"

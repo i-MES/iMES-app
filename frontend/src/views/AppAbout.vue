@@ -1,17 +1,12 @@
 <template>
   <v-container>
-    <v-row justify="space-around">
+
+    <v-row class="my-5" justify="space-around">
       <v-card width="80%">
-        <img class="mx-auto" :src="logo" alt="Logo" />
-        <ul class="ma-10">
-          <li class="info-item">
-            <div class="name">{{ t('aboutpage.project-repository') }}</div>
-            <open-link class="link" href="https://github.com/i-MES/iMES-app">
-              https://github.com/i-MES/iMES-app</open-link>
-          </li>
-        </ul>
+        <app-logo :msg="t('homepage.welcome')" logoheight="250px" />
       </v-card>
     </v-row>
+
     <v-row justify="space-around">
       <v-card width="80%">
         <v-card-text>
@@ -58,13 +53,15 @@
 </template>
 
 <script lang="ts" setup>
+import AppLogo from '@/components/AppLogo.vue'
 import { useI18n } from 'vue-i18n'
-import logo from '@/assets/images/logo.svg'
+// import { useRouter } from 'vue-router'
+// const router = useRouter()
+const { t } = useI18n({ useScope: 'global' })
 
 // 已结通过 app.use() 注册，此处不再需要单独 import
 // import OpenLink from '../components/plugin/OpenLink.vue'
 
-const { t } = useI18n({ useScope: 'global' })
 
 </script>
 

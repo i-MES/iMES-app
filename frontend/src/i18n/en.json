@@ -19,11 +19,13 @@
     "logout": "Log Out"
   },
   "test": {
-    "loadtestgroup": "Load and Parse Test File",
+    "loadtestgroupfromfile": "Load and Parse Test File",
+    "loadtestgroupfromfolder": "Load and Parse Test Folder",
     "zoomout": "Zoom Out",
     "zoomin": "Zoom In",
     "addentity": "Add Entity",
     "cansorttestclass": "Can Sort TestClass",
+    "cannotsorttestclass": "Can not Sort TestClass",
     "startallgroup": "Start All Group",
     "stopallgroup": "Stop All Group",
     "viewmode": "View Mode"

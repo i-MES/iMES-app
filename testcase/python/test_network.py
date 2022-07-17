@@ -28,5 +28,10 @@ class Test_Network:
       time.sleep(i)
       assert i < 5
       
+    def test_4G(self, entity):
+      print(entity)
+      assert hasattr(entity, "ip") == True
+      assert entity.ip.startswith("199") == True
+
     def teardown_class(self):
       pass

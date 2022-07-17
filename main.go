@@ -2,17 +2,13 @@ package main
 
 import (
 	"embed"
-	"runtime"
 
 	imes "github.com/i-mes/imes-app/backend"
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/logger"
-	"github.com/wailsapp/wails/v2/pkg/menu"
-	"github.com/wailsapp/wails/v2/pkg/menu/keys"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/mac"
 	"github.com/wailsapp/wails/v2/pkg/options/windows"
-	wailsruntime "github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 //go:embed frontend/dist
@@ -27,21 +23,6 @@ func main() {
 	app := &App{}
 	app.api = api
 
-	AppMenu := menu.NewMenu()
-	FileMenu := AppMenu.AddSubmenu("File")
-	FileMenu.AddText("Load Config Data Only", keys.CmdOrCtrl("o"), app.loadConfigFileCallback)
-	FileMenu.AddSeparator()
-	FileMenu.AddText("Quit", keys.CmdOrCtrl("q"), func(_ *menu.CallbackData) {
-		wailsruntime.Quit(nil)
-	})
-	if runtime.GOOS == "darwin" {
-		AppMenu.Append(menu.EditMenu()) // on macos platform, we should append EditMenu to enable Cmd+C,Cmd+V,Cmd+Z... shortcut
-	}
-	ViewMenu := AppMenu.AddSubmenu("View")
-	ViewMenu.AddText("...", keys.CmdOrCtrl(","), app.msgDialog)
-	HelpMenu := AppMenu.AddSubmenu("Help")
-	HelpMenu.AddText("...", keys.CmdOrCtrl("."), app.msgDialog)
-
 	// Create application with options
 	err := wails.Run(&options.App{
 		Title:             "iMES-app",
@@ -55,7 +36,7 @@ func main() {
 		StartHidden:       false,
 		HideWindowOnClose: false,
 		Assets:            assets,
-		Menu:              AppMenu,
+		Menu:              app.applicationMenu(),
 		Logger:            nil,
 		LogLevel:          logger.DEBUG,
 		OnStartup:         app.startup,

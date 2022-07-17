@@ -45,6 +45,7 @@ import { useBaseStore } from '../stores/index'
 // import { TestItemStart } from '../../wailsjs/go/imes/Api'
 import { useI18n } from 'vue-i18n'
 import { DateTime } from 'luxon'
+import * as runtime from '../../wailsjs/runtime/runtime'
 
 // const props = defineProps<{
 //   mainWindowHeight: number
@@ -95,7 +96,7 @@ onUnmounted(() => {
 })
 
 
-window.runtime.EventsOn('testitemlog', (data) => {
+runtime.EventsOn('testitemlog', (data) => {
   store.testitemsLogs.push(data)
 })
 </script>

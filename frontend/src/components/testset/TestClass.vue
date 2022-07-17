@@ -1,12 +1,16 @@
 <template>
   <div class="mt-5">
     <DragHandle v-if="showHandle" />
-    <div class="mt-2 ml-2">
-      {{ tc.title }}
-      {{ tc.parametrizes }}
-      {{ tc.fixtures }}
-    </div>
-    <v-expansion-panels class="px-2 mt-1" multiple>
+    <v-expansion-panels v-bind="props" class="px-2 mt-1" multiple>
+      <v-tooltip v-if="store.enableTCTooltip" activator="parent" location="top"
+        transition="slide-y-reverse-transition">
+        <h2>TestClass</h2>
+        title: {{ tc.title }}<br />
+        parametrizes: {{ tc.parametrizes }}<br />
+        fixtures: {{ tc.fixtures }}<br />
+        modulepath: {{ tc.modulepath }}<br />
+        modulename: {{ tc.modulename }}<br />
+      </v-tooltip>
       <test-item v-for="(ti, i) in tc.testitems" :key="ti.title" :id="i" :teid="teid"
         :tgid="tgid" :tcid="tc.id" :ti="ti" />
     </v-expansion-panels>
@@ -19,6 +23,9 @@ import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { target } from '../../../wailsjs/go/models'
 import TestItem from './TestItem.vue'
 import DragHandle from '../utils/DragHandle.vue'
+import * as runtime from '../../../wailsjs/runtime/runtime'
+import { useBaseStore } from '../../stores/index'
+const store = useBaseStore()
 
 const props = defineProps<{
   teid: string,
@@ -30,11 +37,11 @@ const showHandle = ref(false)
 
 onMounted(() => {
   console.log('++++ TestClass: ', props.tc, props.tgid)
-  window.runtime.EventsEmit('testclasscreated', props.tgid)
+  runtime.EventsEmit('testclasscreated', props.tgid)
 })
 onBeforeUnmount(() => {
   console.log('---- TestClass: ', props.tc, props.tgid)
-  window.runtime.EventsEmit('testclassdeleted', props.tgid)
+  runtime.EventsEmit('testclassdeleted', props.tgid)
 })
 </script>
 

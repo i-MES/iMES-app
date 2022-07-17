@@ -7,8 +7,15 @@ package python
 */
 import "C"
 
+func PySys_GetSysPath() string {
+	return PyImport_GetModule("sys").GetAttrString("path").Str()
+}
+func PySys_GetSysModules() string {
+	return PyImport_GetModule("sys").GetAttrString("modules").Str()
+}
+
 // Append path to sys.path
-func PySys_AppendPath(path string) error {
+func PySys_AppendSysPath(path string) error {
 	// way 1:
 	// cmd := fmt.Sprintf("sys.path.append('%s')", path)
 	// C.PyRun_SimpleString(C.CString(cmd))
@@ -28,5 +35,13 @@ func PySys_AppendPath(path string) error {
 	// defer C.PyMem_RawFree(unsafe.Pointer(wpath))
 	// C.PySys_SetPath(wpath)
 
+	return nil
+}
+
+// Append path to sys.path
+func PySys_RemoveSysPath(path string) error {
+	args := C.PyUnicode_FromString(C.CString(path))
+	defer C.Py_DecRef(args)
+	PyImport_GetModule("sys").GetAttrString("path").CallMethodArgs("remove", togo(args))
 	return nil
 }

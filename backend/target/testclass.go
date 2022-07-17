@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"runtime"
 	"strconv"
+	"strings"
 
 	"github.com/google/uuid"
 	py "github.com/i-mes/imes-app/backend/python"
@@ -31,6 +32,8 @@ type TestClass struct {
 	Title        string            `json:"title"`
 	Desc         string            `json:"desc"`
 	FileName     string            `json:"filename"`
+	ModulePath   string            `json:"modulepath"`
+	ModuleName   string            `json:"modulename"`
 	ClassName    string            `json:"classname"`
 	TestItems    []TestItem        `json:"testitems"`
 	Parametrizes map[string]string `json:"parametrizes"`
@@ -84,7 +87,7 @@ type TestClass struct {
 // 对应关系：
 // TestClass -- class Test_XXX
 // TestItem  -- func test_xxx
-func ParsePythonOneStep(ctx *context.Context, file string) []TestClass {
+func ParsePythonOneStep(ctx *context.Context, root, file string) []TestClass {
 	f, err := os.Open(file)
 	if err != nil {
 		wails.LogError(*ctx, "Can not open file:"+file)
@@ -95,7 +98,7 @@ func ParsePythonOneStep(ctx *context.Context, file string) []TestClass {
 
 	// 解析 Fixture 夹具 文件
 	fixs := make([]string, 0)
-	confile := path.Dir(file) + "/conftest.py"
+	confile := root + "/conftest.py"
 	if _, err1 := os.Stat(confile); err1 == nil {
 		validFixture := regexp.MustCompile(`^\s*@pytest.fixture`)
 		validFixtureFunc := regexp.MustCompile(`^\s*def (.*)\(`)
@@ -127,14 +130,19 @@ func ParsePythonOneStep(ctx *context.Context, file string) []TestClass {
 	// 解析 pytest 文件
 	r := bufio.NewReader(f)
 	tcs := make([]TestClass, 0)
-	validClass := regexp.MustCompile(`^class\ *(.*):`)
-	validFunc := regexp.MustCompile(`^\s*def (test_.*)\(`)
+	validClass := regexp.MustCompile(`^class\s*([t|T]est.*):`)
+	validFunc := regexp.MustCompile(`^\s*def ([t|T]est.*)\((.*)\):\s*$`)
 	validDoc := regexp.MustCompile(`^\s*"""(.*)"""`)
 	validDocStart := regexp.MustCompile(`^\s*"""(.*)`)
 	validDocEnd := regexp.MustCompile(`^\s*(.*)"""`)
 	validParameterize := regexp.MustCompile(`^\s*@pytest.mark.parametrize\("(.*)",\s*(.*)\)`)
 
+	modpath := root
+	modnamewithsuf := strings.ReplaceAll(file[len([]rune(root))+1:], "/", ".")
+	suf := path.Ext(modnamewithsuf)
+	modname := strings.TrimSuffix(modnamewithsuf, suf)
 	funcName := ""
+	args := make([]string, 0)
 	huntDoc := false
 	hintDoc := false
 	docStr := ""
@@ -163,28 +171,29 @@ func ParsePythonOneStep(ctx *context.Context, file string) []TestClass {
 				paraln = ln
 			}
 
-			// 匹配出 Class 名称
+			// 匹配出 Class 名称，并创建 TestClass
 			cnames := validClass.FindStringSubmatch(line)
 			if len(cnames) > 1 {
-				wails.LogTrace(*ctx, fmt.Sprintf("Match class: %s", cnames[1]))
+				wails.LogDebug(*ctx, fmt.Sprintf("Match class: %s", cnames[1]))
 				_uuid, _ := uuid.NewUUID()
 				if (ln - paraln) == 1 {
 					tcs = append(tcs,
-						TestClass{_uuid.String(), cnames[1], "", file, cnames[1], make([]TestItem, 0),
+						TestClass{_uuid.String(), cnames[1], "", file, modpath, modname, cnames[1], make([]TestItem, 0),
 							map[string]string{parametrize1: parametrize2}, fixs})
 				} else {
 					tcs = append(tcs,
-						TestClass{_uuid.String(), cnames[1], "", file, cnames[1], make([]TestItem, 0), nil, fixs})
+						TestClass{_uuid.String(), cnames[1], "", file, modpath, modname, cnames[1], make([]TestItem, 0), nil, fixs})
 				}
 				continue
 			}
 
-			// 匹配出当前 Class 所属的 Function 名称
+			// 匹配出当前 Class 内 Method 名称，并进入 docstr 搜索状态
 			fnames := validFunc.FindStringSubmatch(line)
 			if len(fnames) > 1 {
-				wails.LogTrace(*ctx, fmt.Sprintf("Match function: %s", fnames[1]))
+				wails.LogDebug(*ctx, fmt.Sprintf("Match function: %v", fnames))
 				// 继续匹配 DocString
 				funcName = fnames[1]
+				args = strings.Split(strings.ReplaceAll(fnames[2], " ", ""), ",")[1:]
 				huntDoc = true
 			}
 		} else { // hunt DocStr 状态
@@ -220,12 +229,13 @@ func ParsePythonOneStep(ctx *context.Context, file string) []TestClass {
 				}
 			}
 
+			// docstr 搜索完毕，创建 TestItem
 			if !huntDoc {
 				wails.LogTrace(*ctx, "hunt docstr 结束，生成 TestItem"+funcName+docStr)
 				_l := len(tcs) - 1
 				_uuid, _ := uuid.NewUUID()
 				tcs[_l].TestItems = append(tcs[_l].TestItems,
-					TestItem{_uuid.String(), funcName, docStr, file, funcName, 0})
+					TestItem{_uuid.String(), funcName, "", modpath, modname, funcName, args, docStr, 0})
 				docStr = ""
 			}
 		}
@@ -244,7 +254,7 @@ func (tc *TestClass) RunPython(ctx context.Context, emit func(ename, tiid, msg s
 	wails.LogDebug(ctx, "Get Python GIL lock")
 
 	// debug info
-	wails.LogDebug(ctx, "--------- start testclass "+tc.Title)
+	wails.LogDebug(ctx, "========== start testclass "+tc.Title)
 	wails.LogDebug(ctx, "go process id: "+strconv.Itoa(utils.GetProcessId()))
 	wails.LogDebug(ctx, "go threading id: "+strconv.Itoa(utils.GetThreadId()))
 	py.LogProcessId()
@@ -255,29 +265,42 @@ func (tc *TestClass) RunPython(ctx context.Context, emit func(ename, tiid, msg s
 		py.Py_Initialize()
 	}
 
-	// 首先实例化夹具（pytest fixture）
+	// 检查 conftest.py, 找到 create_entity(name) 则创建 entity
+	var entObj *py.PyObject
 	fixObjs := make([]*py.PyObject, 0)
-	if len(tc.Fixtures) > 0 {
-		_modc := py.PyImport_ImportFile(path.Dir(tc.FileName) + "/conftest.py")
-		if _modc == nil {
+
+	// 处理夹具文件
+	if _, _err := os.Stat(tc.ModulePath + "/conftest.py"); _err == nil {
+		_modct := py.PyImport_ImportFile(tc.ModulePath, tc.ModulePath+"/conftest.py")
+		if _modct == nil {
 			wails.LogError(ctx, "import module error")
 			py.PyErr_Print()
-			return
 		} else {
-			defer _modc.DecRef()
-		}
-		wails.LogDebug(ctx, _modc.Dir())
-		for _, fix := range tc.Fixtures {
-			obj := _modc.CallMethod(fix)
-			py.PyErr_Print()
-			fmt.Println("-=-=-=-=-=-=", fix, obj)
-			fixObjs = append(fixObjs, obj)
+			defer _modct.DecRef()
+			wails.LogDebug(ctx, "conftest.py:")
+			wails.LogDebug(ctx, _modct.Dir())
+
+			// 首先尝试创建全局 Entity
+			entObj = _modct.CallMethodArgs("create_entity", py.PyUnicode_FromString("199.33.33.33"))
+			if entObj == nil {
+				py.PyErr_Print()
+			}
+
+			// 其次实例化夹具（pytest fixture）
+			// if len(tc.Fixtures) > 0 {
+			// 	for _, fix := range tc.Fixtures {
+			// 		obj := _modct.CallMethod(fix)
+			// 		py.PyErr_Print()
+			// 		fmt.Println("-=-=-=-=-=-=", fix, obj)
+			// 		fixObjs = append(fixObjs, obj)
+			// 	}
+			// }
 		}
 	}
 
 	// 运行测试用例
 	// 导入 py 脚本
-	_mod := py.PyImport_ImportFile(tc.FileName)
+	_mod := py.PyImport_AddPathAndImportModule(tc.ModulePath, tc.ModuleName)
 	if _mod == nil {
 		wails.LogError(ctx, "import module error")
 		py.PyErr_Print()
@@ -287,7 +310,19 @@ func (tc *TestClass) RunPython(ctx context.Context, emit func(ename, tiid, msg s
 	}
 
 	wails.LogDebug(ctx,
-		fmt.Sprintf("Does module %s has attr %s : %t", _mod.Name(), tc.Title, _mod.HasAttrString(tc.ClassName)))
+		fmt.Sprintf("Does module %s has Class %s : %t", _mod.Name(), tc.Title, _mod.HasAttrString(tc.ClassName)))
+
+	// 如果当前模块（.py）中发现 create_entity，则用于实例化 entity
+	wails.LogDebug(ctx,
+		fmt.Sprintf("Does module %s has Func %s : %t", _mod.Name(), "create_entity", _mod.HasAttrString("create_entity")))
+	if _mod.HasAttrString("create_entity") {
+		entObj = _mod.CallMethod("create_entity")
+		if entObj != nil {
+			defer entObj.DecRef()
+		} else {
+			py.PyErr_Print()
+		}
+	}
 
 	// Py3 C-API 使用 PyObject_CallMethod 实例化 class
 	_class := _mod.CallMethod(tc.ClassName)
@@ -295,11 +330,21 @@ func (tc *TestClass) RunPython(ctx context.Context, emit func(ename, tiid, msg s
 		wails.LogDebug(ctx, _class.Repr())
 		wails.LogDebug(ctx, _class.Dir())
 		for _, ti := range tc.TestItems {
-			wails.LogDebug(ctx, fmt.Sprintf("------- start testitem %s with %v ", ti.FuncName, fixObjs))
+			wails.LogDebug(ctx, fmt.Sprintf("------- start testitem %s with entity(%v), fixture(%v)", ti.FuncName, entObj, fixObjs))
 			emit("testitemstatus", ti.Id, "started")
 			// 调用对象的方法，执行具体的测试项
-			_ret := _class.CallMethodArgs(ti.FuncName, fixObjs...)
-			py.LogInfo(ti.FuncName)
+			var _ret *py.PyObject
+			if len(ti.Args) > 0 {
+				// 有参
+				if entObj != nil && ti.Args[0] == "entity" {
+					_ret = _class.CallMethodArgs(ti.FuncName, entObj)
+				} else {
+					wails.LogError(ctx, "entity is nil")
+				}
+			} else {
+				// 无参
+				_ret = _class.CallMethodArgs(ti.FuncName)
+			}
 			if _ret == nil {
 				py.PyErr_Print()
 				wails.LogError(ctx, fmt.Sprintf("Run TI Error: %s\t%s", tc.ClassName, ti.FuncName))
@@ -308,11 +353,17 @@ func (tc *TestClass) RunPython(ctx context.Context, emit func(ename, tiid, msg s
 				wails.LogDebug(ctx, fmt.Sprintf("Run TI Pass: %s\t%s", tc.ClassName, ti.FuncName))
 				emit("testitemstatus", ti.Id, "pass")
 			}
+			wails.LogDebug(ctx, fmt.Sprintf("------- end testitem %s\n", ti.FuncName))
 		}
 	} else {
 		py.PyErr_Print()
 		wails.LogError(ctx, "--- can not get "+tc.ClassName)
 	}
+
+	if _mod.HasAttrString("teardown") {
+		_mod.CallMethodArgs("teardown")
+	}
+	wails.LogDebug(ctx, "========== end testclass "+tc.Title)
 }
 
 // 解析 go 文件，提取 TestClass
