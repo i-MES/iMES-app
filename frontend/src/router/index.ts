@@ -7,16 +7,16 @@ import DashBoard from '../views/DashBoard.vue'
 import FooBar from '../views/FooBar.vue'
 
 const routes: Array<RouteRecordRaw> = [
-  {
-    path: '/',
-    name: 'home', // 与 i18n/x.json 中 nav.xxx 中自动对应
-    component: AppHome,
-    meta: {
-      location: 'top',
-      sort: 1,
-      icon: 'mdi-home'
-    }
-  },
+  // {
+  //   path: '/',
+  //   name: 'home', // 与 i18n/x.json 中 nav.xxx 中自动对应
+  //   component: AppHome,
+  //   meta: {
+  //     location: 'top',
+  //     sort: 1,
+  //     icon: 'mdi-home'
+  //   }
+  // },
   {
     path: '/test',
     name: 'test',
@@ -24,7 +24,8 @@ const routes: Array<RouteRecordRaw> = [
     meta: {
       location: 'top',
       sort: 2,
-      icon: 'mdi-arrow-right-bold-circle-outline'
+      icon: 'mdi-parachute-outline'
+      // icon: 'mdi-arrow-right-bold-circle-outline'
     }
   },
   {

@@ -11,12 +11,15 @@ import (
 
 // 测试项
 type TestItem struct {
-	Id       string `json:"id"`
-	Title    string `json:"title"`
-	Desc     string `json:"desc"`
-	FileName string `json:"filename"`
-	FuncName string `json:"funcname"`
-	Sequence int    `json:"sequence"`
+	Id         string   `json:"id"`
+	Title      string   `json:"title"`
+	Desc       string   `json:"desc"`
+	ModulePath string   `json:"modulepath"`
+	ModuleName string   `json:"modulename"`
+	FuncName   string   `json:"funcname"`
+	Args       []string `json:"args"`
+	Docstr     string   `json:"docstr"`
+	Sequence   int      `json:"sequence"`
 }
 
 // func CreateTestItemExample() {

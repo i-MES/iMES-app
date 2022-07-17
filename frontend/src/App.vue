@@ -81,7 +81,6 @@ import { useRouter, useRoute, RouteRecordRaw } from 'vue-router'
 import { useDisplay } from 'vuetify'
 import { useI18n } from 'vue-i18n'
 // about wails
-import { WindowMinimise, Quit } from '../wailsjs/runtime'
 import { OpenGithub } from '../wailsjs/go/imes/Api'
 import { SysInfo } from '../wailsjs/go/main/App'
 // about app
@@ -90,7 +89,7 @@ import { useBaseStore } from './stores/index'
 const router = useRouter() // router 是管理器，可以 addRoute、removeRoute、getRoutes、push...
 const route = useRoute() // route 是一个响应式对象，
 const store = useBaseStore()
-const { t, availableLocales, locale } = useI18n({ useScope: 'global' })
+const { t, locale } = useI18n({ useScope: 'global' })
 
 //********** 底部 App-bar 相关 **********/
 // change theme
@@ -99,11 +98,11 @@ const onclickToggleTheme = () => {
   console.log(store.appTheme)
 }
 // change i18n
-const languages = availableLocales
-const onclickLanguageHandle = (item: string) => {
-  // 所有语言列表切换
-  item !== locale.value ? (locale.value = item) : false
-}
+// const languages = availableLocales
+// const onclickLanguageHandle = (item: string) => {
+//   // 所有语言列表切换
+//   item !== locale.value ? (locale.value = item) : false
+// }
 const onclickToggleLanguage = () => {
   // 中英文切换
   locale.value ? (locale.value == 'en' ? (locale.value = 'zh-Hans') : (locale.value = 'en')) : false
@@ -116,7 +115,6 @@ const onclickOpenGithub = () => {
 }
 
 //********** 左侧 APP 导航栏相关 **********/
-const onToggleMenu = ref(true)
 const disableToggleMore = ref(true)
 const listSelected = ref([])
 const onclickMenuListItem = (menu: RouteRecordRaw) => {
@@ -141,13 +139,13 @@ watch(
 //********** 其他 **********/
 const display = useDisplay()
 // hide window
-const onclickMinimise = () => {
-  WindowMinimise()
-}
-// close app
-const onclickQuit = () => {
-  Quit()
-}
+// const onclickMinimise = () => {
+//   WindowMinimise()
+// }
+// // close app
+// const onclickQuit = () => {
+//   Quit()
+// }
 
 onMounted(() => {
   // practise vuetify's display props

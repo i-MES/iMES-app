@@ -8,6 +8,7 @@ class Test_GPIO:
       pass
 
     def test_gpio_buff(self):
+      """GPIO 测试"""
       i = randint(1,5)
       time.sleep(i)
       assert i < 5

@@ -2,12 +2,19 @@
   <v-expansion-panel>
     <v-expansion-panel-title>
       <template v-slot:default>
-        <span style="max-width:100%" class="text-truncate">{{ ti.title
+        <span style="max-width:100%" class="text-truncate">{{ ti.docstr ? ti.docstr :
+            ti.title
         }}</span>
       </template>
     </v-expansion-panel-title>
     <v-expansion-panel-text>
-      {{ ti.desc }}
+      TestItem<br />
+      desc: {{ ti.desc }}<br />
+      modulepath: {{ ti.modulepath }}<br />
+      modulename: {{ ti.modulename }}<br />
+      funcname: {{ ti.funcname }}<br />
+      args: {{ ti.args }}<br />
+      docstr: {{ ti.docstr }}<br />
     </v-expansion-panel-text>
     <div>
       <v-progress-linear v-model="progressdata" :indeterminate="isrunning"
@@ -20,6 +27,7 @@
 <script lang="ts" setup>
 import { ref, onBeforeUnmount, onMounted } from 'vue'
 import { target } from '../../../wailsjs/go/models'
+import * as runtime from '../../../wailsjs/runtime/runtime'
 
 const props = defineProps<{
   teid: string,
@@ -41,7 +49,7 @@ const pcolor = ref('')
 
 onMounted(() => {
   console.log('++ TestItem:', props.ti)
-  window.runtime.EventsOn('testitemstatus', (tistatus: target.TestItemStatus) => {
+  runtime.EventsOn('testitemstatus', (tistatus: target.TestItemStatus) => {
     console.log('receive event', tistatus)
     if (props.ti.id == tistatus.testitemid) {
       console.log('==', props.ti.title, tistatus.status)
@@ -61,7 +69,7 @@ onMounted(() => {
       // 同 group、同 tc 的 ti 需要……
     }
   })
-  window.runtime.EventsOn('clearprocessbar', (ids) => {
+  runtime.EventsOn('clearprocessbar', (ids) => {
     if (ids.teid == props.teid && ids.tgid == props.tgid) {
       console.log('EventsOn clearprocessbar')
       progressdata.value = 0
@@ -72,7 +80,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   // clearInterval(interval)
   console.log('-- TestItem:', props.ti)
-  // window.runtime.EventsOff('testitemstatus')
+  // runtime.EventsOff('testitemstatus')
 })
 </script>
 

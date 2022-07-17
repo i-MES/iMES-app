@@ -56,17 +56,17 @@ func (a *Api) MsgDialog(msg string) {
 }
 
 // 通过对话框 UI 得到用户选择
-func (a *Api) OpenFile(title, filePattern string) string {
-	return utils.OpenFile(&a.ctx, title, filePattern)
+func (a *Api) SelectFile(title, filePattern string) string {
+	return utils.SelectFile(&a.ctx, title, filePattern)
 }
 
 // 通过对话框 UI 得到用户选择
-func (a *Api) OpenFolder(title string) string {
-	return utils.OpenFolder(&a.ctx, title)
+func (a *Api) SelectFolder(title string) string {
+	return utils.SelectFolder(&a.ctx, title)
 }
 
-func (a *Api) LoadTestGroup(loadFlag string, selectPath bool) []target.TestGroup {
-	return target.LoadTestGroup(&a.ctx, loadFlag, selectPath)
+func (a *Api) LoadTestGroup(loadFlag string, selectFolder, selectPath bool) []target.TestGroup {
+	return target.LoadTestGroup(&a.ctx, loadFlag, selectFolder, selectPath)
 }
 
 func (a *Api) StopTestGroupSyncMonitor() {

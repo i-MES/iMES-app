@@ -109,7 +109,7 @@ func StartSyncMonitor(dataType string, srcs []string, newcallback func(string), 
 					for _, sf := range srcs {
 						if sfinfo, _err := os.Stat(sf); _err == nil {
 							if cfinfo.ModTime().Before(sfinfo.ModTime()) {
-								// 源代码比缓存新
+								// 源代码比 config 新
 								fmt.Printf("[%s(%s)] newer than [%s(%s)]\n",
 									sfinfo.Name(), sfinfo.ModTime(),
 									cfinfo.Name(), cfinfo.ModTime())

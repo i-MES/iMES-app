@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"runtime"
 	"strconv"
 
 	"github.com/i-mes/imes-app/backend/target"
@@ -13,6 +14,7 @@ import (
 	"github.com/i-mes/imes-app/backend/utils"
 	"github.com/wailsapp/wails/v2/pkg/logger"
 	"github.com/wailsapp/wails/v2/pkg/menu"
+	"github.com/wailsapp/wails/v2/pkg/menu/keys"
 	wails "github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
@@ -20,7 +22,28 @@ import (
 type App struct {
 	ctx         context.Context
 	api         *imes.Api
+	menu        *menu.Menu
 	threadState *py.PyThreadState
+}
+
+// 制作 AppMenu
+func (a *App) applicationMenu() *menu.Menu {
+	a.menu = menu.NewMenu()
+	FileMenu := a.menu.AddSubmenu("File")
+	FileMenu.AddText("Load Config Data Only", keys.CmdOrCtrl("o"), a.loadConfigFileCallback)
+	FileMenu.AddSeparator()
+	FileMenu.AddText("Quit", keys.CmdOrCtrl("q"), func(_ *menu.CallbackData) {
+		wails.Quit(a.ctx)
+	})
+	if runtime.GOOS == "darwin" {
+		a.menu.Append(menu.EditMenu()) // on macos platform, we should append EditMenu to enable Cmd+C,Cmd+V,Cmd+Z... shortcut
+	}
+	ViewMenu := a.menu.AddSubmenu("View")
+	ViewMenu.AddText("...", keys.CmdOrCtrl(","), a.msgDialog)
+	HelpMenu := a.menu.AddSubmenu("Help")
+	HelpMenu.AddText("...", keys.CmdOrCtrl("."), a.msgDialog)
+	// wails.MenuSetApplicationMenu(a.ctx, a.menu)
+	return a.menu
 }
 
 // startup is called when the app starts. The context is saved
@@ -46,11 +69,40 @@ func (a *App) startup(ctx context.Context) {
 	wd, _ := os.Getwd()
 	wails.LogInfo(ctx, wd)
 
+	// ===== CPython 启动 =====
 	if !py.Py_IsInitialized() {
+		// 方式1: Unix 用 :, Windows 用 ;
+		// py.Py_SetProgramName("/data/kevin/workspace/zproject/pytp/venv3.10/bin/python") // 参与生成 prefix，进而生成 sys.path
+		py.Py_SetProgramName("/Users/wangkevin/workspace/kproject/mes/iMES_202204/venv3.10.4/bin/python")
+		// py.Py_SetPythonHome()  // 标准库搜索路径(不可 venv)
+		// py.Py_SetPath("") 			// 会清空 prefix，只留下本初的入参，所以可能缺少标准库，不如由 Py_SetProgramName() 自动生成比较稳妥
 		py.Py_Initialize()
+
+		// 方式2
+		// syspath := []string{
+		// 	"/home/me/.pyenv/versions/3.10.4/lib/python3.10",
+		// 	"/home/me/.pyenv/versions/3.10.4/lib/python3.10/lib-dynload",
+		// 	"/data/kevin/workspace/zproject/pytp/pyTP/src",
+		// 	"/data/kevin/workspace/zproject/pytp/venv/lib/python3.8/site-packages"}
+		// py.Py_InitializeFromConfig(syspath)
+
+		// 方式3: 后面再 sys.path.append()，这样会带上 sys.path 的默认值
+		// py.Py_Initialize()
 	}
 	if !py.Py_IsInitialized() {
-		panic(fmt.Errorf("python: could not initialize the python interpreter"))
+		panic(fmt.Errorf("Could not initialize the python interpreter!"))
+	}
+
+	// 验证启动情况：
+	if pyName, err := py.Py_GetProgramName(); err == nil {
+		fmt.Println("Py_GetProgramName: ", pyName)
+	}
+	if pyHome, err := py.Py_GetPythonHome(); err == nil {
+		fmt.Println("Py_GetPythonHome:", pyHome)
+	}
+	if pyPath, err := py.Py_GetPath(); err == nil {
+		// 注意 pip install -e 安装的 module 是否还存在
+		fmt.Println("Py_GetPath:", pyPath)
 	}
 
 	// ===== CPython 高层接口 =====
@@ -58,6 +110,7 @@ func (a *App) startup(ctx context.Context) {
 	py.PyRun_SimpleString("import os")
 	py.PyRun_SimpleString("import sys")
 	py.PyRun_SimpleString("import threading")
+	py.PyRun_SimpleString("import pytp")
 	py.PyRun_SimpleString("from pathlib import Path")
 	// sys.modules: 已 loaded 到内存的 module
 	// 建议不要直接使用 sys.modules,而是 copy 后使用
@@ -71,42 +124,48 @@ for path in sys.path:
 _mods = sys.modules.copy() 				
 for key, value in _mods.items():	
 	print(value)
-print("dir():", dir()) 						
+print("Global dir():", dir()) 						
 print("OS.name: ", sys.modules["os"].name)
 print("Path.cwd: ", Path.cwd())
 print("Path.home: ", Path.home())
+print("sys.prefix: ", sys.prefix)
+print("pytp.VERSION: ", pytp.VERSION)
+sys.stdout.write('******************'+'\n')
 `)
+	py.PyRun_SimpleString(`import debugpy`)
+	py.PyRun_SimpleString(`debugpy.listen(8899)`)
+	// py.PyRun_SimpleString(`debugpy.wait_for_client()`)
 
 	// ===== CPython 低层接口 =====
 	fmt.Println("=========== Try Python Low Level C API")
 
 	// python module 的 2 步动作
 	//     1. load 到 sys.modules：module 已被创建，并全局可访问
-	//     2. 注入到 dir()：可以用 xxxmod.xxx 访问到该 module
-	// PyImport_ImportModule -- 其实只是 Load 到 sys.modules,并没有注入到 dir() —— 这也太坑爹了，困我好几天
-	// PyRun_SimpleString("import xxx") -- 才会同时生效到 sys.modules & dir()
-	// PyImport_AddModule -- 不会 load 和 import，会检查 sys.modules 中是否有，有则拿出，没有创建个 empty 的。
-	// 这逻辑也没谁了，太 TM 让人 emo 了。
-	// 文档中有一段：
-	// module = PyImport_ImportModule("<modulename>");
-	// 如果模块尚未被导入（即它还不存在于 sys.modules 中），这会初始化该模块；否则它只是简单地返回 sys.modules["<modulename>"] 的值。
-	// 请注意它并不会将模块加入任何命名空间 —— 它只是确保模块被初始化并存在于 sys.modules 中。
-	// 之后你就可以通过如下方式来访问模块的属性（即模块中定义的任何名称）:
-	// attr = PyObject_GetAttrString(module, "<attrname>");
+	//     2. 注入到全局命名空间 dir()：可以用 xxxmod.xxx 访问到该 module
+	// PyRun_SimpleString('import xxx') -- 完成 1、2 两个步骤
+	// PyImport_ImportModule('xxx') -- 只完成 1，不做 2 —— 这也太坑爹了，困我好几天
+	// 			文档中有一段：
+	// 			module = PyImport_ImportModule("<modulename>");
+	// 			如果模块尚未被导入（即它还不存在于 sys.modules 中），这会初始化该模块；否则它只是简单地返回 sys.modules["<modulename>"] 的值。
+	// 			请注意它并不会将模块加入任何命名空间 —— 它只是确保模块被初始化并存在于 sys.modules 中。
+	// 			之后你就可以通过如下方式来访问模块的属性（即模块中定义的任何名称）:
+	// 			attr = PyObject_GetAttrString(module, "<attrname>");
+	// 			然后可以使用 attr 自己的命名空间(即：attr.__dir__() )
+	// PyImport_AddModule -- 1、2 都不做，只会检查 sys.modules 中是否有，有则拿出，没有创建个 empty 的。—— 这逻辑也没谁了，太 TM 让人 emo 了。
 
 	fmt.Println("====== Try PyImport_ImportModule")
 	_mod_dt := py.PyImport_ImportModule("datetime")
 	// defer _mod_dt.DecRef() // 保留住，就不删除了
 	py.PyRun_SimpleString(`print(sys.modules["datetime"])`)                         // 有，可以访问到
 	py.PyRun_SimpleString(`print("Now1: ",sys.modules["datetime"].datetime.now())`) // 有效
-	py.PyRun_SimpleString(`print("dir():", dir())`)                                 // 没有 datetime
+	py.PyRun_SimpleString(`print("dir():", dir())`)                                 // 全局 dir 中没有 datetime
 	py.PyRun_SimpleString(`print("Now2: ",datetime.datetime.now())`)                // 无效, NameError: name 'datetime' is not defined
 
 	_type_dt := _mod_dt.GetAttrString("datetime")
 	defer _type_dt.DecRef()
 	_func_now := _type_dt.GetAttrString("now")
 	// defer _func_now.DecRef()
-	fmt.Println(py.PyCallable_Check(_func_now)) // true
+	fmt.Println(py.PyCallable_Check(_func_now)) // true，datatime 自己的命名空间(datetime.__dir__())中有 now
 
 	_now := _func_now.CallObject(nil) // call now funcution
 	defer _now.DecRef()
@@ -162,24 +221,24 @@ print("Path.home: ", Path.home())
 	}
 
 	fmt.Println("====== Try PyImport from a file")
-	// 下面不生效，原因：
 	// PyImport_ImportModule(): 只会 import 已经在 sys.path 路径下的 *.py 文件
 	// 文档里说的仅能使用绝对路径，不是文件的绝对路径，而是module的(绝对:x.y,相对:..x.y)
 	// _gpio := py.PyImport_ImportModule("/data/kevin/workspace/kproject/imes/iMES-app/testcase/python/test_gpio.py")
 	// defer _gpio.DecRef()
-	// 所以封装了下面函数:
-	_mod_gpio := py.PyImport_ImportFile("./testcase/python/test_gpio.py")
+	// 所以封装了 PyImport_ImportFile 函数:
+	_mod_gpio := py.PyImport_ImportFile(".", "./testcase/python/test_gpio.py")
 	if _mod_gpio == nil {
 		fmt.Println("Module test_gpio can not imported from file")
 	} else {
 		fmt.Println(_mod_gpio.Name())
-		py.PyRun_SimpleString(`print(sys.modules["test_gpio"])`)
+		py.PyRun_SimpleString(`print(sys.modules["testcase.python.test_gpio"])`)
 	}
 
 	fmt.Println("====== Try PyXXX_Check")
 	fmt.Println("Is PyImport_GetModuleDict's output dict type? - ", py.PyDict_Check(py.PyImport_GetModuleDict())) // true
 
 	fmt.Println("Python version: ", py.Py_GetVersion())
+	fmt.Println("Python path: ", py.PyImport_GetModule("os").GetAttrString("sys").GetAttrString("path").Repr())
 
 	py.InitLog()
 
@@ -231,7 +290,7 @@ func (a *App) SysInfo() SysInfo {
 }
 
 func (a *App) loadConfigFileCallback(data *menu.CallbackData) {
-	target.LoadTestGroup(&a.ctx, "src", true)
+	target.LoadTestGroup(&a.ctx, "src", true, true)
 }
 
 func (a *App) msgDialog(data *menu.CallbackData) {

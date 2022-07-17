@@ -30,16 +30,18 @@ type TestGroup struct {
 	TestClasses []TestClass `json:"testclasses"`
 }
 
+// root: 作为 module search path，添加到 sys.path
+// filepaths: 文件的完整路径（需要以 root 开头），不是相对路径
 // strategy(策略)
-// 1. 所有 py 文件生成 1 个 TestGroup
-// 2. 每个 py 文件生成 1 个 TestGroup
-func ParsePythons(ctx *context.Context, filepaths []string, strategy int) []TestGroup {
+//  	1. 所有 py 文件生成 1 个 TestGroup
+//  	2. 每个 py 文件生成 1 个 TestGroup
+func ParsePythons(ctx *context.Context, root string, filepaths []string, strategy int) []TestGroup {
 	tgs := make([]TestGroup, 0)
 	if strategy == 1 {
 		if _uuid, err := uuid.NewUUID(); err == nil {
 			tg := TestGroup{_uuid.String(), "", "", make([]TestClass, 0)}
 			for _, fp := range filepaths {
-				tg.TestClasses = append(tg.TestClasses, ParsePythonOneStep(ctx, fp)...)
+				tg.TestClasses = append(tg.TestClasses, ParsePythonOneStep(ctx, root, fp)...)
 			}
 			tgs = append(tgs, tg)
 		} else {
@@ -48,32 +50,44 @@ func ParsePythons(ctx *context.Context, filepaths []string, strategy int) []Test
 	} else if strategy == 2 {
 		for _, fp := range filepaths {
 			if _uuid, err := uuid.NewUUID(); err == nil {
-				tgs = append(tgs, TestGroup{_uuid.String(), path.Base(fp), fp, ParsePythonOneStep(ctx, fp)})
+				tgs = append(tgs, TestGroup{_uuid.String(), path.Base(fp), fp, ParsePythonOneStep(ctx, root, fp)})
 			} else {
 				fmt.Println("error uuid get: ", err)
 			}
 		}
 	}
-	wails.LogDebug(*ctx, "ParsePythons tgs len:"+string(len(tgs)))
+	wails.LogDebug(*ctx, fmt.Sprintf("ParsePythons tgs len: %d", len(tgs)))
 	return tgs
 }
 
+var curmoduleroot string = ""
+
 // 从源代码文件文件中加载 TG 数据，并开启 SyncMonitor
-func LoadTestGroupFromSrc(ctx *context.Context, selectPath bool) ([]TestGroup, []string) {
-	folderpath := ""
-	if selectPath {
-		// 用户选择文件夹
-		folderpath = utils.OpenFolder(ctx, "Open TestCase Folder")
+func LoadTestGroupFromSrc(ctx *context.Context, selectFolder, selectPath bool) ([]TestGroup, []string) {
+	moduleroot := ""
+	filepathes := make([]string, 0)
+	if selectFolder {
+		if selectPath {
+			// 用户选择文件夹
+			moduleroot = utils.SelectFolder(ctx, "Select TestCase Folder")
+		} else {
+			// 使用默认文件夹
+			moduleroot = utils.GetAppPath() + "/testcase/python/"
+		}
+		_fps, err := utils.GetAllFile(moduleroot, "test*.py", true)
+		if err != nil {
+			wails.LogDebug(*ctx, "Can not load python file")
+			return nil, nil
+		} else {
+			filepathes = append(filepathes, _fps...)
+		}
 	} else {
-		// 使用默认文件夹
-		folderpath = utils.GetAppPath() + "/testcase/python/"
+		filepathes = append(filepathes,
+			utils.SelectFile(ctx, "Select TestCase File", "*.py"))
+		moduleroot = path.Dir(filepathes[0])
 	}
-	filepathes, err := utils.GetAllFile(folderpath, "test*.py", true)
-	if err != nil {
-		wails.LogDebug(*ctx, "Can not load python file")
-		return nil, nil
-	}
-	tgs := ParsePythons(ctx, filepathes, 2)
+	tgs := ParsePythons(ctx, moduleroot, filepathes, 2)
+	curmoduleroot = moduleroot
 	return tgs, filepathes
 }
 
@@ -109,10 +123,15 @@ func LoadTestGroupFromConfig(ctx *context.Context) ([]TestGroup, []string) {
 /*
 加载 TestGroup 到内存（Cache）
 
-加载源 & 加载方式：
-	loadConfig: 从 config/xxx.json 中加载数据
-	loadFile:   从 源代码文件中解析数据，并完整重写 Config 文件
-		selectPath: 源代码文件的目录由用户选择 or App 默认目录
+loadFlag: 加载源 & 加载方式
+	config: 从 config/xxx.json 中加载数据
+	src:   从 源代码文件中解析数据，并完整重写 Config 文件
+selectPath: 从源代码解析时是否用户选择
+	true: 用户选择
+	false: 使用 App 默认
+selectFolder: 解析源代码目录 or 文件
+	true: 解析文件
+	false: 解析文件
 
 同步策略：
 	- 2 种加载方式都会启动 SyncMonitor
@@ -123,14 +142,15 @@ func LoadTestGroupFromConfig(ctx *context.Context) ([]TestGroup, []string) {
 	用户仅需解析一次源文件，后续源文件修改会自动同步 Merge 到 Cache & Config。
 	用户再次解析源文件，也要确认是否已存在 Config，存在则进行 Merge。
 */
-func LoadTestGroup(ctx *context.Context, loadFlag string, selectPath bool) []TestGroup {
+func LoadTestGroup(ctx *context.Context, loadFlag string, selectFolder, selectPath bool) []TestGroup {
 	switch loadFlag {
 	case "config":
+		// config 文件不需要用户选择目录，仅使用 App 默认路径
 		ctgs, fs := LoadTestGroupFromConfig(ctx)
 		StartTestGroupSyncMonitor(ctx, fs, true)
 		return ctgs
 	case "src":
-		stgs, srcs := LoadTestGroupFromSrc(ctx, selectPath)
+		stgs, srcs := LoadTestGroupFromSrc(ctx, selectFolder, selectPath)
 		StartTestGroupSyncMonitor(ctx, srcs, true)
 		SaveTestGroup(ctx, stgs)
 		return stgs
@@ -147,7 +167,7 @@ func StartTestGroupSyncMonitor(ctx *context.Context, srcs []string, autoMerge bo
 			if autoMerge {
 				// 从源文件读取 TG ，并自动 Merge
 				ctgs, _ := LoadTestGroupFromConfig(ctx)
-				stgs := ParsePythons(ctx, []string{newsrcfile}, 1)
+				stgs := ParsePythons(ctx, curmoduleroot, []string{newsrcfile}, 1)
 				for _, stc := range stgs[0].TestClasses {
 					// Merge 策略：
 					//   src 中新增的 TC：保留到新的 TG 中，添加到 ctgs；
@@ -198,8 +218,15 @@ func (tg *TestGroup) Merge(ctx context.Context) {
 
 }
 
-// 执行 TestGroup 内 TestClass 的测试，Group 内串行，Group 间并行
+// 首先分析、创建全局的夹具、参数、创建 entity，
+// 然后遍历执行 TestGroup 内 TestClass 的测试。
+//
+// Wails 会为每个 Group 创建线程执行本函数，所以达到：Group 内串行，Group 间并行。
 func (tg *TestGroup) Run(ctx *context.Context, teid string) {
+	// 由于会出现不同 module(.py) 中的 class 在一个 group 的情况，
+	// 所以没法在这里 create_entity
+
+	// 遍历所有 TestClass
 	for _, tc := range tg.TestClasses {
 		tc.Run(ctx, func(ename string, tiid string, msg string) {
 			wails.EventsEmit(*ctx, ename,

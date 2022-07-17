@@ -16,9 +16,12 @@
         <v-expand-transition>
           <div v-show="show">
             <v-divider></v-divider>
-            <v-card-text class="ma-auto pa-auto"> intelligent Manufacturing Execution
-              System<br />
-              专心服务中小微生产制造企业的 MES 系统
+            <v-card-text class="ma-auto pa-auto">
+              intelligent Manufacturing Execution System<br />
+              专心服务中小微生产制造企业的 MES 系统<br />
+              {{ t('aboutpage.project-repository') }}<br />
+              <open-link class="link" href="https://github.com/i-MES/iMES-app">
+                https://github.com/i-MES/iMES-app</open-link>
             </v-card-text>
           </div>
         </v-expand-transition>

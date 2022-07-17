@@ -55,7 +55,8 @@ export type TGlobalState = {
   addEntity: boolean,
   TEsNotTE: boolean,
   testStatuses: ITestStatuses,
-  canSortTestClass: boolean
+  canSortTestClass: boolean,
+  enableTCTooltip: boolean
 }
 
 export const useBaseStore = defineStore('imesBaseStore', {
@@ -85,7 +86,8 @@ export const useBaseStore = defineStore('imesBaseStore', {
       addEntity: false,
       TEsNotTE: true,
       testStatuses: {},
-      canSortTestClass: false
+      canSortTestClass: false,
+      enableTCTooltip: false
     }
   },
   getters: {
@@ -198,9 +200,9 @@ export const useBaseStore = defineStore('imesBaseStore', {
         }
       })
     },
-    async LoadTestGroup(loadFlag: string, selectPath: boolean) {
+    async LoadTestGroup(loadFlag: string, selectFolder: boolean, selectPath: boolean) {
       // sync: 加载 & 去重 & 去脏 & 写回
-      api.LoadTestGroup(loadFlag, selectPath).then((tgs) => {
+      api.LoadTestGroup(loadFlag, selectFolder, selectPath).then((tgs) => {
         if (tgs) {
           console.log('load testgroup:', tgs)
           this.testGroups = tgs

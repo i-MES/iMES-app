@@ -25,20 +25,26 @@ func Version_Check(ver string) bool {
 	return false
 }
 
+func PyErr_Occurred() bool {
+	if err := C.PyErr_Occurred(); togo(err) != nil {
+		return true
+	} else {
+		return false
+	}
+}
+
 // 打印 python 中的 stderr
 func PyErr_Print() string {
 	errstr := ""
 	if err := C.PyErr_Occurred(); togo(err) != nil {
-		fmt.Println("------ python exception ------")
+		fmt.Println("XXXXXX python exception XXXXXX")
 		// sys.stdout = io.StringIO() // 修改 stdout 为 StringIO 实例
 		// sys.stderr = io.StringIO()
 		C.PyErr_Print()
 		// errstr := sys.stderr.getvalue() // 读出 stdout 的错误打印
 		// sys.stdout.close()
 		// sys.stderr.close()
-		fmt.Println("------")
-		fmt.Println("sys.path: ", PyImport_GetModule("sys").GetAttrString("path").Repr())
-		fmt.Println("------ end ------")
+		fmt.Println("XXXXXX end XXXXXX")
 	}
 	return errstr
 }

@@ -8,6 +8,7 @@ package python
 import "C"
 import (
 	"fmt"
+	"os"
 	"path"
 	"path/filepath"
 	"strings"
@@ -70,48 +71,61 @@ var PySysPathes []string
 /*
 	导入一个绝对路径描述的 py 文件，并返回 模块名（即：文件名）
 	本函数是个传递函数：与 PyImport_ImportModule 保持一致
+	root: 作为 module path
+	file - root: 作为 module name( / 替换为 .)
 */
-func PyImport_ImportFile(filename string) *PyObject {
-	// step0. 检查是否为绝对路径
+func PyImport_ImportFile(root, filename string) *PyObject {
+	// step0. 检查是否存在、绝对路径
+	if _, _err := os.Stat(filename); _err != nil {
+		// 文件不存在
+		return nil
+	}
+	if !filepath.IsAbs(root) {
+		_root, err := filepath.Abs(root)
+		if err == nil {
+			root = _root
+		}
+	}
 	if !filepath.IsAbs(filename) {
 		_filename, err := filepath.Abs(filename)
 		if err == nil {
 			filename = _filename
 		}
 	}
+
 	// step1. add sys.path
-	dir := path.Dir(filename)
 	if PySysPathes == nil {
 		PySysPathes = make([]string, 0)
 	}
 	_pathadded := false
 	for _, d := range PySysPathes {
-		if d == dir {
+		if d == root {
 			_pathadded = true
 			break
 		}
 	}
 	if !_pathadded {
-		fmt.Println("Add a new path to sys.path")
-		PySys_AppendPath(dir)
-		PySysPathes = append(PySysPathes, dir)
+		fmt.Printf("Add a new path(%s) to sys.path\n", root)
+		PySys_AppendSysPath(root)
+		PySysPathes = append(PySysPathes, root)
 	} else {
-		fmt.Println("Path has added sys.path")
+		fmt.Printf("Path(%s) has added sys.path\n", root)
 	}
+
 	// step2. load and import module
-	fwithsuf := path.Base(filename)
+	fwithsuf := strings.ReplaceAll(filename[len([]rune(root))+1:], "/", ".")
 	suf := path.Ext(fwithsuf)
-	f := strings.TrimSuffix(fwithsuf, suf)
-	_mod := PyImport_GetModule(f)
+	modname := strings.TrimSuffix(fwithsuf, suf) // 去掉 .py 后缀
+	_mod := PyImport_GetModule(modname)
 	// defer _mod.DecRef() 不能 DecRef，否则调用者就 emo 了。
 	if _mod == nil {
-		fmt.Println("Load and import new module: ", f)
+		fmt.Println("Load and import new module: ", modname)
 		// way 1:
 		// C.PyRun_SimpleString(C.CString(fmt.Sprintf("import %s", f)))
 		// way 2:
 		// _mod = togo(C.PyImport_Import(C.PyUnicode_FromString(C.CString(f))))
 		// way 3:
-		_mod = PyImport_ImportModule(f)
+		_mod = PyImport_ImportModule(modname)
 		// way 4:
 		// _mod = PyImport_AddModule(f) // Error! 只会添加一个 empty 的
 	}
@@ -119,6 +133,59 @@ func PyImport_ImportFile(filename string) *PyObject {
 		PyErr_Print()
 		fmt.Println(filename)
 	}
+
+	// step3. 查看新导入的 mod 的路径是否与入参匹配
+	// 如：入参是希望导入 x/y/z.py，但已经导入过 m/n/z.py，
+	// 则：m/n 一直在 sys.path 中，即使  x/y/z.py 不存在，也能 import z 成功
+	modfile := _mod.GetAttrString("__file__").Str()
+	if filename != modfile {
+		fmt.Println("Import wrong module: ", root, "!=", modfile)
+		PySys_RemoveSysPath(path.Dir(modfile))
+		fmt.Println(PySys_GetSysPath())
+		return nil
+	}
+
+	// return PyImport_GetModule(f)
+	return _mod
+}
+
+func PyImport_AddPathAndImportModule(modulepath, modulename string) *PyObject {
+	// step0. 检查是否为绝对路径
+	if !filepath.IsAbs(modulepath) {
+		_modulepath, err := filepath.Abs(modulepath)
+		if err == nil {
+			modulepath = _modulepath
+		}
+	}
+	// step1. add sys.path
+	if PySysPathes == nil {
+		PySysPathes = make([]string, 0)
+	}
+	_pathadded := false
+	for _, d := range PySysPathes {
+		if d == modulepath {
+			_pathadded = true
+			break
+		}
+	}
+	if !_pathadded {
+		fmt.Printf("Add a new path(%s) to sys.path\n", modulepath)
+		PySys_AppendSysPath(modulepath)
+		PySysPathes = append(PySysPathes, modulepath)
+	} else {
+		fmt.Printf("Path(%s) has added sys.path\n", modulepath)
+	}
+
+	// step2. load and import module
+	_mod := PyImport_GetModule(modulename)
+	if _mod == nil {
+		fmt.Println("Load and import new module: ", modulename)
+		_mod = PyImport_ImportModule(modulename)
+	}
+	if _mod == nil {
+		PyErr_Print()
+	}
+
 	// return PyImport_GetModule(f)
 	return _mod
 }
