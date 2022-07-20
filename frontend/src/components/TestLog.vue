@@ -22,8 +22,10 @@
         <thead>
           <tr>
             <th class="text-left" width="8%">No.</th>
-            <th class="text-left" width="30%">Name</th>
-            <th class="text-left">Calories</th>
+            <th class="text-left" width="30%">时间戳</th>
+            <th class="text-left" width="30%">TestItemID</th>
+            <th class="text-left">Flag</th>
+            <th class="text-left">Message</th>
           </tr>
         </thead>
         <tbody>
@@ -31,6 +33,8 @@
             <td>{{ idx + 1 }}</td>
             <td>{{ DateTime.fromSeconds(log.timestamp).toFormat('yyyy-MM-dd HH:MM:ss')
             }}</td>
+            <td>{{ log.testitemid }}</td>
+            <td>{{ log.flag == true ? "√" : "×" }}</td>
             <td>{{ log.message }}</td>
           </tr>
         </tbody>

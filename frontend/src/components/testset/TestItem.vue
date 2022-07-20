@@ -2,19 +2,17 @@
   <v-expansion-panel>
     <v-expansion-panel-title>
       <template v-slot:default>
-        <span style="max-width:100%" class="text-truncate">{{ ti.docstr ? ti.docstr :
+        <span style="max-width:100%" class="text-truncate">{{ ti.desc ? ti.desc :
             ti.title
         }}</span>
       </template>
     </v-expansion-panel-title>
     <v-expansion-panel-text>
-      TestItem<br />
-      desc: {{ ti.desc }}<br />
-      modulepath: {{ ti.modulepath }}<br />
-      modulename: {{ ti.modulename }}<br />
-      funcname: {{ ti.funcname }}<br />
-      args: {{ ti.args }}<br />
-      docstr: {{ ti.docstr }}<br />
+      <ul>
+        <li>title: {{ ti.title }}</li>
+        <li>desc: {{ ti.desc }}</li>
+        <li>args: {{ ti.args }}</li>
+      </ul>
     </v-expansion-panel-text>
     <div>
       <v-progress-linear v-model="progressdata" :indeterminate="isrunning"
@@ -28,6 +26,9 @@
 import { ref, onBeforeUnmount, onMounted } from 'vue'
 import { target } from '../../../wailsjs/go/models'
 import * as runtime from '../../../wailsjs/runtime/runtime'
+import { useBaseStore } from '../../stores/index'
+
+const store = useBaseStore()
 
 const props = defineProps<{
   teid: string,
@@ -48,10 +49,11 @@ const pcolor = ref('')
 // }, 2000)
 
 onMounted(() => {
-  console.log('++ TestItem:', props.ti)
+  // console.log('++ TestItem:', props.ti)
+  // 注册状态响应函数
   runtime.EventsOn('testitemstatus', (tistatus: target.TestItemStatus) => {
-    console.log('receive event', tistatus)
-    if (props.ti.id == tistatus.testitemid) {
+    // console.log('receive event', tistatus)
+    if (props.ti.id == tistatus.testitemid && props.teid == tistatus.testentityid) {
       console.log('==', props.ti.title, tistatus.status)
       if (tistatus.status == 'started') {
         isrunning.value = true
@@ -79,7 +81,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   // clearInterval(interval)
-  console.log('-- TestItem:', props.ti)
+  // console.log('-- TestItem:', props.ti)
   // runtime.EventsOff('testitemstatus')
 })
 </script>

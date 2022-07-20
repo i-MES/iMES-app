@@ -1,7 +1,8 @@
-import { defineStore, storeToRefs } from 'pinia'
+import { defineStore } from 'pinia'
 import { useUserStore } from './user'
 import { main, imes, target } from '../../wailsjs/go/models'
 import * as api from '../../wailsjs/go/imes/Api'
+import * as runtime from '../../wailsjs/runtime/runtime'
 
 export enum UserStatus {
   login,
@@ -14,21 +15,6 @@ export enum AppStatus {
 }
 export interface IAppStatusBar {
   [key: string]: number | string
-}
-enum TestStatus {
-  ready,
-  running,
-  passed,
-  failed
-}
-interface ITestStatus {
-  testGroupTitle: string,
-  testClassId: number,
-  testItemId: number,
-  status: TestStatus
-}
-interface ITestStatuses {
-  [entityId: number]: ITestStatus[]
 }
 export type TGlobalState = {
   sysInfo: main.SysInfo,
@@ -54,9 +40,10 @@ export type TGlobalState = {
   testitemsLogs: target.TestItemLog[],
   addEntity: boolean,
   TEsNotTE: boolean,
-  testStatuses: ITestStatuses,
   canSortTestClass: boolean,
-  enableTCTooltip: boolean
+  enableTCTooltip: boolean,
+  darkmaincolor: string,
+  lightmaincolor: string,
 }
 
 export const useBaseStore = defineStore('imesBaseStore', {
@@ -85,9 +72,10 @@ export const useBaseStore = defineStore('imesBaseStore', {
       testitemsLogs: [],
       addEntity: false,
       TEsNotTE: true,
-      testStatuses: {},
       canSortTestClass: false,
-      enableTCTooltip: false
+      enableTCTooltip: false,
+      darkmaincolor: 'blue-grey-darken-2',
+      lightmaincolor: 'blue-grey-lighten-3',
     }
   },
   getters: {
@@ -102,7 +90,7 @@ export const useBaseStore = defineStore('imesBaseStore', {
       }
     },
     testGroupById: (state) => {
-      return (id: number): target.TestGroup | undefined => {
+      return (id: string): target.TestGroup | undefined => {
         return state.testGroups.find((tg) => tg.id == id)
       }
     },
@@ -168,17 +156,20 @@ export const useBaseStore = defineStore('imesBaseStore', {
     },
     async addTestEntity(te: target.TestEntity) {
       let _new = true
-      this.testEntities.forEach((_te, idx) => {
-        if (_te.ip.toString() == te.ip.toString()) {
-          this.testEntities[idx] = te
-          console.log('update testentity:', te.ip)
-          _new = false
+      api.UUID().then((uuid) => {
+        te.id = uuid
+        this.testEntities.forEach((_te, idx) => {
+          if (_te.ip.toString() == te.ip.toString()) {
+            this.testEntities[idx] = te
+            console.log('update testentity:', te.id, te.ip)
+            _new = false
+          }
+        })
+        if (_new) {
+          this.testEntities.push(te)
+          console.log('create testentity:', te.id, te.ip)
         }
       })
-      if (_new) {
-        this.testEntities.push(te)
-        console.log('create testentity:', te.ip)
-      }
     },
     async syncTestEntity() {
       // sync: 加载 & 去重 & 去脏 & 写回
@@ -248,6 +239,17 @@ export const useBaseStore = defineStore('imesBaseStore', {
           return
         }
       })
+    },
+    async LoadActivedTestEntityTIStatuses() {
+      api.GetTestItemStatuses(this.activedTestEntityId).then(
+        (tiss: target.TestItemStatus[]) => {
+          if (tiss) {
+            tiss.forEach((tis) => {
+              runtime.EventsEmit('testitemstatus', tis)
+            })
+          }
+        }
+      )
     }
   }
 })

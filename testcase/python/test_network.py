@@ -18,12 +18,12 @@ class Test_Network:
       time.sleep(i)
       assert i < 5
 
-    def test_socket(self):
+    def test_socket(self,bar):
       i = randint(1,5)
       time.sleep(i)
       assert i < 5
 
-    def test_icmp(self):
+    def test_icmp(self, foo):
       i = randint(1,5)
       time.sleep(i)
       assert i < 5

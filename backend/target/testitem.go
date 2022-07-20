@@ -1,25 +1,17 @@
 package target
 
 import (
-	"context"
 	"fmt"
-	"time"
 
 	"github.com/i-mes/imes-app/backend/utils"
-	wails "github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 // 测试项
 type TestItem struct {
-	Id         string   `json:"id"`
-	Title      string   `json:"title"`
-	Desc       string   `json:"desc"`
-	ModulePath string   `json:"modulepath"`
-	ModuleName string   `json:"modulename"`
-	FuncName   string   `json:"funcname"`
-	Args       []string `json:"args"`
-	Docstr     string   `json:"docstr"`
-	Sequence   int      `json:"sequence"`
+	Id    string   `json:"id"`    // uuid
+	Title string   `json:"title"` // function name
+	Desc  string   `json:"desc"`  // python docstr
+	Args  []string `json:"args"`
 }
 
 // func CreateTestItemExample() {
@@ -80,30 +72,11 @@ func LoadTestItems() []TestItem {
 // 	fmt.Println("Run TI: ", ti.Title, ti.Desc, ti.FuncName, ti.Sequence)
 // }
 
-// 测试项日志
-type TestItemLog struct {
-	TestEntityId string `json:"testentityid"`
-	TestGroupId  string `json:"testgroupid"`
-	TestItemId   string `json:"testitemid"`
-	TimeStamp    int64  `json:"timestamp"`
-	Flag         bool   `json:"flag"`
-	Message      string `json:"message"`
-}
-
-func (ti *TestItem) EmitLog(ctx context.Context, entityid string, groupid string, flag bool, message string) {
-	wails.EventsEmit(ctx, "testitemlog",
-		TestItemLog{entityid, groupid, ti.Id, time.Now().Unix(), flag, message})
-}
-
 type TestItemStatus struct {
 	TestEntityId string `json:"testentityid"`
 	TestGroupId  string `json:"testgroupid"`
+	TestClassId  string `json:"testclassid"`
 	TestItemId   string `json:"testitemid"`
-	TimeStamp    int64  `json:"timestamp"`
 	Status       string `json:"status"`
-}
-
-func (ti *TestItem) EmitStatus(ctx context.Context, entityid string, groupid string, status string) {
-	wails.EventsEmit(ctx, "testitemstatus",
-		TestItemStatus{entityid, groupid, ti.Id, time.Now().Unix(), status})
+	TimeStamp    int64  `json:"timestamp"`
 }

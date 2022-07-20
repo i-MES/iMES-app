@@ -54,7 +54,8 @@ const store = useBaseStore()
 
 onMounted(() => {
   // 加载 TestGroup、TestClass、TestItem 数据
-  store.LoadTestGroup('config', true)
+  store.LoadTestGroup('config', true, false)
+  store.LoadActivedTestEntityTIStatuses()
   console.log('TestEntity onMounted: ')
 })
 </script>

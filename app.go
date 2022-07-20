@@ -247,7 +247,21 @@ sys.stdout.write('******************'+'\n')
 	// C.PyEval_ReleaseThread(_tstate)
 
 	// Py_Initialize() 会占用 GIL，此处不放弃，其他地方抢占不到。
-	a.threadState = py.PyEval_SaveThread()
+	a.threadState = py.PyEval_SaveThread() // 释放 GIL，将 state 置为 null，并且返回前一个 state
+
+	// 一些基本配置
+	c := utils.GetAppConfiger()
+
+	if home, err := utils.Home(); err == nil {
+		datacachepath := home + "/.cache/iMES-app/"
+		if _, err := os.Stat(datacachepath); err != nil {
+			os.MkdirAll(datacachepath, 0750)
+		}
+		if !c.IsSet("datacachepath") {
+			c.Set("datacachepath", datacachepath)
+		}
+	}
+	fmt.Println(c.AllSettings())
 }
 
 // domReady is called after the front-end dom has been loaded
@@ -262,8 +276,13 @@ func (a *App) domReady(ctx context.Context) {
 // beforeClose在单击窗口关闭按钮或调用runtime.Quit即将退出应用程序时被调用.
 // 返回 true 将导致应用程序继续，false 将继续正常关闭。
 func (a *App) beforeClose(ctx context.Context) (prevent bool) {
-	py.PyEval_RestoreThread(a.threadState) // 貌似也没啥意义了哦 :)
-	py.Py_Finalize()
+	fmt.Println("beforeClose...")
+
+	// 放这里没啥意义，可用于不重启APP，仅重启 python
+	// py.PyEval_RestoreThread(a.threadState) // 获取GIL，并将线程状态置为tstate
+	// py.Py_Finalize()
+
+	// 测试中提示用户关闭有风险，请确认。
 	return false
 }
 

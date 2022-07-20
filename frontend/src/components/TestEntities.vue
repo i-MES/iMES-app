@@ -4,7 +4,7 @@
       <v-col v-for="entity in store.testEntities" :key="entity.ip.toString()"
         :cols="defcols">
         <v-card :elevation="5" @click="onclickEntity(entity.id)"
-          :color="store.appTheme == 'dark' ? 'blue-grey-darken-2' : 'blue-grey-lighten-3'">
+          :color="store.appTheme == 'dark' ? store.darkmaincolor : store.lightmaincolor">
           <!-- <v-card-avatar></v-card-avatar> -->
           <template v-slot:title>{{ entity.ip.toString().replaceAll(',', '.') }}
           </template>
@@ -27,8 +27,10 @@
 </template>
 
 <script lang="ts" setup>
+import { onMounted, ref } from 'vue'
 import { useBaseStore } from '../stores/index'
 import { useI18n } from 'vue-i18n'
+import { GetSetting } from '../../wailsjs/go/imes/Api'
 const { t } = useI18n({ useScope: 'global' })
 const store = useBaseStore()
 
@@ -47,6 +49,24 @@ const onclickEntity = (id: string) => {
   store.TEsNotTE = false
 }
 
+onMounted(() => {
+  GetSetting('maincolor-dark').then(
+    (v) => {
+      if (v) {
+        store.darkmaincolor = v
+      }
+    }
+  )
+
+  GetSetting('maincolor-light').then(
+    (v) => {
+      if (v) {
+        store.lightmaincolor = v
+      }
+    }
+  )
+}
+)
 
 </script>
 

@@ -36,11 +36,11 @@ const props = defineProps<{
 const showHandle = ref(false)
 
 onMounted(() => {
-  console.log('++++ TestClass: ', props.tc, props.tgid)
+  // console.log('++++ TestClass: ', props.tc, props.tgid)
   runtime.EventsEmit('testclasscreated', props.tgid)
 })
 onBeforeUnmount(() => {
-  console.log('---- TestClass: ', props.tc, props.tgid)
+  // console.log('---- TestClass: ', props.tc, props.tgid)
   runtime.EventsEmit('testclassdeleted', props.tgid)
 })
 </script>

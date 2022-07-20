@@ -2,7 +2,7 @@
   <v-layout>
     <v-app :theme="store.appTheme">
       <!-- 底部 App-bar -->
-      <v-app-bar class="app-bar" color="#1c7bc9" absolute location="bottom"
+      <v-app-bar class="app-bar" color="#A7535A" absolute location="bottom"
         :height="store.appBarHeight" :data-wails-drag="true">
         <template v-slot:prepend>
           <!-- <v-app-bar-nav-icon variant="text" @click.stop="onToggleMenu = !onToggleMenu">
@@ -32,7 +32,7 @@
           <!-- <v-list-subheader class="ma-0 pa-0"> </v-list-subheader> -->
           <v-list-item v-for="(menu, i) in router.getRoutes().filter((v) => { return v.meta.location == `top` }).sort((a, b) => {
             return (a ? a.meta.sort as number : 0) - (b ? b.meta.sort as number : 0);
-          })" :key="i" :value="menu" active-color="primary" density="comfortable"
+          })" :key="i" :value="menu" active-color="#A7535A" density="comfortable"
             :to="menu.path" @click="onclickMenuListItem(menu)">
             <v-tooltip location="end">
               <template v-slot:activator="{ props }">
@@ -49,7 +49,7 @@
           <v-list :selected="listSelected" nav>
             <v-list-item v-for="(menu, i) in router.getRoutes().filter((v) => { return v.meta.location == `bottom` }).sort((a, b) => {
               return (a ? a.meta.sort as number : 0) - (b ? b.meta.sort as number : 0);
-            })" :key="i" :value="menu" active-color="primary" density="comfortable"
+            })" :key="i" :value="menu" active-color="#A7535A" density="comfortable"
               :to="menu.path" @click="onclickMenuListItem(menu)">
               <v-tooltip location="end">
                 <template v-slot:activator="{ props }">
