@@ -3,7 +3,6 @@ package target
 import (
 	"context"
 	"fmt"
-	"os"
 	"path"
 	"time"
 
@@ -91,33 +90,46 @@ func LoadTestGroupFromSrc(ctx *context.Context, selectFolder, selectPath bool) (
 	return tgs, filepathes
 }
 
-var tgMonitor *time.Ticker
+var tgCacheConfiger *utils.Configer
 
-// testgroupMonitorHandler.Stop() 能够停止 Monitor
-
-// 从 Config 文件中加载 TG 数据，并开启 SyncMonitor
+// 从 Config 文件中加载 TG 数据
 func LoadTestGroupFromConfig(ctx *context.Context) ([]TestGroup, []string) {
-	ctgs := make([]TestGroup, 0)
+	// ctgs := make([]TestGroup, 0)
 
-	if data, err := utils.InputConfigData("testgroup"); err == nil {
-		// 找到 json 文件，加载到 ctgs
-		_tg := []byte(json.Get(data).ToString())
-		if json.Unmarshal(_tg, &ctgs) != nil {
-			fmt.Println("can not Unmarshal json data")
+	// if data, err := utils.InputConfigData("testgroup"); err == nil {
+	// 	// 找到 json 文件，加载到 ctgs
+	// 	// _tg := []byte(json.Get(data).ToString())
+	// 	if json.Unmarshal(data, &ctgs) != nil {
+	// 		fmt.Println("can not Unmarshal json data")
+	// 		return nil, nil
+	// 	}
+	// 	srcs := make([]string, 0)
+	// 	for _, tg := range ctgs {
+	// 		for _, tc := range tg.TestClasses {
+	// 			srcs = append(srcs, tc.FileName)
+	// 		}
+	// 	}
+	// 	return ctgs, srcs
+	// } else if os.IsNotExist(err) {
+	// 	wails.LogDebug(*ctx, "json 文件不存在")
+	// 	return nil, nil
+	// }
+	// return nil, nil
+	if tgCacheConfiger == nil {
+		lmp := utils.GetAppConfiger().GetString("lastmodulepath")
+		if lmp == "" {
 			return nil, nil
 		}
-		srcs := make([]string, 0)
-		for _, tg := range ctgs {
-			for _, tc := range tg.TestClasses {
-				srcs = append(srcs, tc.FileName)
-			}
-		}
-		return ctgs, srcs
-	} else if os.IsNotExist(err) {
-		wails.LogDebug(*ctx, "json 文件不存在")
+		tgCacheConfiger = utils.CreateTestcaseConfiger(lmp, "testgroup")
+	}
+
+	var tgs map[string][]TestGroup
+	tgCacheConfiger.Unmarshal(&tgs)
+	if tgs["testgroups"] != nil {
+		return tgs["testgroups"], nil
+	} else {
 		return nil, nil
 	}
-	return nil, nil
 }
 
 /*
@@ -147,18 +159,23 @@ func LoadTestGroup(ctx *context.Context, loadFlag string, selectFolder, selectPa
 	case "config":
 		// config 文件不需要用户选择目录，仅使用 App 默认路径
 		ctgs, fs := LoadTestGroupFromConfig(ctx)
-		StartTestGroupSyncMonitor(ctx, fs, true)
+		StartTestGroupSrcMonitor(ctx, fs, true)
 		return ctgs
 	case "src":
 		stgs, srcs := LoadTestGroupFromSrc(ctx, selectFolder, selectPath)
-		StartTestGroupSyncMonitor(ctx, srcs, true)
+		StartTestGroupSrcMonitor(ctx, srcs, true)
 		SaveTestGroup(ctx, stgs)
+		utils.GetAppConfiger().Set("lastmodulepath", stgs[0].TestClasses[0].ModulePath)
 		return stgs
 	}
 	return nil
 }
 
-func StartTestGroupSyncMonitor(ctx *context.Context, srcs []string, autoMerge bool) {
+// tgMonitor.Stop() 能够停止 Monitor
+var tgMonitor *time.Ticker
+
+// 创建对 srcs 的 monitor，不是 config file 的。
+func StartTestGroupSrcMonitor(ctx *context.Context, srcs []string, autoMerge bool) {
 	StopTestGroupSyncMonitor() // 只使用1个TG Monitor，先删除原有的。
 	wails.EventsEmit(*ctx, "testgroupmonitor", "clear")
 	tgMonitor = utils.StartSyncMonitor("testgroup", srcs,
@@ -203,9 +220,13 @@ func StopTestGroupSyncMonitor() {
 }
 
 func SaveTestGroup(ctx *context.Context, data []TestGroup) {
-	_data := make(map[string]interface{})
-	_data["testgroup"] = data
-	utils.OutputConfigData(_data)
+	if tgCacheConfiger == nil {
+		tgCacheConfiger = utils.CreateTestcaseConfiger(data[0].TestClasses[0].ModulePath, "testgroup")
+	}
+	tgCacheConfiger.Set("testgroups", data)
+	// _data := make(map[string]interface{})
+	// _data["testgroup"] = data
+	// utils.OutputConfigData(_data)
 }
 
 // 保存 TestGroup 信息
@@ -229,8 +250,9 @@ func (tg *TestGroup) Run(ctx *context.Context, teid string) {
 	// 遍历所有 TestClass
 	for _, tc := range tg.TestClasses {
 		tc.Run(ctx, func(ename string, tiid string, msg string) {
-			wails.EventsEmit(*ctx, ename,
-				TestItemStatus{teid, tg.Id, tiid, time.Now().Unix(), msg})
+			newtis := TestItemStatus{teid, tg.Id, tc.Id, tiid, msg, time.Now().Unix()}
+			// 向前端发送消息
+			wails.EventsEmit(*ctx, ename, newtis)
 		})
 	}
 	wails.EventsEmit(*ctx, "testgroupfinished", tg.Id)

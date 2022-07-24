@@ -235,7 +235,7 @@ func ParsePythonOneStep(ctx *context.Context, root, file string) []TestClass {
 				_l := len(tcs) - 1
 				_uuid, _ := uuid.NewUUID()
 				tcs[_l].TestItems = append(tcs[_l].TestItems,
-					TestItem{_uuid.String(), funcName, "", modpath, modname, funcName, args, docStr, 0})
+					TestItem{_uuid.String(), funcName, docStr, args})
 				docStr = ""
 			}
 		}
@@ -330,30 +330,30 @@ func (tc *TestClass) RunPython(ctx context.Context, emit func(ename, tiid, msg s
 		wails.LogDebug(ctx, _class.Repr())
 		wails.LogDebug(ctx, _class.Dir())
 		for _, ti := range tc.TestItems {
-			wails.LogDebug(ctx, fmt.Sprintf("------- start testitem %s with entity(%v), fixture(%v)", ti.FuncName, entObj, fixObjs))
+			wails.LogDebug(ctx, fmt.Sprintf("------- start testitem %s with entity(%v), fixture(%v)", ti.Title, entObj, fixObjs))
 			emit("testitemstatus", ti.Id, "started")
 			// 调用对象的方法，执行具体的测试项
 			var _ret *py.PyObject
 			if len(ti.Args) > 0 {
 				// 有参
 				if entObj != nil && ti.Args[0] == "entity" {
-					_ret = _class.CallMethodArgs(ti.FuncName, entObj)
+					_ret = _class.CallMethodArgs(ti.Title, entObj)
 				} else {
 					wails.LogError(ctx, "entity is nil")
 				}
 			} else {
 				// 无参
-				_ret = _class.CallMethodArgs(ti.FuncName)
+				_ret = _class.CallMethodArgs(ti.Title)
 			}
 			if _ret == nil {
 				py.PyErr_Print()
-				wails.LogError(ctx, fmt.Sprintf("Run TI Error: %s\t%s", tc.ClassName, ti.FuncName))
+				wails.LogError(ctx, fmt.Sprintf("Run TI Error: %s\t%s", tc.ClassName, ti.Title))
 				emit("testitemstatus", ti.Id, "ng")
 			} else {
-				wails.LogDebug(ctx, fmt.Sprintf("Run TI Pass: %s\t%s", tc.ClassName, ti.FuncName))
+				wails.LogDebug(ctx, fmt.Sprintf("Run TI Pass: %s\t%s", tc.ClassName, ti.Title))
 				emit("testitemstatus", ti.Id, "pass")
 			}
-			wails.LogDebug(ctx, fmt.Sprintf("------- end testitem %s\n", ti.FuncName))
+			wails.LogDebug(ctx, fmt.Sprintf("------- end testitem %s\n", ti.Title))
 		}
 	} else {
 		py.PyErr_Print()

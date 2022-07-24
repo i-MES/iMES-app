@@ -4,13 +4,20 @@ package utils
 import "C"
 
 import (
+	"bytes"
 	"context"
+	"errors"
 	"fmt"
+	"hash/crc32"
 	"io/fs"
 	"io/ioutil"
 	"log"
+	"os"
+	"os/exec"
+	"os/user"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	"github.com/google/uuid"
 	wails "github.com/wailsapp/wails/v2/pkg/runtime"
@@ -187,4 +194,68 @@ func SelectFile(ctx *context.Context, title, filePattern string) string {
 		log.Panic("Error on file opening", err.Error())
 	}
 	return selectedFile
+}
+
+// 生成字符串的 hash 值
+func Hash(s string) (string, error) {
+	v := int(crc32.ChecksumIEEE([]byte(s)))
+	if v >= 0 {
+		return fmt.Sprintf("%d", v), nil
+	}
+	if -v >= 0 {
+		return fmt.Sprintf("%d", -v), nil
+	}
+	return "", fmt.Errorf("generate a hash failed")
+}
+
+func Home() (string, error) {
+	user, err := user.Current()
+	if nil == err {
+		return user.HomeDir, nil
+	}
+
+	// cross compile support
+
+	if "windows" == runtime.GOOS {
+		return homeWindows()
+	}
+
+	// Unix-like system, so just assume Unix
+	return homeUnix()
+}
+
+func homeUnix() (string, error) {
+	// First prefer the HOME environmental variable
+	if home := os.Getenv("HOME"); home != "" {
+		return home, nil
+	}
+
+	// If that fails, try the shell
+	var stdout bytes.Buffer
+	cmd := exec.Command("sh", "-c", "eval echo ~$USER")
+	cmd.Stdout = &stdout
+	if err := cmd.Run(); err != nil {
+		return "", err
+	}
+
+	result := strings.TrimSpace(stdout.String())
+	if result == "" {
+		return "", errors.New("blank output when reading home directory")
+	}
+
+	return result, nil
+}
+
+func homeWindows() (string, error) {
+	drive := os.Getenv("HOMEDRIVE")
+	path := os.Getenv("HOMEPATH")
+	home := drive + path
+	if drive == "" || path == "" {
+		home = os.Getenv("USERPROFILE")
+	}
+	if home == "" {
+		return "", errors.New("HOMEDRIVE, HOMEPATH, and USERPROFILE are blank")
+	}
+
+	return home, nil
 }

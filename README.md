@@ -1,5 +1,9 @@
 # README
 
+## 基础说明
+
+- 主色调：中国红(`#A7535A`)、微软蓝(`#1c7bc9`)
+
 ## 开发环境
 
 - install [node.js](http://nodejs.cn/)、[go](https://go.dev/doc/install)

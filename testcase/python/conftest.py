@@ -25,3 +25,13 @@ def create_entity(ip):
   e = Entity(ip)
   e.connect()
   return e
+
+@pytest.fixture(scope="session",params=None)
+def foo():
+  return create_foo()
+  
+def create_foo():
+  pass
+
+def create_bar():
+  pass

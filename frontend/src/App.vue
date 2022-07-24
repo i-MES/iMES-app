@@ -2,7 +2,7 @@
   <v-layout>
     <v-app :theme="store.appTheme">
       <!-- 底部 App-bar -->
-      <v-app-bar class="app-bar" color="#1c7bc9" absolute location="bottom"
+      <v-app-bar class="app-bar" color="#A7535A" absolute location="bottom"
         :height="store.appBarHeight" :data-wails-drag="true">
         <template v-slot:prepend>
           <!-- <v-app-bar-nav-icon variant="text" @click.stop="onToggleMenu = !onToggleMenu">
@@ -32,7 +32,7 @@
           <!-- <v-list-subheader class="ma-0 pa-0"> </v-list-subheader> -->
           <v-list-item v-for="(menu, i) in router.getRoutes().filter((v) => { return v.meta.location == `top` }).sort((a, b) => {
             return (a ? a.meta.sort as number : 0) - (b ? b.meta.sort as number : 0);
-          })" :key="i" :value="menu" active-color="primary" density="comfortable"
+          })" :key="i" :value="menu" active-color="#A7535A" density="comfortable"
             :to="menu.path" @click="onclickMenuListItem(menu)">
             <v-tooltip location="end">
               <template v-slot:activator="{ props }">
@@ -49,7 +49,7 @@
           <v-list :selected="listSelected" nav>
             <v-list-item v-for="(menu, i) in router.getRoutes().filter((v) => { return v.meta.location == `bottom` }).sort((a, b) => {
               return (a ? a.meta.sort as number : 0) - (b ? b.meta.sort as number : 0);
-            })" :key="i" :value="menu" active-color="primary" density="comfortable"
+            })" :key="i" :value="menu" active-color="#A7535A" density="comfortable"
               :to="menu.path" @click="onclickMenuListItem(menu)">
               <v-tooltip location="end">
                 <template v-slot:activator="{ props }">
@@ -85,6 +85,8 @@ import { OpenGithub } from '../wailsjs/go/imes/Api'
 import { SysInfo } from '../wailsjs/go/main/App'
 // about app
 import { useBaseStore } from './stores/index'
+import * as runtime from '../wailsjs/runtime/runtime'
+import { target } from '../wailsjs/go/models'
 
 const router = useRouter() // router 是管理器，可以 addRoute、removeRoute、getRoutes、push...
 const route = useRoute() // route 是一个响应式对象，
@@ -182,7 +184,27 @@ onMounted(() => {
       }
     }
   )
+
+  // 注册状态响应函数
+  runtime.EventsOn('testitemstatus', (tis: target.TestItemStatus) => {
+    var _tises = store.LastestTIStatus[tis.testentityid]
+    if (_tises) {
+      for (let idx = 0; idx < _tises.length; idx++) {
+        if (_tises[idx].testgroupid == tis.testgroupid && _tises[idx].testclassid == tis.testclassid && _tises[idx].testitemid == tis.testitemid) {
+          store.LastestTIStatus[tis.testentityid][idx] = tis
+          console.log('更新已有 tistatus', tis.testitemid, tis.status)
+          return
+        }
+      }
+      store.LastestTIStatus[tis.testentityid].push(tis)
+      console.log('添加新的 tistatus', tis.testitemid, tis.status)
+    } else {
+      store.LastestTIStatus[tis.testentityid] = [tis]
+      console.log('创建 entity 对应的 tistatus 数组', tis.testitemid, tis.status)
+    }
+  })
 })
+
 const breakpoint = () => {
   if (store.sysInfo.buildtype) {
     console.log('buildtype: ', store.sysInfo.buildtype)

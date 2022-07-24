@@ -1,7 +1,8 @@
 <template>
   <v-sheet onselectstart="return false"
-    :color="store.appTheme == 'dark' ? 'blue-grey-darken-2' : 'blue-grey-lighten-3'">
-    <v-toolbar height="40">
+    :color="store.appTheme == 'dark' ? store.darkmaincolor : store.lightmaincolor">
+    <v-toolbar height="40"
+      :style="'background:' + (store.appTheme == 'dark' ? store.darkmaincolor : store.lightmaincolor)">
       <drag-handle />
       <v-toolbar-title>
         G-{{ tg.title == '' ? tg.id.substring(0, 4) : tg.title }}
@@ -64,24 +65,24 @@ const disableBtnStopGroup = ref(true)
 const disableBtnNewGroup = ref(false)
 const disableBtnDelGroup = ref(true)
 
-watch(
-  () => props.tg.testclasses,
-  (nv) => {
-    if (nv.length == 0) {
-      disableBtnRunGroup.value = true
-      disableBtnStopGroup.value = true
-      disableBtnNewGroup.value = false
-      disableBtnDelGroup.value = false
-    } else {
-      disableBtnRunGroup.value = false
-      disableBtnStopGroup.value = true
-      disableBtnNewGroup.value = false
-      disableBtnDelGroup.value = true
-    }
-  }
-)
+// watch(
+//   () => props.tg.testclasses,
+//   (nv) => {
+//     if (nv.length == 0) {
+//       disableBtnRunGroup.value = true
+//       disableBtnStopGroup.value = true
+//       disableBtnNewGroup.value = false
+//       disableBtnDelGroup.value = false
+//     } else {
+//       disableBtnRunGroup.value = false
+//       disableBtnStopGroup.value = true
+//       disableBtnNewGroup.value = false
+//       disableBtnDelGroup.value = true
+//     }
+//   }
+// )
 onMounted(() => {
-  console.log('++++++ TestGroup: ', props.tg)
+  // console.log('++++++ TestGroup: ', props.tg)
 
   // 置初始值
   if (props.tg.testclasses.length == 0) {
@@ -125,7 +126,7 @@ onMounted(() => {
   })
 })
 onBeforeUnmount(() => {
-  console.log('------ TestGroup: ', props.tg)
+  // console.log('------ TestGroup: ', props.tg)
 })
 
 // 执行组测试
@@ -137,7 +138,7 @@ const starttestgroup = (tg: target.TestGroup) => {
   disableBtnDelGroup.value = true
   // 只有 activedTestEntityId 才会被用户点击
   RunTestGroup(store.activedTestEntityId, tg)
-  // 将 grop 内所有 ti 的滚动条清零
+  // 将 group 内所有 ti 的滚动条清零
   runtime.EventsEmit('clearprocessbar', {
     teid: store.activedTestEntityId,
     tgid: tg.id,

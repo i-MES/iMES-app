@@ -115,3 +115,10 @@ func (a *Api) LoadTestEntity() []target.TestEntity {
 func (a *Api) NeedStruct(tistatus target.TestItemStatus) {
 	fmt.Println("Just need these struct")
 }
+
+func (a *Api) GetSetting(key string) string {
+	return utils.GetAppConfiger().GetString(key)
+}
+func (a *Api) SetSetting(key, value string) {
+	utils.GetAppConfiger().Set(key, value)
+}
