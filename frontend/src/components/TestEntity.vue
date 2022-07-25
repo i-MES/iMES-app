@@ -33,13 +33,14 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, } from 'vue'
+import { onBeforeMount, onMounted, } from 'vue'
 import { useBaseStore } from '../stores/index'
 import TestGroup from './testset/TestGroup.vue'
 import TestClass from './testset/TestClass.vue'
 import { SlickList, SlickItem } from 'vue-slicksort'
 import SlickRow from './utils/SlickRow.vue'
 import SlickCol from './utils/SlickCol.vue'
+import * as runtime from '../../wailsjs/runtime/runtime'
 
 const store = useBaseStore()
 // const activeTab = ref(store.activedTestEntityId)
@@ -51,6 +52,15 @@ const store = useBaseStore()
 //     entityId: '127.0.0.1'
 //   }
 // )
+
+onBeforeMount(() => {
+  // TestGroup 组件中会注册，反复重入会反复注册，所以这里统一删除、清理一下
+  runtime.EventsOff('testclasscreated')
+  runtime.EventsOff('testclassdeleted')
+  runtime.EventsOff('testgroupfinished')
+  runtime.EventsOff('startallgroup')
+  console.error('EventsOff startallgroup')
+})
 
 onMounted(() => {
   // 加载 TestGroup、TestClass、TestItem 数据

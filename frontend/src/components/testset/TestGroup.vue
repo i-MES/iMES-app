@@ -82,7 +82,7 @@ const disableBtnDelGroup = ref(true)
 //   }
 // )
 onMounted(() => {
-  // console.log('++++++ TestGroup: ', props.tg)
+  console.log('++++++ TestGroup: ', props.tg)
 
   // 置初始值
   if (props.tg.testclasses.length == 0) {
@@ -110,6 +110,7 @@ onMounted(() => {
       if (props.tg.testclasses.length == 0) {
         disableBtnRunGroup.value = true
         disableBtnStopGroup.value = true
+        disableBtnDelGroup.value = false
       }
     }
   })
@@ -121,12 +122,13 @@ onMounted(() => {
       disableBtnNewGroup.value = false
     }
   })
+  console.error('EventsOn startallgroup')
   runtime.EventsOn('startallgroup', () => {
     starttestgroup(props.tg)
   })
 })
 onBeforeUnmount(() => {
-  // console.log('------ TestGroup: ', props.tg)
+  console.log('------ TestGroup: ', props.tg)
 })
 
 // 执行组测试
@@ -136,6 +138,14 @@ const starttestgroup = (tg: target.TestGroup) => {
   disableBtnStopGroup.value = false
   disableBtnNewGroup.value = true
   disableBtnDelGroup.value = true
+  // 清空本 group 的所有 class 及其 itiem 的 status
+  if (store.LastestTIStatus[store.activedTestEntityId]) {
+    store.LastestTIStatus[store.activedTestEntityId].forEach((tis) => {
+      if (tis.testgroupid == props.tg.id) {
+        tis.status = 'ready'
+      }
+    })
+  }
   // 只有 activedTestEntityId 才会被用户点击
   RunTestGroup(store.activedTestEntityId, tg)
   // 将 group 内所有 ti 的滚动条清零

@@ -215,9 +215,7 @@ func (c *Configer) reloadUserConfig() {
 			} else {
 				fmt.Println("Found config file, but other error accord")
 			}
-		} else {
-			fmt.Println("AllSettings: ", c.v.AllSettings())
-		}
+		} 
 
 		// 刷新 c.userv
 		if err := c.userv.ReadInConfig(); err != nil {

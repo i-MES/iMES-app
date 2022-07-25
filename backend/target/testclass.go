@@ -255,7 +255,7 @@ func (tc *TestClass) RunPython(ctx context.Context, emit func(ename, tiid, msg s
 
 	// debug info
 	wails.LogDebug(ctx, "========== start testclass "+tc.Title)
-	wails.LogDebug(ctx, "go process id: "+strconv.Itoa(utils.GetProcessId()))
+	wails.LogDebug(ctx, "go process id: "+strconv.Itoa(utils.GetProcessIdGet()))
 	wails.LogDebug(ctx, "go threading id: "+strconv.Itoa(utils.GetThreadId()))
 	py.LogProcessId()
 	py.LogThreadId()     // 与 go threading id 相同
@@ -346,8 +346,8 @@ func (tc *TestClass) RunPython(ctx context.Context, emit func(ename, tiid, msg s
 				_ret = _class.CallMethodArgs(ti.Title)
 			}
 			if _ret == nil {
-				py.PyErr_Print()
-				wails.LogError(ctx, fmt.Sprintf("Run TI Error: %s\t%s", tc.ClassName, ti.Title))
+				// py.PyErr_Print()
+				wails.LogDebug(ctx, fmt.Sprintf("Run TI Error: %s\t%s", tc.ClassName, ti.Title))
 				emit("testitemstatus", ti.Id, "ng")
 			} else {
 				wails.LogDebug(ctx, fmt.Sprintf("Run TI Pass: %s\t%s", tc.ClassName, ti.Title))

@@ -56,18 +56,18 @@ func (a *App) startup(ctx context.Context) {
 
 	// 不是 log 到文件，而是到 stdout
 	envInfo := wails.Environment(ctx)
-	wails.LogInfo(ctx, envInfo.BuildType)
 	if envInfo.BuildType == "dev" {
 		wails.LogSetLogLevel(ctx, logger.DEBUG)
 	} else {
 		wails.LogSetLogLevel(ctx, logger.INFO)
 	}
-	utils.InitPlatform(envInfo.Platform, envInfo.Arch)
-	wails.LogInfo(ctx, envInfo.Platform)
-	wails.LogInfo(ctx, envInfo.Arch)
-	wails.LogInfo(ctx, strconv.Itoa(utils.GetProcessId()))
-	wd, _ := os.Getwd()
-	wails.LogInfo(ctx, wd)
+	wails.LogInfo(ctx, "BuildType: "+envInfo.BuildType)
+	wails.LogInfo(ctx, "GOOS: "+runtime.GOOS)
+	wails.LogInfo(ctx, "GOARCH: "+runtime.GOARCH)
+	wails.LogInfo(ctx, "ProcessId: "+strconv.Itoa(utils.GetProcessIdGet()))
+	if wd, e := os.Getwd(); e == nil {
+		wails.LogInfo(ctx, "Getwd: "+wd)
+	}
 
 	// ===== CPython 启动 =====
 	if !py.Py_IsInitialized() {

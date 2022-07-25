@@ -81,13 +81,19 @@ func LoadTestGroupFromSrc(ctx *context.Context, selectFolder, selectPath bool) (
 			filepathes = append(filepathes, _fps...)
 		}
 	} else {
-		filepathes = append(filepathes,
-			utils.SelectFile(ctx, "Select TestCase File", "*.py"))
-		moduleroot = path.Dir(filepathes[0])
+		if _p := utils.SelectFile(ctx, "Select TestCase File", "*.py"); _p != "" {
+			filepathes = append(filepathes, _p)
+			moduleroot = path.Dir(filepathes[0])
+		}
 	}
-	tgs := ParsePythons(ctx, moduleroot, filepathes, 2)
-	curmoduleroot = moduleroot
-	return tgs, filepathes
+
+	if moduleroot != "" && len(filepathes) != 0 {
+		tgs := ParsePythons(ctx, moduleroot, filepathes, 2)
+		curmoduleroot = moduleroot
+		return tgs, filepathes
+	} else {
+		return nil, nil
+	}
 }
 
 var tgCacheConfiger *utils.Configer
@@ -163,12 +169,17 @@ func LoadTestGroup(ctx *context.Context, loadFlag string, selectFolder, selectPa
 		return ctgs
 	case "src":
 		stgs, srcs := LoadTestGroupFromSrc(ctx, selectFolder, selectPath)
-		StartTestGroupSrcMonitor(ctx, srcs, true)
-		SaveTestGroup(ctx, stgs)
-		utils.GetAppConfiger().Set("lastmodulepath", stgs[0].TestClasses[0].ModulePath)
+		if stgs != nil {
+			StartTestGroupSrcMonitor(ctx, srcs, true)
+			// 保存 cache 数据到 cache 路径
+			SaveTestGroup(ctx, stgs)
+			// 保持 setting 数据到 config 路径
+			utils.GetAppConfiger().Set("lastmodulepath", stgs[0].TestClasses[0].ModulePath)
+		}
 		return stgs
+	default:
+		return nil
 	}
-	return nil
 }
 
 // tgMonitor.Stop() 能够停止 Monitor
@@ -219,6 +230,7 @@ func StopTestGroupSyncMonitor() {
 	}
 }
 
+// 保持 TestGroup 到 cache file 中
 func SaveTestGroup(ctx *context.Context, data []TestGroup) {
 	if tgCacheConfiger == nil {
 		tgCacheConfiger = utils.CreateTestcaseConfiger(data[0].TestClasses[0].ModulePath, "testgroup")
@@ -246,6 +258,7 @@ func (tg *TestGroup) Merge(ctx context.Context) {
 func (tg *TestGroup) Run(ctx *context.Context, teid string) {
 	// 由于会出现不同 module(.py) 中的 class 在一个 group 的情况，
 	// 所以没法在这里 create_entity
+	wails.LogError(*ctx, "TestGroup Run:"+tg.Title)
 
 	// 遍历所有 TestClass
 	for _, tc := range tg.TestClasses {

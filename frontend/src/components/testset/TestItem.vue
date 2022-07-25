@@ -12,7 +12,6 @@
         <li>title: {{ ti.title }}</li>
         <li>desc: {{ ti.desc }}</li>
         <li>args: {{ ti.args }}</li>
-        <li>status: {{ statusmsg }}</li>
       </ul>
     </v-expansion-panel-text>
     <div>
@@ -40,7 +39,6 @@ const props = defineProps<{
 const progressdata = ref(0)
 const isrunning = ref(false)
 const pcolor = ref('')
-const statusmsg = ref('')
 
 // watch(progressdata, (n) => {
 //   if (n < 100) return
@@ -67,10 +65,9 @@ const setstatus = (tis: target.TestItemStatus) => {
 
 var tis = store.LastestTIStatusById(props.teid, props.tgid, props.tcid, props.ti.id)
 if (tis) {
-  console.log('=-=-=-=-=-=-=')
   setstatus(tis)
-} else {
-  console.error(tis)
+  // } else {
+  //   console.error(tis)
 }
 
 onMounted(() => {

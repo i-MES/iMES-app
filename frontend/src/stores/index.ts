@@ -118,13 +118,13 @@ export const useBaseStore = defineStore('imesBaseStore', {
     },
     LastestTIStatusById: (state) => {
       return (teid: string, tgid: string, tcid: string, tiid: string): target.TestItemStatus | undefined => {
-        console.log('寻找', tiid)
+        // console.log('寻找', tiid)
         if (state.LastestTIStatus[teid]) {
           for (let index = 0; index < state.LastestTIStatus[teid].length; index++) {
             if (state.LastestTIStatus[teid][index].testgroupid == tgid &&
               state.LastestTIStatus[teid][index].testclassid == tcid &&
               state.LastestTIStatus[teid][index].testitemid == tiid) {
-              console.log('找到 TestItemStatus', state.LastestTIStatus[teid][index])
+              // console.log('找到 TestItemStatus', state.LastestTIStatus[teid][index])
               return state.LastestTIStatus[teid][index]
             }
           }

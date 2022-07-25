@@ -208,6 +208,7 @@ const startallgroup = () => {
     console.log('run all entity\'s all group')
   } else {
     console.log('run activity entity\'s all group')
+    store.LastestTIStatus[store.activedTestEntityId] = []
     runtime.EventsEmit('startallgroup')
   }
 }

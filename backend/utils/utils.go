@@ -1,8 +1,5 @@
 package utils
 
-// #include <unistd.h>
-import "C"
-
 import (
 	"bytes"
 	"context"
@@ -39,9 +36,10 @@ func InitPlatform(platform string, arch string) {
 	_platform = platform
 	_arch = arch
 }
-func GetProcessId() int {
+func GetProcessIdGet() int {
 	if _platform == "linux" {
-		return int(C.getpid())
+		// return unix.Getpid()
+		return os.Getpid()
 	}
 	if _platform == "windows" {
 		return 0
