@@ -36,8 +36,8 @@
           <key>NSExceptionAllowsInsecureHTTPLoads</key>
           <true/>
           <key>NSIncludesSubdomains</key>
+          <true/>
         </dict>
-        <true/>
       </dict>
     </dict>
   </dict>

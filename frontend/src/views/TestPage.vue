@@ -1,5 +1,5 @@
 <template>
-  <v-card class="ma-0">
+  <v-card class="ma-0 pa-0">
 
     <!-- 顶部 toolbar -->
     <v-toolbar class="entity-toolbar" :height="store.toolbarheight">
@@ -135,18 +135,24 @@
       </template>
     </v-toolbar>
 
-    <!-- TestSet 主窗口 -->
-    <v-sheet class="ma-0 pt-10 overflow-y-auto"
-      :height="store.mainWindowHeight - store.logHeight - store.toolbarheight">
-      <test-entities v-if="store.TEsNotTE" :defcols="defCols" />
-      <test-entity v-else />
-    </v-sheet>
+    <split-pane direction="column" :totalHeight="store.mainWindowHeight"
+      v-model:paneFirstLengthPercent="paneFirstLengthPercent"
+      :triggerLength="triggerLength" :max="paneFirstMaxLengthPercent">
 
-    <!-- TestLog 可扩展窗口 -->
-    <v-sheet class="ma-0 pa-0 overflow-y-auto"
-      :height="store.toolbarheight + store.logHeight">
-      <test-log />
-    </v-sheet>
+      <template v-slot:first>
+        <!-- TestEntity 窗口 -->
+        <v-sheet class="ma-0 pt-10 overflow-y-auto" style="height:100%">
+          <test-entities v-if="store.TEsNotTE" :defcols="defCols" />
+          <test-entity v-else />
+        </v-sheet>
+      </template>
+
+      <template v-slot:second>
+        <!-- TestLog 窗口 -->
+        <test-log />
+      </template>
+
+    </split-pane>
   </v-card>
 </template>
 
@@ -158,6 +164,7 @@ import TestEntities from '../components/TestEntities.vue'
 import TestEntity from '../components/TestEntity.vue'
 import TestLog from '../components/TestLog.vue'
 import AddEntity from '../components/forms/AddEntity.vue'
+import SplitPane from '../components/pane/SplitPane.vue'
 import { StopTestGroupSyncMonitor } from '../../wailsjs/go/imes/Api'
 import * as runtime from '../../wailsjs/runtime/runtime'
 
@@ -168,6 +175,10 @@ const store = useBaseStore()
 const selectedProd = ref()
 const selectedStage = ref()
 const testgroupsrcnewer = ref(false)
+const triggerLength = ref(2)
+const maxLengthPercent: number = 100 - ((store.toolbarheight + triggerLength.value) * 100 / store.mainWindowHeight)
+const paneFirstLengthPercent = ref(maxLengthPercent)
+const paneFirstMaxLengthPercent = ref(maxLengthPercent)
 
 const stages: [string] = reactive([''])
 watch(
@@ -222,7 +233,7 @@ const stopallgroup = () => {
 runtime.EventsOn('testgroupmonitor', (x: string) => {
   if (x == 'srcnewer') {
     testgroupsrcnewer.value = true
-    store.LoadTestGroup('config', true)
+    store.LoadTestGroup('config', false, false)
   } else {
     testgroupsrcnewer.value = false
   }
@@ -230,10 +241,10 @@ runtime.EventsOn('testgroupmonitor', (x: string) => {
 
 onUnmounted(() => {
   StopTestGroupSyncMonitor()
-})  
+})
 </script>
 
-<style>
+<style scoped lang="scss">
 .entity-toolbar {
   top: 0;
   position: absolute;

@@ -16,6 +16,10 @@ html {
   -webkit-user-seletct: none;
   -moz-user-seletct: none;
   -ms-user-seletct: none;
+  /* 不允许拖拽选中 */
+  -webkit-user-select:none; 
+  -moz-user-select:none; 
+  -ms-user-select:none; user-select:none;
 }
 
 .result {
