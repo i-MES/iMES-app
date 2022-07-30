@@ -53,6 +53,7 @@ func (a *App) startup(ctx context.Context) {
 	// user 后续用该上下文(a.ctx) 与 wails runtime 交互
 	a.ctx = ctx
 	a.api.Context(ctx)
+	utils.InitLog(ctx)
 
 	// 不是 log 到文件，而是到 stdout
 	envInfo := wails.Environment(ctx)
@@ -250,17 +251,11 @@ sys.stdout.write('******************'+'\n')
 	a.threadState = py.PyEval_SaveThread() // 释放 GIL，将 state 置为 null，并且返回前一个 state
 
 	// 一些基本配置
-	c := utils.GetAppConfiger()
-
-	if home, err := utils.Home(); err == nil {
-		datacachepath := home + "/.cache/iMES-app/"
-		if _, err := os.Stat(datacachepath); err != nil {
-			os.MkdirAll(datacachepath, 0750)
-		}
-		if !c.IsSet("datacachepath") {
-			c.Set("datacachepath", datacachepath)
-		}
+	c := utils.GetSettingConfiger()
+	if !c.IsSet("usercachepath") {
+		c.Set("usercachepath", utils.GetUserCacheDefaultPath())
 	}
+
 	fmt.Println(c.AllSettings())
 }
 

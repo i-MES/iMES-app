@@ -5,9 +5,8 @@
       <v-toolbar-title>{{ t('testpage.testitem-log') }}</v-toolbar-title>
       <v-spacer></v-spacer>
       <v-text-field hide-details append-icon="mdi-magnify"> </v-text-field>
-      <v-btn :icon="logHeightMaxed ? 'mdi-download-multiple' : 'mdi-upload-multiple'"
-        @click="onclickMax">
-      </v-btn>
+      <v-btn icon="mdi-download-outline" @click="onclickMin"> </v-btn>
+      <v-btn icon="mdi-upload-outline" @click="onclickMax"> </v-btn>
     </v-toolbar>
 
     <v-table class="pt-10" density="compact">
@@ -48,10 +47,12 @@ import * as runtime from '../../wailsjs/runtime/runtime'
 // }>()
 const { t } = useI18n({ useScope: 'global' })
 const store = useBaseStore()
-const logHeightMaxed = ref(false)
-// const pinBak = ref(false)
 
+const onclickMin = () => {
+  store.paneFirstLengthPercent = 100 - ((store.toolbarheight + 2) * 100 / store.mainWindowHeight)
+}
 const onclickMax = () => {
+  store.paneFirstLengthPercent = store.toolbarheight * 100 / store.mainWindowHeight
   //   if (!logHeightMaxed.value) {
   //     // max log window
   //     logHeightBak.value = logHeight.value

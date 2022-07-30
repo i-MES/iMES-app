@@ -1,1 +1,64 @@
-[{"id":1,"pid":1,"title":"Boot测试","desc":"测试工序","sequence":2},{"id":2,"pid":1,"title":"上电测试","desc":"测试工序","sequence":3},{"id":3,"pid":1,"title":"烧录版本","desc":"测试工序","sequence":1},{"id":4,"pid":1,"title":"校准测试","desc":"测试工序","sequence":1},{"id":5,"pid":1,"title":"网络测试","desc":"测试工序","sequence":1},{"id":11,"pid":2,"title":"Boot测试","desc":"测试工序","sequence":2},{"id":12,"pid":2,"title":"上电测试","desc":"测试工序","sequence":3},{"id":13,"pid":2,"title":"盐雾版本","desc":"测试工序","sequence":1},{"id":14,"pid":2,"title":"颜色测试","desc":"测试工序","sequence":1},{"id":15,"pid":2,"title":"跌落测试","desc":"测试工序","sequence":1},{"id":21,"pid":3,"title":"网络测试","desc":"测试工序","sequence":2},{"id":22,"pid":3,"title":"电路测试","desc":"测试工序","sequence":3},{"id":23,"pid":3,"title":"盐雾版本","desc":"测试工序","sequence":1},{"id":41,"pid":4,"title":"综合测试","desc":"测试工序","sequence":1}]
+[
+  { "id": 1, "pid": 1, "title": "Boot测试", "desc": "测试工序", "sequence": 2 },
+  { "id": 2, "pid": 1, "title": "上电测试", "desc": "测试工序", "sequence": 3 },
+  { "id": 3, "pid": 1, "title": "烧录版本", "desc": "测试工序", "sequence": 1 },
+  { "id": 4, "pid": 1, "title": "校准测试", "desc": "测试工序", "sequence": 1 },
+  { "id": 5, "pid": 1, "title": "网络测试", "desc": "测试工序", "sequence": 1 },
+  {
+    "id": 11,
+    "pid": 2,
+    "title": "Boot测试",
+    "desc": "测试工序",
+    "sequence": 2
+  },
+  {
+    "id": 12,
+    "pid": 2,
+    "title": "上电测试",
+    "desc": "测试工序",
+    "sequence": 3
+  },
+  {
+    "id": 13,
+    "pid": 2,
+    "title": "盐雾版本",
+    "desc": "测试工序",
+    "sequence": 1
+  },
+  {
+    "id": 14,
+    "pid": 2,
+    "title": "颜色测试",
+    "desc": "测试工序",
+    "sequence": 1
+  },
+  {
+    "id": 15,
+    "pid": 2,
+    "title": "跌落测试",
+    "desc": "测试工序",
+    "sequence": 1
+  },
+  {
+    "id": 21,
+    "pid": 3,
+    "title": "网络测试",
+    "desc": "测试工序",
+    "sequence": 2
+  },
+  {
+    "id": 22,
+    "pid": 3,
+    "title": "电路测试",
+    "desc": "测试工序",
+    "sequence": 3
+  },
+  {
+    "id": 23,
+    "pid": 3,
+    "title": "盐雾版本",
+    "desc": "测试工序",
+    "sequence": 1
+  },
+  { "id": 41, "pid": 4, "title": "综合测试", "desc": "测试工序", "sequence": 1 }
+]

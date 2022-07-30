@@ -62,14 +62,15 @@
 
 <script lang="ts" setup>
 import { onMounted, reactive, ref } from 'vue'
-import { SelectFolder, GetSetting, SetSetting } from '../../wailsjs/go/imes/Api'
-import { useBaseStore } from '../stores/index'
+import { SelectFolder, GetStringSetting, SetStringSetting } from '../../../wailsjs/go/imes/Api'
+import { useBaseStore } from '../../stores/index'
 const store = useBaseStore()
 const props = defineProps<{
   settingkey: string
   title: string
   desc?: string
   type: string
+  default?: string
   items?: string[]
 }>()
 const curValue = ref()
@@ -93,13 +94,13 @@ const lightswatches = reactive([
 onMounted(() => {
   // 从 config file 中加载默认值
   if (props.type == 'select') {
-    GetSetting(props.settingkey).then(
+    GetStringSetting(props.settingkey).then(
       (v: string) => {
         curValue.value = (v != '') ? v : (props.items ? props.items[0] : '')
       }
     )
   } else if (['input', 'selectfolder'].includes(props.type)) {
-    GetSetting(props.settingkey).then(
+    GetStringSetting(props.settingkey).then(
       (v: string) => {
         curValue.value = v
       }
@@ -110,22 +111,22 @@ onMounted(() => {
 // 用户修改后存储到 config file 中
 const onselectupdate = (val: string) => {
   console.log(val)
-  SetSetting(props.settingkey, val)
+  SetStringSetting(props.settingkey, val)
 }
 const onclickselectfolder = () => {
   SelectFolder('').then(
     (v) => {
       curValue.value = (v != '') ? v : curValue.value
-      SetSetting(props.settingkey, curValue.value)
+      SetStringSetting(props.settingkey, curValue.value)
     }
   )
 }
 const ondarkmaincolorupdated = (c: string) => {
-  SetSetting(props.settingkey + '-dark', c)
+  SetStringSetting(props.settingkey + '-dark', c)
   store.darkmaincolor = c
 }
 const onlightmaincolorupdated = (c: string) => {
-  SetSetting(props.settingkey + '-light', c)
+  SetStringSetting(props.settingkey + '-light', c)
   store.lightmaincolor = c
 }
 // 其他辅助函数

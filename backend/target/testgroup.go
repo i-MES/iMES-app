@@ -62,11 +62,11 @@ func ParsePythons(ctx *context.Context, root string, filepaths []string, strateg
 var curmoduleroot string = ""
 
 // 从源代码文件文件中加载 TG 数据，并开启 SyncMonitor
-func LoadTestGroupFromSrc(ctx *context.Context, selectFolder, selectPath bool) ([]TestGroup, []string) {
+func LoadTestGroupFromSrc(ctx *context.Context, isParseFolder, isUserSelectFolderPath bool) ([]TestGroup, []string) {
 	moduleroot := ""
 	filepathes := make([]string, 0)
-	if selectFolder {
-		if selectPath {
+	if isParseFolder {
+		if isUserSelectFolderPath {
 			// 用户选择文件夹
 			moduleroot = utils.SelectFolder(ctx, "Select TestCase Folder")
 		} else {
@@ -122,11 +122,11 @@ func LoadTestGroupFromConfig(ctx *context.Context) ([]TestGroup, []string) {
 	// }
 	// return nil, nil
 	if tgCacheConfiger == nil {
-		lmp := utils.GetAppConfiger().GetString("lastmodulepath")
+		lmp := utils.GetSettingConfiger().GetString("lastmodulepath")
 		if lmp == "" {
 			return nil, nil
 		}
-		tgCacheConfiger = utils.CreateTestcaseConfiger(lmp, "testgroup")
+		tgCacheConfiger = utils.CreateCacheConfiger(lmp, "testgroup")
 	}
 
 	var tgs map[string][]TestGroup
@@ -144,12 +144,12 @@ func LoadTestGroupFromConfig(ctx *context.Context) ([]TestGroup, []string) {
 loadFlag: 加载源 & 加载方式
 	config: 从 config/xxx.json 中加载数据
 	src:   从 源代码文件中解析数据，并完整重写 Config 文件
-selectPath: 从源代码解析时是否用户选择
-	true: 用户选择
-	false: 使用 App 默认
-selectFolder: 解析源代码目录 or 文件
-	true: 解析文件
+isParseFolder: 解析源代码目录 or 文件 —— 仅 loadFlag == src 时有效
+	true: 解析文件夹
 	false: 解析文件
+isUserSelectFolderPath: 是否弹框让用户选择 —— 仅 loadFlag == src & isParseFolder == true 时有效
+	true: 弹框让用户选择
+	false: 使用 App 默认（App 根目录下自带 testcase/）
 
 同步策略：
 	- 2 种加载方式都会启动 SyncMonitor
@@ -160,7 +160,7 @@ selectFolder: 解析源代码目录 or 文件
 	用户仅需解析一次源文件，后续源文件修改会自动同步 Merge 到 Cache & Config。
 	用户再次解析源文件，也要确认是否已存在 Config，存在则进行 Merge。
 */
-func LoadTestGroup(ctx *context.Context, loadFlag string, selectFolder, selectPath bool) []TestGroup {
+func LoadTestGroup(ctx *context.Context, loadFlag string, isParseFolder, isUserSelectFolderPath bool) []TestGroup {
 	switch loadFlag {
 	case "config":
 		// config 文件不需要用户选择目录，仅使用 App 默认路径
@@ -168,13 +168,13 @@ func LoadTestGroup(ctx *context.Context, loadFlag string, selectFolder, selectPa
 		StartTestGroupSrcMonitor(ctx, fs, true)
 		return ctgs
 	case "src":
-		stgs, srcs := LoadTestGroupFromSrc(ctx, selectFolder, selectPath)
+		stgs, srcs := LoadTestGroupFromSrc(ctx, isParseFolder, isUserSelectFolderPath)
 		if stgs != nil {
 			StartTestGroupSrcMonitor(ctx, srcs, true)
-			// 保存 cache 数据到 cache 路径
+			// 保存 testgroup 数据到 cache configer
 			SaveTestGroup(ctx, stgs)
-			// 保持 setting 数据到 config 路径
-			utils.GetAppConfiger().Set("lastmodulepath", stgs[0].TestClasses[0].ModulePath)
+			// 保存 lastmodulepath 参数到 setting configer
+			utils.GetSettingConfiger().Set("lastmodulepath", stgs[0].TestClasses[0].ModulePath)
 		}
 		return stgs
 	default:
@@ -233,7 +233,7 @@ func StopTestGroupSyncMonitor() {
 // 保持 TestGroup 到 cache file 中
 func SaveTestGroup(ctx *context.Context, data []TestGroup) {
 	if tgCacheConfiger == nil {
-		tgCacheConfiger = utils.CreateTestcaseConfiger(data[0].TestClasses[0].ModulePath, "testgroup")
+		tgCacheConfiger = utils.CreateCacheConfiger(data[0].TestClasses[0].ModulePath, "testgroup")
 	}
 	tgCacheConfiger.Set("testgroups", data)
 	// _data := make(map[string]interface{})

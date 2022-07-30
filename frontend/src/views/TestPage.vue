@@ -136,12 +136,13 @@
     </v-toolbar>
 
     <split-pane direction="column" :totalHeight="store.mainWindowHeight"
-      v-model:paneFirstLengthPercent="paneFirstLengthPercent"
-      :triggerLength="triggerLength" :max="paneFirstMaxLengthPercent">
+      v-model:paneFirstLengthPercent="store.paneFirstLengthPercent"
+      :triggerLength="triggerLength" :max="paneFirstMaxLengthPercent"
+      :min="paneFirstMinLengthPercent">
 
       <template v-slot:first>
         <!-- TestEntity 窗口 -->
-        <v-sheet class="ma-0 pt-10 overflow-y-auto" style="height:100%">
+        <v-sheet class="ma-0 pt-0 overflow-y-auto" style="height:100%">
           <test-entities v-if="store.TEsNotTE" :defcols="defCols" />
           <test-entity v-else />
         </v-sheet>
@@ -157,7 +158,7 @@
 </template>
 
 <script lang="ts" setup>
-import { onUnmounted, reactive, ref, watch } from 'vue'
+import { computed, onUnmounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useBaseStore } from '../stores/index'
 import TestEntities from '../components/TestEntities.vue'
@@ -165,7 +166,7 @@ import TestEntity from '../components/TestEntity.vue'
 import TestLog from '../components/TestLog.vue'
 import AddEntity from '../components/forms/AddEntity.vue'
 import SplitPane from '../components/pane/SplitPane.vue'
-import { StopTestGroupSyncMonitor } from '../../wailsjs/go/imes/Api'
+import { StopTestGroupSyncMonitor, SetIntSetting } from '../../wailsjs/go/imes/Api'
 import * as runtime from '../../wailsjs/runtime/runtime'
 
 const { t } = useI18n({ useScope: 'global' })
@@ -176,11 +177,49 @@ const selectedProd = ref()
 const selectedStage = ref()
 const testgroupsrcnewer = ref(false)
 const triggerLength = ref(2)
-const maxLengthPercent: number = 100 - ((store.toolbarheight + triggerLength.value) * 100 / store.mainWindowHeight)
-const paneFirstLengthPercent = ref(maxLengthPercent)
-const paneFirstMaxLengthPercent = ref(maxLengthPercent)
+const paneFirstMaxLengthPercent = computed(() => {
+  return 100 - ((store.toolbarheight + triggerLength.value) * 100 / store.mainWindowHeight)
+})
+const paneFirstMinLengthPercent = computed(() => {
+  return (store.toolbarheight + triggerLength.value) * 100 / store.mainWindowHeight
+})
 
+if (store.paneFirstLengthPercent === 100) {
+  // 赋默认值
+  store.paneFirstLengthPercent = paneFirstMaxLengthPercent.value
+}
 const stages: [string] = reactive([''])
+
+const adjustPercent = () => {
+  console.log('paneFirst Max|Min LengthPercent', paneFirstMaxLengthPercent.value, paneFirstMinLengthPercent.value)
+  if (store.paneFirstLengthPercent > paneFirstMaxLengthPercent.value) {
+    store.paneFirstLengthPercent = paneFirstMaxLengthPercent.value
+  }
+  if (store.paneFirstLengthPercent < paneFirstMinLengthPercent.value) {
+    store.paneFirstLengthPercent = paneFirstMinLengthPercent.value
+  }
+}
+// 窗口 resize 的时候实时修改窗口比例，否则会撑出边界
+watch(
+  () => store.mainWindowHeight,
+  () => {
+    adjustPercent()
+  }
+)
+var writeTimer: any
+watch(
+  () => store.paneFirstLengthPercent,
+  (nv) => {
+    adjustPercent()
+    // 用户拖拽会快速频繁触发，需要做防抖
+    if (writeTimer) {
+      clearTimeout(writeTimer)
+    }
+    writeTimer = setTimeout(() => {
+      SetIntSetting('paneFirstLengthPercent', Math.round(nv))
+    }, 3000)
+  }
+)
 watch(
   () => selectedProd.value,
   (nv) => {

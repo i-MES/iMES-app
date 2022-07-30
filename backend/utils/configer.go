@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"regexp"
+	"sync"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
@@ -144,81 +145,97 @@ func StartSyncMonitor(dataType string, srcs []string, newcallback func(string), 
 }
 
 type Configer struct {
-	Name        string
-	DefaultPath string       // 版本内置数据文件路径 -- 只读、不监控
-	UserPath    string       // App 自动或用户手动生成数据文件路径 -- 读写、监控并自动 Reload 到 v
-	v           *viper.Viper // DefaultPath、UserPath 数据分别加载到 Level6、Level3 优先级
-	userv       *viper.Viper // 与 UserPath 对标的数据，实时写入 UserPath
+	Name          string       // yaml 文件名，后缀(.yaml)省略
+	ReadOnlyPath  string       // 版本内置数据文件路径 -- 只读、不监控
+	ReadWritePath string       // App 自动或用户手动生成数据文件路径 -- 读写、监控并自动 Reload 到 v
+	alldata       *viper.Viper // ReadWritePath、 ReadWritePath 数据分别加载到 Level6、Level3 优先级
+	rwdata        *viper.Viper // 与 ReadWritePath 对标的数据，实时写入 ReadWritePath
+	wtimer        *time.Timer  // 写文件缓冲 timer
+	mutex         *sync.Mutex  // 并发锁
 }
 
 func (c *Configer) Init() {
-	if c.DefaultPath != "" {
-		if _, err := os.Stat(c.DefaultPath); err != nil {
-			os.MkdirAll(c.DefaultPath, 0750)
+	// 创建 DefaultPath、UserPath 路径下相应文件
+	if c.ReadOnlyPath != "" {
+		if _, err := os.Stat(c.ReadOnlyPath); err != nil {
+			os.MkdirAll(c.ReadOnlyPath, 0750)
 		}
 	}
-	if c.UserPath != "" {
-		if _, err := os.Stat(c.UserPath); err != nil {
-			os.MkdirAll(c.UserPath, 0750)
+	if c.ReadWritePath != "" {
+		if _, err := os.Stat(c.ReadWritePath); err != nil {
+			os.MkdirAll(c.ReadWritePath, 0750)
 		}
 	}
 
-	dpf := c.DefaultPath + "/" + c.Name + ".yaml"
+	dpf := c.ReadOnlyPath + "/" + c.Name + ".yaml"
 	if _, err := os.Stat(dpf); err != nil {
 		os.Create(dpf)
 	}
-	upf := c.UserPath + "/" + c.Name + ".yaml"
+	upf := c.ReadWritePath + "/" + c.Name + ".yaml"
 	if _, err := os.Stat(upf); err != nil {
 		os.Create(upf)
 	}
 
-	c.v.SetConfigName(c.Name)
-	c.v.SetConfigType("yaml")
-	c.userv.SetConfigName(c.Name)
-	c.userv.SetConfigType("yaml")
+	c.alldata.SetConfigName(c.Name)
+	c.alldata.SetConfigType("yaml")
+	c.rwdata.SetConfigName(c.Name)
+	c.rwdata.SetConfigType("yaml")
 
-	// DefaultPath 的 config file 加载到第 Level6 优先级的 default data 中，不监控
-	if c.DefaultPath != "" {
+	// ReadOnlyPath 的 config file 加载到第 Level6 优先级的 default data 中，不监控
+	if c.ReadOnlyPath != "" {
 		_v := viper.New()
 		_v.SetConfigName(c.Name)
 		_v.SetConfigType("yaml")
-		_v.AddConfigPath(c.DefaultPath)
+		_v.AddConfigPath(c.ReadOnlyPath)
 		if err := _v.ReadInConfig(); err == nil {
 			for k, v := range _v.AllSettings() {
-				c.v.SetDefault(k, v)
+				// 遍历并写入 viper 的 default data 中
+				c.alldata.SetDefault(k, v)
 			}
 		} else {
 			fmt.Println(err)
 		}
 	}
 
-	// UserPath 中的 config file 加载到第 3 优先级的 config 中，并进行监控
-	if c.UserPath != "" {
-		c.v.AddConfigPath(c.UserPath)
-		c.userv.AddConfigPath(c.UserPath)
+	// ReadWritePath 中的 config file 加载到第 3 优先级的 config 中，并进行监控
+	if c.ReadWritePath != "" {
+		c.alldata.AddConfigPath(c.ReadWritePath)
+		c.rwdata.AddConfigPath(c.ReadWritePath)
 		c.reloadUserConfig()
-		c.userv.OnConfigChange(func(e fsnotify.Event) {
+		c.rwdata.OnConfigChange(func(e fsnotify.Event) {
 			fmt.Println("Config file changed:", e.Name, e.Op)
-			c.reloadUserConfig()
+			// c.reloadUserConfig()
 		})
-		c.userv.WatchConfig() // 创建线程实时监控
+		c.rwdata.WatchConfig() // 创建线程实时监控
 	}
+
+	// 创建一个写文件缓冲协程
+	c.wtimer = time.NewTimer(time.Second * 3)
+	go func(ch <-chan time.Time) {
+		defer c.wtimer.Stop()
+		for t := range ch {
+			LogDebug("write config to file" + t.GoString())
+			c.writeToFile()
+		}
+	}(c.wtimer.C)
+
+	c.mutex = &sync.Mutex{}
 }
 
-// 重新加载 UserPath 下 config，不关闭也不重启已有的 Watcher
+// 重新加载 ReadWritePath 下 config，不关闭也不重启已有的 Watcher
 func (c *Configer) reloadUserConfig() {
-	if c.UserPath != "" {
+	if c.ReadWritePath != "" {
 		// 刷新 c.v（ReadInConfig 会覆盖同级）
-		if err := c.v.ReadInConfig(); err != nil {
+		if err := c.alldata.ReadInConfig(); err != nil {
 			if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 				fmt.Println("Can not find config file: imes.yaml")
 			} else {
 				fmt.Println("Found config file, but other error accord")
 			}
-		} 
+		}
 
 		// 刷新 c.userv
-		if err := c.userv.ReadInConfig(); err != nil {
+		if err := c.rwdata.ReadInConfig(); err != nil {
 			fmt.Println("c.userv reload error")
 		}
 	}
@@ -226,36 +243,47 @@ func (c *Configer) reloadUserConfig() {
 
 // 依次尝试写入 UserPath、DefaultPath，写入一个即退出
 func (c *Configer) writeToFile() {
-	if c.UserPath != "" {
-		c.userv.WriteConfigAs(c.UserPath + "/" + c.Name + ".yaml")
+	if c.ReadWritePath != "" {
+		c.rwdata.WriteConfigAs(c.ReadWritePath + "/" + c.Name + ".yaml")
 	} else {
 		fmt.Println("WriteToFile Error")
 	}
 }
 
+func (c *Configer) Set(key string, value interface{}) {
+	c.mutex.Lock()
+	c.alldata.Set(key, value)
+	if c.ReadWritePath != "" {
+		c.rwdata.Set(key, value)
+		// c.writeToFile()
+		c.wtimer.Reset(time.Second * 3)	
+	}
+	c.mutex.Unlock()
+}
+
 func (c *Configer) IsSet(key string) bool {
-	return c.v.IsSet(key)
+	return c.alldata.IsSet(key)
 }
 func (c *Configer) Get(key string) interface{} {
-	return c.v.Get(key)
+	return c.alldata.Get(key)
 }
 func (c *Configer) GetString(key string) string {
-	return c.v.GetString(key)
+	return c.alldata.GetString(key)
 }
 func (c *Configer) GetInt(key string) int {
-	return c.v.GetInt(key)
+	return c.alldata.GetInt(key)
 }
 func (c *Configer) AllSettings() map[string]interface{} {
-	return c.v.AllSettings()
+	return c.alldata.AllSettings()
 }
 func (c *Configer) Unmarshal(rawVal interface{}) {
-	x := c.v.AllSettings()
+	x := c.alldata.AllSettings()
 	fmt.Println(x)
-	c.v.Unmarshal(rawVal)
+	c.alldata.Unmarshal(rawVal)
 }
 func (c *Configer) UnmarshalKey(key string, rawVal interface{}) error {
-	if c.v.IsSet(key) {
-		if sub := c.v.Sub(key); sub != nil {
+	if c.alldata.IsSet(key) {
+		if sub := c.alldata.Sub(key); sub != nil {
 			sub.Unmarshal(rawVal)
 			return nil
 		} else {
@@ -265,55 +293,92 @@ func (c *Configer) UnmarshalKey(key string, rawVal interface{}) error {
 	return nil
 }
 
-func (c *Configer) Set(key string, value interface{}) {
-	c.v.Set(key, value)
-	if c.UserPath != "" {
-		c.userv.Set(key, value)
-		c.writeToFile()
-	}
-}
+/*
+config 数据:
 
-var appConf *Configer
+根据用途分 2 种
+
+1. settings: 控制程序运行的配置数据，清空对 app 运行会有一定、甚至深刻影响
+2. cache: 缓存类，用户可以随时清空，对 app 运行没有影响
+
+根据用户分 2 种
+
+1. app data：iMES-app 使用的数据
+2. user data: 用户生成、使用的数据
+
+这是一个二维问题域：
+|          | app data                  | user data                                              |
+| -------- | ------------------------- | ------------------------------------------------------ |
+| Settings | 随 app 自带，用户不能修改 | 用户修改的 Setting，主要包括 app 中 setting 页面中内容 |
+| Cache    | APP 运行态生成的缓存数据  | 用户生成、使用的数据，如：testgroup...                 |
+*/
+
+var settingConf *Configer
 
 // 使用 viper 全局单例做 app configer
-func GetAppConfiger() *Configer {
-	home, _ := Home()
-	confdir := home + "/.config/iMES-app/"
-	if _, err := os.Stat(confdir); err != nil {
-		os.MkdirAll(confdir, 0750)
-	}
-
-	if home, err := Home(); err == nil {
-		if appConf == nil {
-			appConf = &Configer{
-				"imes",
+func GetSettingConfiger() *Configer {
+	if settingConf == nil {
+		if home, err := Home(); err == nil {
+			dir := home + "/.config/imes-app/"
+			if _, err := os.Stat(dir); err != nil {
+				os.MkdirAll(dir, 0750)
+			}
+			settingConf = &Configer{
+				"settings",
 				GetAppPath(),
-				home + "/.config/iMES-app",
+				dir,
 				viper.GetViper(),
 				viper.New(),
+				nil,
+				nil,
 			}
-			appConf.Init()
+			settingConf.Init()
+		} else {
+			return nil
 		}
-		return appConf
-	} else {
-		return nil
 	}
+	return settingConf
 }
 
-// 用户输入 TestCase 的路径，本函数创建对应的 cache 路径
-// ~/.cache/imes-app/testcase/<uuid hash>
+// 用户输入 TestCase 的路径，本函数创建对应的路径
+// GetUserDataPath()/testcase/<hashid>
 // 并为其创建 <configtype>.yaml 的 viper
-func CreateTestcaseConfiger(folder, configtype string) *Configer {
+func CreateCacheConfiger(folder, configtype string) *Configer {
 	if id, err := Hash(folder); err == nil {
 		c := &Configer{
 			configtype,
 			"",
-			GetAppConfiger().GetString("datacachepath") + "/" + id,
+			GetSettingConfiger().GetString("usercachepath") + "/" + id,
 			viper.New(),
 			viper.New(),
+			nil,
+			nil,
 		}
 		c.Init()
 		return c
+	}
+	return nil
+}
+
+func ReadYaml(yamldir string) interface{} {
+	if _, err := os.Stat(yamldir); err != nil {
+		LogWarning("Cannot read file") // 这不算 error
+		return nil
+	}
+	v := viper.New()
+	v.SetConfigType("yaml")
+	v.SetConfigName("config")
+	v.AddConfigPath(yamldir)
+	if err := viper.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			// 找不到 config file
+			LogError("Can not find config file")
+		} else {
+			// 可以找到 config file，但出了其他 error
+			LogError("Found config file, but other error accord")
+		}
+	} else {
+		return v.AllSettings()
 	}
 	return nil
 }

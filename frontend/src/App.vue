@@ -81,7 +81,7 @@ import { useRouter, useRoute, RouteRecordRaw } from 'vue-router'
 import { useDisplay } from 'vuetify'
 import { useI18n } from 'vue-i18n'
 // about wails
-import { OpenGithub } from '../wailsjs/go/imes/Api'
+import { OpenGithub, SetIntSetting } from '../wailsjs/go/imes/Api'
 import { SysInfo } from '../wailsjs/go/main/App'
 // about app
 import { useBaseStore } from './stores/index'
@@ -176,6 +176,9 @@ onMounted(() => {
   store.syncTestStages()
   store.syncTestStation()
   store.syncTestEntity()
+  store.LoadStringSetting('darkmaincolor')
+  store.LoadStringSetting('lightmaincolor')
+  store.LoadNumberSetting('paneFirstLengthPercent')
 
   SysInfo().then(
     (info) => {
@@ -230,6 +233,8 @@ window.onresize = () => {
   console.log('store.mainWindowHeight changed: ', store.mainWindowHeight)
   store.appStatusBar.width = display.width.value
   breakpoint()
+  SetIntSetting('display-height', display.height.value)
+  SetIntSetting('display-width', display.width.value)
 }
 
 </script>

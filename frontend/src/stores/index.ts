@@ -48,6 +48,8 @@ export type TGlobalState = {
   darkmaincolor: string,
   lightmaincolor: string,
   LastestTIStatus: ITestItemStatus,
+  workmode: string
+  paneFirstLengthPercent: number
 }
 
 export const useBaseStore = defineStore('imesBaseStore', {
@@ -81,6 +83,8 @@ export const useBaseStore = defineStore('imesBaseStore', {
       darkmaincolor: 'blue-grey-darken-2',
       lightmaincolor: 'blue-grey-lighten-3',
       LastestTIStatus: {},
+      workmode: '',
+      paneFirstLengthPercent: 100
     }
   },
   getters: {
@@ -130,6 +134,29 @@ export const useBaseStore = defineStore('imesBaseStore', {
           }
           return undefined
         }
+      }
+    },
+    // 从后端加载 setting 到 store
+    LoadStringSetting: (state) => {
+      return (name: keyof typeof state) => {
+        api.GetStringSetting(name as string).then(
+          (v) => {
+            if (v) {
+              state[name] = v
+            }
+          }
+        )
+      }
+    },
+    LoadNumberSetting: (state) => {
+      return (name: keyof typeof state) => {
+        api.GetStringSetting(name as string).then(
+          (v) => {
+            if (v) {
+              state[name] = Number(v)
+            }
+          }
+        )
       }
     }
   },
@@ -212,9 +239,9 @@ export const useBaseStore = defineStore('imesBaseStore', {
         }
       })
     },
-    async LoadTestGroup(loadFlag: string, selectFolder: boolean, selectPath: boolean) {
+    async LoadTestGroup(loadFlag: string, isParseFolder: boolean, isUserSelectFolderPath: boolean) {
       // sync: 加载 & 去重 & 去脏 & 写回
-      api.LoadTestGroup(loadFlag, selectFolder, selectPath).then((tgs) => {
+      api.LoadTestGroup(loadFlag, isParseFolder, isUserSelectFolderPath).then((tgs) => {
         if (tgs) {
           console.log('load testgroup:', tgs)
           this.testGroups = tgs

@@ -1,5 +1,5 @@
 <template>
-  <v-container>
+  <v-container class="mt-10">
     <!-- <v-tabs class="sticky" centered v-model="activeTab" color="deep-purple-accent-4">
       <v-tab v-for="e in store.testEntities" :key="e.ip.toString()"
         :value="e.ip.toString()"> {{ e.ip.toString().replaceAll(',', '.') }}

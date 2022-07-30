@@ -108,3 +108,17 @@ main.go:14:12: pattern frontend/dist: cannot embed directory frontend/dist: cont
     - ` +build` 是老版本的 go 编译指令，`//go:build` 是 go1.17 之后新的。
     - 为了兼容性，老版本的 godoc 要求两个都要写，发现只有 1 个就报以上错误。
     - 但新版本的 godoc 已经能够更智能的处理，不再做这个要求。
+
+## Others
+
+### git 提交规范
+
+遵守 [约定式提交规范](https://www.conventionalcommits.org/zh-hans/)
+
+- feat：新功能（feature）
+- fix：修补 bug
+- refactor：重构（即不是新增功能，也不是修改 bug 的代码变动）
+- docs：文档（documentation）
+- style： 格式（不影响代码运行的变动）
+- test：增加测试
+- chore：构建过程或辅助工具的变动

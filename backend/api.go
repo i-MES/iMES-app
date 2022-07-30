@@ -65,8 +65,8 @@ func (a *Api) SelectFolder(title string) string {
 	return utils.SelectFolder(&a.ctx, title)
 }
 
-func (a *Api) LoadTestGroup(loadFlag string, selectFolder, selectPath bool) []target.TestGroup {
-	return target.LoadTestGroup(&a.ctx, loadFlag, selectFolder, selectPath)
+func (a *Api) LoadTestGroup(loadFlag string, isParseFolder, isUserSelectFolderPath bool) []target.TestGroup {
+	return target.LoadTestGroup(&a.ctx, loadFlag, isParseFolder, isUserSelectFolderPath)
 }
 
 func (a *Api) StopTestGroupSyncMonitor() {
@@ -116,9 +116,21 @@ func (a *Api) NeedStruct(tistatus target.TestItemStatus) {
 	fmt.Println("Just need these struct")
 }
 
-func (a *Api) GetSetting(key string) string {
-	return utils.GetAppConfiger().GetString(key)
+func (a *Api) GetStringSetting(key string) string {
+	return utils.GetSettingConfiger().GetString(key)
 }
-func (a *Api) SetSetting(key, value string) {
-	utils.GetAppConfiger().Set(key, value)
+func (a *Api) SetStringSetting(key, value string) {
+	utils.GetSettingConfiger().Set(key, value)
+}
+func (a *Api) GetIntSetting(key string) int {
+	return utils.GetSettingConfiger().GetInt(key)
+}
+func (a *Api) SetIntSetting(key string, value int) {
+	utils.GetSettingConfiger().Set(key, value)
+}
+func (a *Api) GetUserCacheDefaultPath() string {
+	return utils.GetUserCacheDefaultPath()
+}
+func (a *Api) ReadYaml(yamldir string) interface{} {
+	return utils.ReadYaml(yamldir)
 }

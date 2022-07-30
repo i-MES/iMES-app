@@ -29,6 +29,20 @@ func GetAppPath() string {
 	return approot
 }
 
+// .config: 存放最好不要删除的数据
+// .cache:  存放随时可以删除的数据
+func GetUserCacheDefaultPath() string {
+	if home, err := Home(); err == nil {
+		dir := home + "/.cache/imes-app/"
+		if _, err := os.Stat(dir); err != nil {
+			os.MkdirAll(dir, 0750)
+		}
+		return dir
+	} else {
+		return ""
+	}
+}
+
 var _platform string
 var _arch string
 
