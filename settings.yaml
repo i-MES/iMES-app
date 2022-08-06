@@ -2,3 +2,13 @@ version: 0.0.1
 author: wkevin
 github: https://github.com/i-MES
 website: https://i-MES.github.io
+
+log:
+  # 时区
+  timezone: Asia/Shanghai
+  # logs 文件默认存储路径
+  logsfilepath: ./.logs
+  # logs 文件翻转时长（即：生命周期），数字类型，单位 minut，默认：60
+  logsfilerotateminutes: 60
+  # 防呆刷新 log 缓存数据到 file 中，数字类型，单位 second，默认：60
+  tickerflushsecond: 60

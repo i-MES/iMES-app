@@ -208,6 +208,16 @@ func (w *Writer) rotate() error {
 	return nil
 }
 
+func (w *Writer) tickerflush() error {
+	flushticker := time.NewTicker(time.Second * time.Duration(GetSettingConfiger().GetInt("log.tickerflushsecond")))
+	go func(ch <-chan time.Time) {
+		for range ch {
+			w.bw.Flush()
+		}
+	}(flushticker.C)
+	return nil
+}
+
 // New creates a new concurrency safe Writer which performs log rotation.
 func NewRotate(opts RotateOptions) (*Writer, error) {
 	if _, err := os.Stat(opts.Directory); os.IsNotExist(err) {
@@ -229,6 +239,7 @@ func NewRotate(opts RotateOptions) (*Writer, error) {
 
 	w.rotate()
 	go w.listen()
+	w.tickerflush()
 
 	return w, nil
 }

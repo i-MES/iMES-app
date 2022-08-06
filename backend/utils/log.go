@@ -76,7 +76,7 @@ func InitLog(level string) {
 	// time.Now()输出默认 CST 时区时间；
 	// time.Parse() 默认输出 UTC 时区时间。
 	// Local() 得到当地时区
-	time.LoadLocation("Asia/Shanghai")
+	time.LoadLocation(GetSettingConfiger().GetString("log.timezone"))
 	log.Info().Msgf("Time: %v", time.Now().UTC().Local().Format(time.RFC3339))
 
 	// 配置 Stdout 的输出
@@ -93,9 +93,9 @@ func InitLog(level string) {
 
 	// 配置文件及 rotate
 	rotateFileWriter, err := NewRotate(RotateOptions{
-		Directory:       "./.logs",
+		Directory:       GetSettingConfiger().GetString("log.logsfilepath"),
 		MaximumFileSize: 1024 * 1024 * 1024,
-		MaximumLifetime: time.Hour * 1,
+		MaximumLifetime: time.Minute * time.Duration(GetSettingConfiger().GetInt("log.logsfilerotateminutes")),
 		FileNameFunc:    nil,
 	})
 
