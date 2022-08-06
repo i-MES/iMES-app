@@ -1,9 +1,8 @@
 package imes
 
 import (
-	"fmt"
-
 	"github.com/i-mes/imes-app/backend/utils"
+	"github.com/rs/zerolog/log"
 )
 
 // 工位（允许支持多个测试工序）
@@ -37,7 +36,7 @@ func (a *Api) LoadTestStation() TestStation {
 		_ts := []byte(json.Get(data).ToString())
 		err := json.Unmarshal(_ts, &ts)
 		if err != nil {
-			fmt.Println(err)
+			log.Error().Stack().Err(err).Send()
 		}
 	}
 	return ts

@@ -6,13 +6,14 @@ import (
 	"os"
 	"runtime"
 	"strconv"
+	"time"
 
 	"github.com/i-mes/imes-app/backend/target"
 
 	imes "github.com/i-mes/imes-app/backend"
 	py "github.com/i-mes/imes-app/backend/python"
 	"github.com/i-mes/imes-app/backend/utils"
-	"github.com/wailsapp/wails/v2/pkg/logger"
+	"github.com/rs/zerolog/log"
 	"github.com/wailsapp/wails/v2/pkg/menu"
 	"github.com/wailsapp/wails/v2/pkg/menu/keys"
 	wails "github.com/wailsapp/wails/v2/pkg/runtime"
@@ -53,21 +54,21 @@ func (a *App) startup(ctx context.Context) {
 	// user 后续用该上下文(a.ctx) 与 wails runtime 交互
 	a.ctx = ctx
 	a.api.Context(ctx)
-	utils.InitLog(ctx)
 
 	// 不是 log 到文件，而是到 stdout
 	envInfo := wails.Environment(ctx)
 	if envInfo.BuildType == "dev" {
-		wails.LogSetLogLevel(ctx, logger.DEBUG)
+		utils.InitLog("dev")
 	} else {
-		wails.LogSetLogLevel(ctx, logger.INFO)
+		utils.InitLog("rls")
 	}
-	wails.LogInfo(ctx, "BuildType: "+envInfo.BuildType)
-	wails.LogInfo(ctx, "GOOS: "+runtime.GOOS)
-	wails.LogInfo(ctx, "GOARCH: "+runtime.GOARCH)
-	wails.LogInfo(ctx, "ProcessId: "+strconv.Itoa(utils.GetProcessIdGet()))
+	time.Sleep(time.Second * 1)
+	log.Info().Msg("BuildType: " + envInfo.BuildType)
+	log.Info().Msg("GOOS: " + runtime.GOOS)
+	log.Info().Msg("GOARCH: " + runtime.GOARCH)
+	log.Info().Msg("ProcessId: " + strconv.Itoa(utils.GetProcessIdGet()))
 	if wd, e := os.Getwd(); e == nil {
-		wails.LogInfo(ctx, "Getwd: "+wd)
+		log.Info().Msg("Getwd: " + wd)
 	}
 
 	// ===== CPython 启动 =====
@@ -96,14 +97,14 @@ func (a *App) startup(ctx context.Context) {
 
 	// 验证启动情况：
 	if pyName, err := py.Py_GetProgramName(); err == nil {
-		fmt.Println("Py_GetProgramName: ", pyName)
+		log.Debug().Str("Py_GetProgramName", pyName).Send()
 	}
 	if pyHome, err := py.Py_GetPythonHome(); err == nil {
-		fmt.Println("Py_GetPythonHome:", pyHome)
+		log.Debug().Str("Py_GetPythonHome", pyHome).Send()
 	}
 	if pyPath, err := py.Py_GetPath(); err == nil {
 		// 注意 pip install -e 安装的 module 是否还存在
-		fmt.Println("Py_GetPath:", pyPath)
+		log.Debug().Str("Py_GetPath", pyPath).Send()
 	}
 
 	// ===== CPython 高层接口 =====
@@ -238,8 +239,8 @@ sys.stdout.write('******************'+'\n')
 	fmt.Println("====== Try PyXXX_Check")
 	fmt.Println("Is PyImport_GetModuleDict's output dict type? - ", py.PyDict_Check(py.PyImport_GetModuleDict())) // true
 
-	fmt.Println("Python version: ", py.Py_GetVersion())
-	fmt.Println("Python path: ", py.PyImport_GetModule("os").GetAttrString("sys").GetAttrString("path").Repr())
+	log.Debug().Str("PythonVersion", py.Py_GetVersion()).Send()
+	log.Debug().Str("PythonPath", py.PyImport_GetModule("os").GetAttrString("sys").GetAttrString("path").Repr()).Send()
 
 	py.InitLog()
 

@@ -3,12 +3,10 @@ package utils
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"hash/crc32"
 	"io/fs"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/exec"
 	"os/user"
@@ -17,6 +15,8 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 	wails "github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
@@ -25,7 +25,6 @@ func GetAppPath() string {
 	// f, _ := exec.LookPath(os.Args[0])
 	_, fileStr, _, _ := runtime.Caller(0)
 	approot, _ := filepath.Abs(filepath.Dir(fileStr) + "/../..")
-	// fmt.Println("AppRoot: ", approot)
 	return approot
 }
 
@@ -73,12 +72,12 @@ func GetThreadId() int {
 
 		// user32, err = syscall.LoadDLL("Kernel32.dll")
 		// if err != nil {
-		// 	fmt.Printf("syscall.LoadDLL fail: %v", err.Error())
+		// 	log.Debug().Msgf("syscall.LoadDLL fail: %v", err.Error())
 		// 	return 0
 		// }
 		// GetCurrentThreadId, err = user32.FindProc("GetCurrentThreadId")
 		// if err != nil {
-		// 	fmt.Printf("user32.FindProc fail: %v", err.Error())
+		// 	log.Debug().Msgf("user32.FindProc fail: %v", err.Error())
 		// 	return 0
 		// }
 
@@ -132,7 +131,7 @@ func getAllFile_IOUtil(root, pattern string, recursion bool) ([]string, error) {
 	// func ReadDir(dirname string) ([]fs.FileInfo, error)
 	infos, err := ioutil.ReadDir(root)
 	if err != nil {
-		fmt.Printf("读取文件目录失败, root=%v, err=%v \n", root, err)
+		log.Debug().Msgf("读取文件目录失败, root=%v, err=%v \n", root, err)
 		return result, err
 	}
 
@@ -184,7 +183,7 @@ func SelectFolder(ctx *context.Context, title string) string {
 	}
 	selectedFolder, err := wails.OpenDirectoryDialog(*ctx, _opt)
 	if err != nil {
-		log.Panic("Error on folder opening", err.Error())
+		log.Error().Stack().Err(errors.Wrap(err, "Error on folder opening")).Send()
 	}
 	return selectedFolder
 }
@@ -203,7 +202,7 @@ func SelectFile(ctx *context.Context, title, filePattern string) string {
 	}
 	selectedFile, err := wails.OpenFileDialog(*ctx, _opt)
 	if err != nil {
-		log.Panic("Error on file opening", err.Error())
+		log.Error().Stack().Err(errors.Wrap(err, "Error on file opening")).Send()
 	}
 	return selectedFile
 }

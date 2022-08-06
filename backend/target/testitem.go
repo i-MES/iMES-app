@@ -1,9 +1,8 @@
 package target
 
 import (
-	"fmt"
-
 	"github.com/i-mes/imes-app/backend/utils"
+	"github.com/rs/zerolog/log"
 )
 
 // 测试项
@@ -36,7 +35,7 @@ func LoadTestItems() []TestItem {
 		_ti := []byte(json.Get(data).ToString())
 		err := json.Unmarshal(_ti, &ti)
 		if err != nil {
-			fmt.Println(err)
+			log.Error().Stack().Err(err).Send()
 		}
 		return ti
 	}
@@ -46,16 +45,16 @@ func LoadTestItems() []TestItem {
 // func (ti *TestItem) Run(tg_name string) {
 // 	runtime.LockOSThread()
 // 	defer runtime.UnlockOSThread()
-// 	fmt.Println(ti)
+// 	log.Debug().Msg(ti)
 
 // 	if !python.Py_IsInitialized() {
 // 		python.Py_Initialize()
 // 	}
-// 	fmt.Println("-=")
+// 	log.Debug().Msg("-=")
 // 	_gil := python.PyGILState_Ensure()
 // 	defer python.PyGILState_Release(_gil)
 
-// 	fmt.Println("-=-=")
+// 	log.Debug().Msg("-=-=")
 // 	_mod := python.PyImport_ImportFile(ti.FileName)
 // 	defer _mod.DecRef()
 // 	if _mod == nil {
@@ -66,10 +65,10 @@ func LoadTestItems() []TestItem {
 // 	if pFunc != nil {
 // 		pValue := pFunc.CallObject(nil)
 // 		if pValue != nil {
-// 			fmt.Println(pValue)
+// 			log.Debug().Msg(pValue)
 // 		}
 // 	}
-// 	fmt.Println("Run TI: ", ti.Title, ti.Desc, ti.FuncName, ti.Sequence)
+// 	log.Debug().Msg("Run TI: ", ti.Title, ti.Desc, ti.FuncName, ti.Sequence)
 // }
 
 type TestItemStatus struct {

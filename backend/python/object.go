@@ -177,8 +177,8 @@ func (pyObject *PyObject) Type() string {
 // func (pyObject *PyObject) Bytes() int {
 // 	_bytes := C.PyObject_Bytes(toc(pyObject))
 // 	defer C.Py_DecRef(_bytes)
-// 	fmt.Println(_bytes)
-// 	fmt.Println(C.PyBytes_Size(_bytes))
+// 	log.Debug().Msg(_bytes)
+// 	log.Debug().Msg(C.PyBytes_Size(_bytes))
 // 	if _bytes == nil {
 // 		return 0
 // 	} else {

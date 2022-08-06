@@ -1,9 +1,8 @@
 package imes
 
 import (
-	"fmt"
-
 	"github.com/i-mes/imes-app/backend/utils"
+	"github.com/rs/zerolog/log"
 )
 
 // 产品
@@ -31,7 +30,7 @@ func (a *Api) LoadTestProductions() []TestProduction {
 		if err == nil {
 			return tp
 		} else {
-			fmt.Println(err)
+			log.Error().Stack().Err(err).Send()
 			return nil
 		}
 	}

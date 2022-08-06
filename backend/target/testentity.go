@@ -1,10 +1,9 @@
 package target
 
 import (
-	"fmt"
-
 	"github.com/i-mes/imes-app/backend/utils"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/rs/zerolog/log"
 )
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
@@ -36,7 +35,7 @@ func LoadTestEntity() []TestEntity {
 		_te := []byte(json.Get(data).ToString())
 		err := json.Unmarshal(_te, &te)
 		if err != nil {
-			fmt.Println(err)
+			log.Error().Stack().Err(err).Send()
 		}
 		return te
 	}
@@ -45,11 +44,11 @@ func LoadTestEntity() []TestEntity {
 
 func ConnectTestEntity(ip []int) bool {
 	if len(ip) == 4 {
-		fmt.Println("IP V4")
+		log.Debug().Msg("IP V4")
 	} else if len(ip) == 6 {
-		fmt.Println("IP V6")
+		log.Debug().Msg("IP V6")
 	} else {
-		fmt.Println("Invallied arg")
+		log.Debug().Msg("Invallied arg")
 	}
 	return true
 }

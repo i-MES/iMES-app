@@ -7,3 +7,4 @@ package.json.md5
 .vim.*
 *.pyc
 *_log/
+.logs/

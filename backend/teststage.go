@@ -1,9 +1,8 @@
 package imes
 
 import (
-	"fmt"
-
 	"github.com/i-mes/imes-app/backend/utils"
+	"github.com/rs/zerolog/log"
 )
 
 // 工序
@@ -49,7 +48,7 @@ func (a *Api) LoadTestStages() []TestStage {
 		if err == nil {
 			return ts
 		} else {
-			fmt.Println(err)
+			log.Error().Stack().Err(err).Send()
 			return nil
 		}
 	}

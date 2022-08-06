@@ -7,12 +7,13 @@ package python
 */
 import "C"
 import (
-	"fmt"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
 	"unsafe"
+
+	"github.com/rs/zerolog/log"
 )
 
 func PyImport_ImportModule(name string) *PyObject {
@@ -105,11 +106,11 @@ func PyImport_ImportFile(root, filename string) *PyObject {
 		}
 	}
 	if !_pathadded {
-		fmt.Printf("Add a new path(%s) to sys.path\n", root)
+		log.Debug().Msgf("Add a new path(%s) to sys.path\n", root)
 		PySys_AppendSysPath(root)
 		PySysPathes = append(PySysPathes, root)
 	} else {
-		fmt.Printf("Path(%s) has added sys.path\n", root)
+		log.Debug().Msgf("Path(%s) has added sys.path\n", root)
 	}
 
 	// step2. load and import module
@@ -119,7 +120,7 @@ func PyImport_ImportFile(root, filename string) *PyObject {
 	_mod := PyImport_GetModule(modname)
 	// defer _mod.DecRef() 不能 DecRef，否则调用者就 emo 了。
 	if _mod == nil {
-		fmt.Println("Load and import new module: ", modname)
+		log.Debug().Msgf("Load and import new module: %v", modname)
 		// way 1:
 		// C.PyRun_SimpleString(C.CString(fmt.Sprintf("import %s", f)))
 		// way 2:
@@ -131,7 +132,7 @@ func PyImport_ImportFile(root, filename string) *PyObject {
 	}
 	if _mod == nil {
 		PyErr_Print()
-		fmt.Println(filename)
+		log.Debug().Msg(filename)
 	}
 
 	// step3. 查看新导入的 mod 的路径是否与入参匹配
@@ -139,9 +140,9 @@ func PyImport_ImportFile(root, filename string) *PyObject {
 	// 则：m/n 一直在 sys.path 中，即使  x/y/z.py 不存在，也能 import z 成功
 	modfile := _mod.GetAttrString("__file__").Str()
 	if filename != modfile {
-		fmt.Println("Import wrong module: ", root, "!=", modfile)
+		log.Error().Stack().Msg("Import wrong module: " + root + "!=" + modfile)
 		PySys_RemoveSysPath(path.Dir(modfile))
-		fmt.Println(PySys_GetSysPath())
+		log.Debug().Msg(PySys_GetSysPath())
 		return nil
 	}
 
@@ -169,17 +170,17 @@ func PyImport_AddPathAndImportModule(modulepath, modulename string) *PyObject {
 		}
 	}
 	if !_pathadded {
-		fmt.Printf("Add a new path(%s) to sys.path\n", modulepath)
+		log.Debug().Msgf("Add a new path(%s) to sys.path\n", modulepath)
 		PySys_AppendSysPath(modulepath)
 		PySysPathes = append(PySysPathes, modulepath)
 	} else {
-		fmt.Printf("Path(%s) has added sys.path\n", modulepath)
+		log.Debug().Msgf("Path(%s) has added sys.path\n", modulepath)
 	}
 
 	// step2. load and import module
 	_mod := PyImport_GetModule(modulename)
 	if _mod == nil {
-		fmt.Println("Load and import new module: ", modulename)
+		log.Debug().Msg("Load and import new module: " + modulename)
 		_mod = PyImport_ImportModule(modulename)
 	}
 	if _mod == nil {

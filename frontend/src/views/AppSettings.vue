@@ -15,6 +15,9 @@
         <folder-select settingkey="usercachepath" title="用户数据存储路径"
           desc="用户 Cache 数据文件存储路径" :default="defaultusercachepath" />
 
+        <drop-select settingkey="groupparse" title="TestGroup 解析组策略" type="select"
+          :items="['组合成一组', '每个文件一组']" :updatestore="true" />
+
         <color-picker settingkey="maincolor" title="主色调" desc="影响页面主色块、底色等颜色"
           :updatestore="true" />
       </v-col>

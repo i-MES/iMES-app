@@ -12,6 +12,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
+
 	"github.com/google/uuid"
 	py "github.com/i-mes/imes-app/backend/python"
 	"github.com/i-mes/imes-app/backend/utils"
@@ -90,7 +93,7 @@ type TestClass struct {
 func ParsePythonOneStep(ctx *context.Context, root, file string) []TestClass {
 	f, err := os.Open(file)
 	if err != nil {
-		wails.LogError(*ctx, "Can not open file:"+file)
+		log.Error().Stack().Err(errors.Wrap(err, "Can not open file:"+file)).Send()
 		return nil
 	} else {
 		defer f.Close()
@@ -107,14 +110,14 @@ func ParsePythonOneStep(ctx *context.Context, root, file string) []TestClass {
 			r := bufio.NewReader(cf)
 			for {
 				if line, err3 := r.ReadString('\n'); err3 == io.EOF {
-					fmt.Println("EoF of Fixture file")
+					log.Debug().Msg("EoF of Fixture file")
 					break
 				} else if err != nil {
-					fmt.Printf("error reading file %s", err)
+					log.Debug().Msgf("error reading file %s", err)
 					break
 				} else {
 					if validFixture.Match([]byte(line)) {
-						wails.LogDebug(*ctx, "Match Fixture")
+						log.Debug().Msg("Match Fixture")
 						// Fixture 在下一行
 						if line, err4 := r.ReadString('\n'); err4 == nil {
 							_fixs := validFixtureFunc.FindStringSubmatch(line)
@@ -125,7 +128,7 @@ func ParsePythonOneStep(ctx *context.Context, root, file string) []TestClass {
 			}
 		}
 	}
-	wails.LogDebug(*ctx, fmt.Sprintf("Fixture: %s", fixs))
+	log.Error().Stack().Stack().Msg(fmt.Sprintf("Fixture: %s", fixs))
 
 	// 解析 pytest 文件
 	r := bufio.NewReader(f)
@@ -153,10 +156,10 @@ func ParsePythonOneStep(ctx *context.Context, root, file string) []TestClass {
 	for {
 		line, err := r.ReadString('\n')
 		if err == io.EOF {
-			wails.LogTrace(*ctx, fmt.Sprintf("EoF of %s", file))
+			log.Trace().Msgf("EoF of %s", file)
 			break
 		} else if err != nil {
-			fmt.Printf("error reading file %s", err)
+			log.Debug().Msgf("error reading file %s", err)
 			break
 		}
 		ln += 1
@@ -165,7 +168,7 @@ func ParsePythonOneStep(ctx *context.Context, root, file string) []TestClass {
 			// 匹配出 Parametrize
 			pnames := validParameterize.FindStringSubmatch(line)
 			if len(pnames) > 2 {
-				wails.LogTrace(*ctx, fmt.Sprintf("Match Parametrize: %s", pnames))
+				log.Trace().Msgf("Match Parametrize: %s", pnames)
 				parametrize1 = pnames[1]
 				parametrize2 = pnames[2]
 				paraln = ln
@@ -174,7 +177,7 @@ func ParsePythonOneStep(ctx *context.Context, root, file string) []TestClass {
 			// 匹配出 Class 名称，并创建 TestClass
 			cnames := validClass.FindStringSubmatch(line)
 			if len(cnames) > 1 {
-				wails.LogDebug(*ctx, fmt.Sprintf("Match class: %s", cnames[1]))
+				log.Debug().Msg(fmt.Sprintf("Match class: %s", cnames[1]))
 				_uuid, _ := uuid.NewUUID()
 				if (ln - paraln) == 1 {
 					tcs = append(tcs,
@@ -190,7 +193,7 @@ func ParsePythonOneStep(ctx *context.Context, root, file string) []TestClass {
 			// 匹配出当前 Class 内 Method 名称，并进入 docstr 搜索状态
 			fnames := validFunc.FindStringSubmatch(line)
 			if len(fnames) > 1 {
-				wails.LogDebug(*ctx, fmt.Sprintf("Match function: %v", fnames))
+				log.Debug().Msg(fmt.Sprintf("Match function: %v", fnames))
 				// 继续匹配 DocString
 				funcName = fnames[1]
 				args = strings.Split(strings.ReplaceAll(fnames[2], " ", ""), ",")[1:]
@@ -199,27 +202,27 @@ func ParsePythonOneStep(ctx *context.Context, root, file string) []TestClass {
 		} else { // hunt DocStr 状态
 			docstrs := validDoc.FindStringSubmatch(line)
 			if len(docstrs) > 1 {
-				wails.LogTrace(*ctx, "找到单行 DocStr")
+				log.Debug().Msg("找到单行 DocStr")
 				huntDoc = false
 				docStr = docstrs[1]
 			} else {
-				wails.LogTrace(*ctx, "寻找多行注释")
+				log.Debug().Msg("寻找多行注释")
 				docstrs1 := validDocStart.FindStringSubmatch(line)
 				if len(docstrs1) > 1 {
-					wails.LogTrace(*ctx, "找到多行注释的首行")
+					log.Debug().Msg("找到多行注释的首行")
 					docStr = docstrs1[1]
 					hintDoc = true
 				} else {
 					if hintDoc {
-						wails.LogTrace(*ctx, "继续寻找 DocStr 尾")
+						log.Debug().Msg("继续寻找 DocStr 尾")
 						docstrs2 := validDocEnd.FindStringSubmatch(line)
 						if len(docstrs2) > 1 {
-							wails.LogTrace(*ctx, "找到 DocStr 尾")
+							log.Debug().Msg("找到 DocStr 尾")
 							docStr += docstrs2[1]
 							hintDoc = false
 							huntDoc = false
 						} else {
-							wails.LogTrace(*ctx, "未到 DocStr 尾")
+							log.Debug().Msg("未到 DocStr 尾")
 							docStr += line
 						}
 					} else {
@@ -231,7 +234,7 @@ func ParsePythonOneStep(ctx *context.Context, root, file string) []TestClass {
 
 			// docstr 搜索完毕，创建 TestItem
 			if !huntDoc {
-				wails.LogTrace(*ctx, "hunt docstr 结束，生成 TestItem"+funcName+docStr)
+				log.Debug().Msg("hunt docstr 结束，生成 TestItem" + funcName + docStr)
 				_l := len(tcs) - 1
 				_uuid, _ := uuid.NewUUID()
 				tcs[_l].TestItems = append(tcs[_l].TestItems,
@@ -251,12 +254,12 @@ func (tc *TestClass) RunPython(ctx context.Context, emit func(ename, tiid, msg s
 	// py 维度进程上锁
 	_gil := py.PyGILState_Ensure()
 	defer py.PyGILState_Release(_gil)
-	wails.LogDebug(ctx, "Get Python GIL lock")
+	log.Debug().Msg("Get Python GIL lock")
 
 	// debug info
-	wails.LogDebug(ctx, "========== start testclass "+tc.Title)
-	wails.LogDebug(ctx, "go process id: "+strconv.Itoa(utils.GetProcessIdGet()))
-	wails.LogDebug(ctx, "go threading id: "+strconv.Itoa(utils.GetThreadId()))
+	log.Debug().Msg("========== start testclass " + tc.Title)
+	log.Debug().Msg("go process id: " + strconv.Itoa(utils.GetProcessIdGet()))
+	log.Debug().Msg("go threading id: " + strconv.Itoa(utils.GetThreadId()))
 	py.LogProcessId()
 	py.LogThreadId()     // 与 go threading id 相同
 	py.LogInfo(tc.Title) // 其中的 threading id 与上面 2 个不同
@@ -273,12 +276,12 @@ func (tc *TestClass) RunPython(ctx context.Context, emit func(ename, tiid, msg s
 	if _, _err := os.Stat(tc.ModulePath + "/conftest.py"); _err == nil {
 		_modct := py.PyImport_ImportFile(tc.ModulePath, tc.ModulePath+"/conftest.py")
 		if _modct == nil {
-			wails.LogError(ctx, "import module error")
+			log.Error().Stack().Err(errors.New("import module error")).Send()
 			py.PyErr_Print()
 		} else {
 			defer _modct.DecRef()
-			wails.LogDebug(ctx, "conftest.py:")
-			wails.LogDebug(ctx, _modct.Dir())
+			log.Debug().Msg("conftest.py:")
+			log.Debug().Msg(_modct.Dir())
 
 			// 首先尝试创建全局 Entity
 			entObj = _modct.CallMethodArgs("create_entity", py.PyUnicode_FromString("199.33.33.33"))
@@ -291,7 +294,7 @@ func (tc *TestClass) RunPython(ctx context.Context, emit func(ename, tiid, msg s
 			// 	for _, fix := range tc.Fixtures {
 			// 		obj := _modct.CallMethod(fix)
 			// 		py.PyErr_Print()
-			// 		fmt.Println("-=-=-=-=-=-=", fix, obj)
+			// 		log.Debug().Msg("-=-=-=-=-=-=", fix, obj)
 			// 		fixObjs = append(fixObjs, obj)
 			// 	}
 			// }
@@ -302,18 +305,18 @@ func (tc *TestClass) RunPython(ctx context.Context, emit func(ename, tiid, msg s
 	// 导入 py 脚本
 	_mod := py.PyImport_AddPathAndImportModule(tc.ModulePath, tc.ModuleName)
 	if _mod == nil {
-		wails.LogError(ctx, "import module error")
+		log.Error().Stack().Err(errors.New("import module error")).Send()
 		py.PyErr_Print()
 		return
 	} else {
 		defer _mod.DecRef()
 	}
 
-	wails.LogDebug(ctx,
+	log.Debug().Msg(
 		fmt.Sprintf("Does module %s has Class %s : %t", _mod.Name(), tc.Title, _mod.HasAttrString(tc.ClassName)))
 
 	// 如果当前模块（.py）中发现 create_entity，则用于实例化 entity
-	wails.LogDebug(ctx,
+	log.Debug().Msg(
 		fmt.Sprintf("Does module %s has Func %s : %t", _mod.Name(), "create_entity", _mod.HasAttrString("create_entity")))
 	if _mod.HasAttrString("create_entity") {
 		entObj = _mod.CallMethod("create_entity")
@@ -327,10 +330,10 @@ func (tc *TestClass) RunPython(ctx context.Context, emit func(ename, tiid, msg s
 	// Py3 C-API 使用 PyObject_CallMethod 实例化 class
 	_class := _mod.CallMethod(tc.ClassName)
 	if _class != nil {
-		wails.LogDebug(ctx, _class.Repr())
-		wails.LogDebug(ctx, _class.Dir())
+		log.Debug().Msg(_class.Repr())
+		log.Debug().Msg(_class.Dir())
 		for _, ti := range tc.TestItems {
-			wails.LogDebug(ctx, fmt.Sprintf("------- start testitem %s with entity(%v), fixture(%v)", ti.Title, entObj, fixObjs))
+			log.Debug().Msg(fmt.Sprintf("------- start testitem %s with entity(%v), fixture(%v)", ti.Title, entObj, fixObjs))
 			emit("testitemstatus", ti.Id, "started")
 			// 调用对象的方法，执行具体的测试项
 			var _ret *py.PyObject
@@ -339,7 +342,7 @@ func (tc *TestClass) RunPython(ctx context.Context, emit func(ename, tiid, msg s
 				if entObj != nil && ti.Args[0] == "entity" {
 					_ret = _class.CallMethodArgs(ti.Title, entObj)
 				} else {
-					wails.LogError(ctx, "entity is nil")
+					log.Error().Stack().Err(errors.New("entity is nil")).Send()
 				}
 			} else {
 				// 无参
@@ -347,23 +350,23 @@ func (tc *TestClass) RunPython(ctx context.Context, emit func(ename, tiid, msg s
 			}
 			if _ret == nil {
 				// py.PyErr_Print()
-				wails.LogDebug(ctx, fmt.Sprintf("Run TI Error: %s\t%s", tc.ClassName, ti.Title))
+				log.Debug().Msg(fmt.Sprintf("Run TI Error: %s\t%s", tc.ClassName, ti.Title))
 				emit("testitemstatus", ti.Id, "ng")
 			} else {
-				wails.LogDebug(ctx, fmt.Sprintf("Run TI Pass: %s\t%s", tc.ClassName, ti.Title))
+				log.Debug().Msg(fmt.Sprintf("Run TI Pass: %s\t%s", tc.ClassName, ti.Title))
 				emit("testitemstatus", ti.Id, "pass")
 			}
-			wails.LogDebug(ctx, fmt.Sprintf("------- end testitem %s\n", ti.Title))
+			log.Debug().Msg(fmt.Sprintf("------- end testitem %s", ti.Title))
 		}
 	} else {
 		py.PyErr_Print()
-		wails.LogError(ctx, "--- can not get "+tc.ClassName)
+		log.Error().Stack().Err(errors.New("--- can not get " + tc.ClassName)).Send()
 	}
 
 	if _mod.HasAttrString("teardown") {
 		_mod.CallMethodArgs("teardown")
 	}
-	wails.LogDebug(ctx, "========== end testclass "+tc.Title)
+	log.Debug().Msg("========== end testclass " + tc.Title)
 }
 
 // 解析 go 文件，提取 TestClass
@@ -376,14 +379,14 @@ func (tc *TestClass) RunGolang(ctx context.Context) {
 }
 
 func (tc *TestClass) Run(ctx *context.Context, emit func(ename, tiid, msg string)) {
-	wails.LogInfo(*ctx, path.Ext(tc.FileName))
+	log.Info().Msg(path.Ext(tc.FileName))
 	switch path.Ext(tc.FileName) {
 	case ".py":
 		tc.RunPython(*ctx, emit)
 	case ".go":
 		tc.RunGolang(*ctx)
 	default:
-		wails.LogError(*ctx, "can not run testitem")
+		log.Error().Stack().Err(errors.New("can not run testitem")).Send()
 	}
 
 	wails.EventsEmit(*ctx, "testclassfinished", tc.Id)

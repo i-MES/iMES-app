@@ -2,7 +2,6 @@ package utils
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"regexp"
 	"sync"
@@ -10,6 +9,8 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 )
 
@@ -22,16 +23,16 @@ func OutputConfigData(data map[string]interface{}) {
 		datatype = k
 		// switch data[k].(type) {
 		// case int:
-		// 	fmt.Println("int")
+		// 	log.Debug().Msg("int")
 		// case float64:
-		// 	fmt.Println("float64")
+		// 	log.Debug().Msg("float64")
 		// case string:
-		// 	fmt.Println("string")
+		// 	log.Debug().Msg("string")
 		// default:
-		// 	fmt.Println("default")
+		// 	log.Debug().Msg("default")
 		// }
 	}
-	fmt.Println("Output config data, type: ", datatype)
+	log.Debug().Msgf("Output config data, type: %v", datatype)
 	_data, _ := json.Marshal(data[datatype])
 	filePath := GetAppPath() + "/config/" + datatype + ".json"
 	err := os.WriteFile(filePath, _data, 0644)
@@ -50,7 +51,7 @@ func getConfigFilePath(dataType string) string {
 	filePath := GetAppPath() + "/config/" + dataType + ".json"
 	matched, err := regexp.Match(`/.*`, []byte(filePath))
 	if !matched {
-		log.Fatalf("config file path(%v) invalled, err: %v", filePath, err)
+		log.Fatal().Msgf("config file path(%v) invalled, err: %v", filePath, err)
 	}
 
 	// 判断是否存在
@@ -61,7 +62,7 @@ func getConfigFilePath(dataType string) string {
 		// 文件不存在
 		return ""
 	} else {
-		fmt.Println("其他 Error")
+		log.Debug().Msg("其他 Error")
 		return ""
 	}
 }
@@ -70,7 +71,7 @@ func getConfigFilePath(dataType string) string {
 func InputConfigData(dataType string) ([]byte, error) {
 	if fp := getConfigFilePath(dataType); fp != "" {
 		if data, err := os.ReadFile(fp); err != nil {
-			log.Fatalf("ReadFile error: %v", err)
+			log.Fatal().Msgf("ReadFile error: %v", err)
 			return nil, err
 		} else {
 			return data, nil
@@ -91,7 +92,7 @@ func InputConfigData(dataType string) ([]byte, error) {
 */
 func StartSyncMonitor(dataType string, srcs []string, newcallback func(string), oldcallback func()) *time.Ticker {
 	ticker := time.NewTicker(time.Second * 3)
-	fmt.Println("create monitor:", srcs)
+	log.Debug().Msgf("create monitor: %v", srcs)
 	// 创建协程处理 Monitor，使用 ticker.Stop() 结束协程
 	go func(ch <-chan time.Time) {
 		defer ticker.Stop()
@@ -113,7 +114,7 @@ func StartSyncMonitor(dataType string, srcs []string, newcallback func(string), 
 						if sfinfo, _err := os.Stat(sf); _err == nil {
 							if cfinfo.ModTime().Before(sfinfo.ModTime()) {
 								// 源代码比 config 新
-								fmt.Printf("[%s(%s)] newer than [%s(%s)]\n",
+								log.Debug().Msgf("[%s(%s)] newer than [%s(%s)]\n",
 									sfinfo.Name(), sfinfo.ModTime(),
 									cfinfo.Name(), cfinfo.ModTime())
 								newerfound = true
@@ -125,13 +126,13 @@ func StartSyncMonitor(dataType string, srcs []string, newcallback func(string), 
 
 					if newerfound {
 						if !oncecallback {
-							fmt.Println("newcallback Ticker:", t)
+							log.Debug().Msgf("newcallback Ticker: %v", t)
 							newcallback(newsrcfile)
 							oncecallback = true
 						}
 					} else {
 						if oncecallback {
-							fmt.Println("oldcallback Ticker:", t)
+							log.Debug().Msgf("oldcallback Ticker: %v", t)
 							oldcallback()
 							oncecallback = false
 						}
@@ -190,10 +191,12 @@ func (c *Configer) Init() {
 		if err := _v.ReadInConfig(); err == nil {
 			for k, v := range _v.AllSettings() {
 				// 遍历并写入 viper 的 default data 中
+				// c.mutex.Lock()
 				c.alldata.SetDefault(k, v)
+				// c.mutex.Unlock()
 			}
 		} else {
-			fmt.Println(err)
+			log.Error().Stack().Err(err).Send()
 		}
 	}
 
@@ -203,7 +206,7 @@ func (c *Configer) Init() {
 		c.rwdata.AddConfigPath(c.ReadWritePath)
 		c.reloadUserConfig()
 		c.rwdata.OnConfigChange(func(e fsnotify.Event) {
-			fmt.Println("Config file changed:", e.Name, e.Op)
+			log.Debug().Msgf("Config file changed: %s, %v", e.Name, e.Op)
 			// c.reloadUserConfig()
 		})
 		c.rwdata.WatchConfig() // 创建线程实时监控
@@ -214,7 +217,7 @@ func (c *Configer) Init() {
 	go func(ch <-chan time.Time) {
 		defer c.wtimer.Stop()
 		for t := range ch {
-			LogDebug("write config to file" + t.GoString())
+			log.Debug().Msg("write config to file" + t.GoString())
 			c.writeToFile()
 		}
 	}(c.wtimer.C)
@@ -228,15 +231,15 @@ func (c *Configer) reloadUserConfig() {
 		// 刷新 c.v（ReadInConfig 会覆盖同级）
 		if err := c.alldata.ReadInConfig(); err != nil {
 			if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-				fmt.Println("Can not find config file: imes.yaml")
+				log.Debug().Msg("Can not find config file: imes.yaml")
 			} else {
-				fmt.Println("Found config file, but other error accord")
+				log.Debug().Msg("Found config file, but other error accord")
 			}
 		}
 
 		// 刷新 c.userv
 		if err := c.rwdata.ReadInConfig(); err != nil {
-			fmt.Println("c.userv reload error")
+			log.Debug().Msg("c.userv reload error")
 		}
 	}
 }
@@ -246,7 +249,7 @@ func (c *Configer) writeToFile() {
 	if c.ReadWritePath != "" {
 		c.rwdata.WriteConfigAs(c.ReadWritePath + "/" + c.Name + ".yaml")
 	} else {
-		fmt.Println("WriteToFile Error")
+		log.Debug().Msg("WriteToFile Error")
 	}
 }
 
@@ -256,7 +259,7 @@ func (c *Configer) Set(key string, value interface{}) {
 	if c.ReadWritePath != "" {
 		c.rwdata.Set(key, value)
 		// c.writeToFile()
-		c.wtimer.Reset(time.Second * 3)	
+		c.wtimer.Reset(time.Second * 3)
 	}
 	c.mutex.Unlock()
 }
@@ -278,7 +281,7 @@ func (c *Configer) AllSettings() map[string]interface{} {
 }
 func (c *Configer) Unmarshal(rawVal interface{}) {
 	x := c.alldata.AllSettings()
-	fmt.Println(x)
+	log.Debug().Msgf("allsettings: %v", x)
 	c.alldata.Unmarshal(rawVal)
 }
 func (c *Configer) UnmarshalKey(key string, rawVal interface{}) error {
@@ -362,7 +365,7 @@ func CreateCacheConfiger(folder, configtype string) *Configer {
 
 func ReadYaml(yamldir string) interface{} {
 	if _, err := os.Stat(yamldir); err != nil {
-		LogWarning("Cannot read file") // 这不算 error
+		log.Warn().Msg("Cannot read file") // 这不算 error
 		return nil
 	}
 	v := viper.New()
@@ -372,10 +375,10 @@ func ReadYaml(yamldir string) interface{} {
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			// 找不到 config file
-			LogError("Can not find config file")
+			log.Error().Stack().Err(errors.Wrap(err, "Can not find config file")).Send()
 		} else {
 			// 可以找到 config file，但出了其他 error
-			LogError("Found config file, but other error accord")
+			log.Error().Stack().Err(errors.Wrap(err, "Found config file, but other error accord")).Send()
 		}
 	} else {
 		return v.AllSettings()

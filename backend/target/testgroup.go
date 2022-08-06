@@ -6,6 +6,9 @@ import (
 	"path"
 	"time"
 
+	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
+
 	"github.com/google/uuid"
 	"github.com/i-mes/imes-app/backend/utils"
 	wails "github.com/wailsapp/wails/v2/pkg/runtime"
@@ -44,18 +47,18 @@ func ParsePythons(ctx *context.Context, root string, filepaths []string, strateg
 			}
 			tgs = append(tgs, tg)
 		} else {
-			fmt.Println("error uuid get: ", err)
+			log.Error().Stack().Err(errors.Wrap(err, "error uuid get")).Send()
 		}
 	} else if strategy == 2 {
 		for _, fp := range filepaths {
 			if _uuid, err := uuid.NewUUID(); err == nil {
 				tgs = append(tgs, TestGroup{_uuid.String(), path.Base(fp), fp, ParsePythonOneStep(ctx, root, fp)})
 			} else {
-				fmt.Println("error uuid get: ", err)
+				log.Error().Stack().Err(errors.Wrap(err, "error uuid get")).Send()
 			}
 		}
 	}
-	wails.LogDebug(*ctx, fmt.Sprintf("ParsePythons tgs len: %d", len(tgs)))
+	log.Debug().Msg(fmt.Sprintf("ParsePythons tgs len: %d", len(tgs)))
 	return tgs
 }
 
@@ -75,7 +78,7 @@ func LoadTestGroupFromSrc(ctx *context.Context, isParseFolder, isUserSelectFolde
 		}
 		_fps, err := utils.GetAllFile(moduleroot, "test*.py", true)
 		if err != nil {
-			wails.LogDebug(*ctx, "Can not load python file")
+			log.Debug().Msg("Can not load python file")
 			return nil, nil
 		} else {
 			filepathes = append(filepathes, _fps...)
@@ -88,7 +91,14 @@ func LoadTestGroupFromSrc(ctx *context.Context, isParseFolder, isUserSelectFolde
 	}
 
 	if moduleroot != "" && len(filepathes) != 0 {
-		tgs := ParsePythons(ctx, moduleroot, filepathes, 2)
+		c := utils.GetSettingConfiger()
+		n := 2
+		if c.IsSet("groupparse") {
+			if c.Get("groupparse") == "组合成一组" {
+				n = 1
+			}
+		}
+		tgs := ParsePythons(ctx, moduleroot, filepathes, n)
 		curmoduleroot = moduleroot
 		return tgs, filepathes
 	} else {
@@ -106,7 +116,7 @@ func LoadTestGroupFromConfig(ctx *context.Context) ([]TestGroup, []string) {
 	// 	// 找到 json 文件，加载到 ctgs
 	// 	// _tg := []byte(json.Get(data).ToString())
 	// 	if json.Unmarshal(data, &ctgs) != nil {
-	// 		fmt.Println("can not Unmarshal json data")
+	// 		log.Debug().Msg("can not Unmarshal json data")
 	// 		return nil, nil
 	// 	}
 	// 	srcs := make([]string, 0)
@@ -117,7 +127,7 @@ func LoadTestGroupFromConfig(ctx *context.Context) ([]TestGroup, []string) {
 	// 	}
 	// 	return ctgs, srcs
 	// } else if os.IsNotExist(err) {
-	// 	wails.LogDebug(*ctx, "json 文件不存在")
+	// 	log.Debug().Msg(*ctx, "json 文件不存在")
 	// 	return nil, nil
 	// }
 	// return nil, nil
@@ -191,7 +201,7 @@ func StartTestGroupSrcMonitor(ctx *context.Context, srcs []string, autoMerge boo
 	wails.EventsEmit(*ctx, "testgroupmonitor", "clear")
 	tgMonitor = utils.StartSyncMonitor("testgroup", srcs,
 		func(newsrcfile string) {
-			fmt.Println("---------------")
+			log.Debug().Msg("---------------")
 			if autoMerge {
 				// 从源文件读取 TG ，并自动 Merge
 				ctgs, _ := LoadTestGroupFromConfig(ctx)
@@ -213,13 +223,13 @@ func StartTestGroupSrcMonitor(ctx *context.Context, srcs []string, autoMerge boo
 						}
 					}
 					SaveTestGroup(ctx, ctgs)
-					wails.LogInfo(*ctx, "Merge and save newer testgroup")
+					log.Info().Msg("Merge and save newer testgroup")
 				}
 			}
 			wails.EventsEmit(*ctx, "testgroupmonitor", "srcnewer")
 		},
 		func() {
-			fmt.Println("===============")
+			log.Debug().Msg("===============")
 			wails.EventsEmit(*ctx, "testgroupmonitor", "srcolder")
 		},
 	)
@@ -258,7 +268,7 @@ func (tg *TestGroup) Merge(ctx context.Context) {
 func (tg *TestGroup) Run(ctx *context.Context, teid string) {
 	// 由于会出现不同 module(.py) 中的 class 在一个 group 的情况，
 	// 所以没法在这里 create_entity
-	wails.LogError(*ctx, "TestGroup Run:"+tg.Title)
+	// utils.LogError( "TestGroup Run:"+tg.Title)
 
 	// 遍历所有 TestClass
 	for _, tc := range tg.TestClasses {

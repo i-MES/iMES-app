@@ -109,6 +109,48 @@ main.go:14:12: pattern frontend/dist: cannot embed directory frontend/dist: cont
     - 为了兼容性，老版本的 godoc 要求两个都要写，发现只有 1 个就报以上错误。
     - 但新版本的 godoc 已经能够更智能的处理，不再做这个要求。
 
+### `wails dev` 因端口不对无 UI
+
+```
+DEB | [DevWebServer] Waiting for frontend DevServer 'http://localhost:3000' to be ready
+   vite v2.9.13 dev server running at:
+
+  > Local: http://localhost:3001/                                                                                                                                                                                                                                    14:54:36
+  > Network: use --host to expose
+```
+
+因为 wails 前端使用 3000 端口，上面提示说明 3000 被占用，又可以是因为上一个 `wails dev` 没有正常关闭。
+
+```sh
+➜  iMES-app git:(alpha) ✗ netstat -ap|grep 3000
+(Not all processes could be identified, non-owned process info
+ will not be shown, you would have to be root to see it all.)
+tcp        8      0 localhost:3000          0.0.0.0:*               LISTEN      85879/node
+tcp        1      0 localhost:3000          localhost:33848         CLOSE_WAIT  85879/node
+tcp        1      0 localhost:3000          localhost:33912         CLOSE_WAIT  -
+tcp      422      0 localhost:3000          localhost:33910         CLOSE_WAIT  -
+```
+
+说明 3000 被 85879 的 node 占用。
+
+```sh
+ps -ef|grep 85879
+me         85879    1774  0 11:34 ?        00:00:23 /data/software/node/node-v18.2.0-linux-x64/bin/node /data/kevin/workspace/kproject/imes/iMES-app/frontend/node_modules/.bin/vite
+me         85886   85879  0 11:34 ?        00:00:12 /data/kevin/workspace/kproject/imes/iMES-app/frontend/node_modules/esbuild-linux-64/bin/esbuild --service=0.14.43 --ping
+```
+
+进一步确认是 iMES-app 的 vite 导致 node 没有正常关闭。所以：
+
+```sh
+kill -9 85879
+```
+
+或者
+
+```sh
+$ pkill node
+```
+
 ## Others
 
 ### git 提交规范
