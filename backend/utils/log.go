@@ -109,3 +109,7 @@ func InitLog(level string) {
 			Logger()
 	}
 }
+
+func GetGlobalLevel() string {
+	return zerolog.GlobalLevel().String()
+}

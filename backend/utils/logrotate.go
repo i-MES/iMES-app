@@ -13,7 +13,7 @@ import (
 )
 
 /*
-fork from github.com/easyCZ/logrotate
+fork and modify from github.com/easyCZ/logrotate
 modify:
 - 创建时不使用 stdlib 中 log
 */

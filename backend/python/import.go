@@ -1,3 +1,50 @@
+/*
+---
+
+运行 python 脚本的几种方式：
+
+方式1：PyRun_SimpleString()
+```go
+PyRun_SimpleString(`
+from pathlib import Path
+print("Path.cwd: ", Path.cwd())
+print("Path.home: ", Path.home())
+`)
+```
+
+方式2：PyImport_ImportModule().GetAttrString().CallMethon()
+```go
+if mod := PyImport_ImportModule("pathlib"); mod != nil {
+	defer mod.DecRef()
+	e.Str("Path.cwd", mod.GetAttrString("Path").CallMethod("cwd").Repr())
+	e.Str("Path.home", mod.GetAttrString("Path").CallMethod("home").Repr())
+}
+```
+
+- 方式1：无法控制其输出，可以写复杂代码
+- 方式2：可以得到输出，只能依次调用，无法写 for 循环等复杂代码
+
+---
+
+python import module 涉及 sys.path、sys.modules、dir()，其典型流程：
+
+1. 在 sys.path 中找到 moduel，load 到 sys.modules
+			module 若被成功 import，并可使用 sys.modules["xxx"].yyy 直接使用
+2. 注入到全局命名空间 dir()：可以用 xxxmod.xxx 访问到该 module
+
+- PyRun_SimpleString('import xxx') -- 完成 1、2 两个步骤
+- PyImport_ImportModule('xxx') -- 只完成 1，不做 2 —— 这也太坑爹了，困我好几天
+			文档中有一段：
+			module = PyImport_ImportModule("<modulename>");
+			如果模块尚未被导入（即它还不存在于 sys.modules 中），这会初始化该模块；若已导入，则返回 sys.modules["<modulename>"] 的值。
+			请注意它并不会将模块加入任何命名空间 —— 它只是确保模块被初始化并存在于 sys.modules 中。
+			之后你就可以通过如下方式来访问模块的属性（即模块中定义的任何名称）:
+				attr = PyObject_GetAttrString(module, "<attrname>");
+				然后可以使用 attr 自己的命名空间(即：attr.__dir__() )
+- PyImport_AddModule -- 1、2 都不做，只会检查 sys.modules 中是否有，有则拿出，没有创建个 empty 的。—— 这逻辑也太 TM 让人 emo 了。
+
+---
+*/
 package python
 
 /*
@@ -16,17 +63,25 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// 与 PyImport_ImportModule 基本同效
+func PyImport_Import(name string) *PyObject {
+	newModuleName := PyUnicode_FromString(name) // 或 PyString_FromString((char*)name);
+	defer newModuleName.DecRef()
+
+	return togo(C.PyImport_Import(toc(newModuleName)))
+}
+
+/*
+	PyImport_ImportModule: 这是个传递函数，接收方需要负责及时 Py_DECREF。
+	name:
+		必须是绝对路径：package.submodule.module
+		不能是相对路径：..package.submodule.module
+	Return: a new reference to the imported module,所以接收方不用是需 Py_DECREF
+*/
 func PyImport_ImportModule(name string) *PyObject {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
 
-	/*
-		C.PyImport_ImportModule:、
-		这是个传递函数，接收方需要负责及时 Py_DECREF
-		name: 必须是绝对路径：package.submodule.module
-		      不能是相对路径：..package.submodule.module
-		Return: a new reference to the imported module,所以接收方不用是需 Py_DECREF
-	*/
 	return togo(C.PyImport_ImportModule(cname))
 }
 
@@ -47,7 +102,10 @@ func PyImport_AddModule(name string) *PyObject {
 	return togo(C.PyImport_AddModule(cname))
 }
 
-// 从 sys.modules 中取出返回，没有则返回 nil
+/*
+从 sys.modules 中取出返回，没有则返回 nil
+借用函数，接收方不要 Py_DECREF，或者 Py_INCREF 和 Py_DECREF 成对使用。
+*/
 func PyImport_GetModule(name string) *PyObject {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
@@ -63,6 +121,7 @@ func PyImport_GetModule(name string) *PyObject {
 	*/
 	return togo(C.PyImport_GetModule(uname))
 }
+
 func PyImport_GetModuleDict() *PyObject {
 	return togo(C.PyImport_GetModuleDict())
 }
@@ -74,6 +133,11 @@ var PySysPathes []string
 	本函数是个传递函数：与 PyImport_ImportModule 保持一致
 	root: 作为 module path
 	file - root: 作为 module name( / 替换为 .)
+
+	背景说明：
+		PyImport_ImportModule(): 只会 import 已经在 sys.path 路径下的 *.py 文件
+		文档里说的仅能使用绝对路径，不是文件的绝对路径，而是module的(绝对:x.y,相对:..x.y)
+		所以封装了本函数。
 */
 func PyImport_ImportFile(root, filename string) *PyObject {
 	// step0. 检查是否存在、绝对路径
@@ -189,4 +253,11 @@ func PyImport_AddPathAndImportModule(modulepath, modulename string) *PyObject {
 
 	// return PyImport_GetModule(f)
 	return _mod
+}
+
+func PyImport_ExecCodeModule(name string, co *PyObject) *PyObject {
+	cname := C.CString(name)
+	defer C.free(unsafe.Pointer(cname))
+
+	return togo(C.PyImport_ExecCodeModule(cname, toc(co)))
 }

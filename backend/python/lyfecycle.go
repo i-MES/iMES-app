@@ -105,6 +105,11 @@ func Py_SetPath(path string) error {
 
 	return nil
 }
+
+// Return the default module search path，
+// 根据 Py_SetProgramName() 和环境变量计算而来（但似乎实践证明没有 Py_SetProgramName 无法添加 venv 虚拟环境），
+// 不可修改。
+// sys.path 使用本路径初始化，但 sys.path 可以用户修改。
 func Py_GetPath() (string, error) {
 	wcname := C.Py_GetPath()
 	if wcname == nil {

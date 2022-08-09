@@ -3,6 +3,9 @@ author: wkevin
 github: https://github.com/i-MES
 website: https://i-MES.github.io
 
+app:
+  loadpymethod: 1
+
 log:
   # 时区
   timezone: Asia/Shanghai

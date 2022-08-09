@@ -43,8 +43,8 @@ y=${yz%.*}
 z=${1##*.}
 echo $x $y $z
 
-# 3. 配置 pkg-config pc file
-#    (A) 在 /usr/lib/x86_64-linux-gnu/pkgconfig/ 创建指定 pc 文件的链接
+# 3. 配置 pkg-config pc file 以保证 cgo 编译时使用 pkg-config 找到正确的配置文件
+#    (A) 在 /usr/lib/x86_64-linux-gnu/pkgconfig/ 创建指定 pc 文件的链接 —— 本脚本选择此方案
 #    (B) 设置 PKG_CONFIG_PATH 环境变量 —— 存在多个 python3-embed.pc 的问题
 pkgdir="."
 if [ $os == "linux" ];then
@@ -61,13 +61,13 @@ go clean --cache
 echo New python pkg-config config:
 echo `pkg-config --libs python3-embed`
 
-# 4. 配置 libpythonx.6.so
+# 4. 配置 libpythonx.6.so 以保证 cgo 运行时找到正确的动态库
 #    (A) ln -s 或 cp so 到特定位置（ubutnu:/usr/lib/x86_64-linux-gnu/）—— 适合生产环境
 #       find ~/.pyenv/versions -name "libpython*.so" |xargs -I{} sh -c 'sudo ln -s {} /usr/lib/x86_64-linux-gnu/'
 #       ln -s $HOME/.pyenv/versions/${1}/lib/libpython* /usr/lib/x86_64-linux-gnu/
 #    (B) 提示用户设置 LD_LIBRARY_PATH —— 适合 dev 环境
 cmd="LD_LIBRARY_PATH=$HOME/.pyenv/versions/${1}/lib"
-echo "===== if you use libpythonX.Y.so(such as: wails), you need:"
+echo "===== you can use LD_LIBRARY_PATH to find libpythonX.Y.so(dev), or link to /usr/lib/x86_64-linux-gnu(release):"
 cped=""
 type xclip >/dev/null 2>&1 && echo $cmd |xclip -in -selection clipboard && cped=" # 已拷贝到粘贴板"
 echo $cmd $cped

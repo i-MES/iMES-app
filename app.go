@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"runtime"
@@ -55,192 +56,144 @@ func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 	a.api.Context(ctx)
 
-	// 不是 log 到文件，而是到 stdout
-	envInfo := wails.Environment(ctx)
+	envInfo := wails.Environment(ctx) // 不是 log 到文件，而是到 stdout
+
+	// log 到文件
 	if envInfo.BuildType == "dev" {
 		utils.InitLog("dev")
 	} else {
 		utils.InitLog("rls")
 	}
 	time.Sleep(time.Second * 1)
-	log.Info().Msg("BuildType: " + envInfo.BuildType)
-	log.Info().Msg("GOOS: " + runtime.GOOS)
-	log.Info().Msg("GOARCH: " + runtime.GOARCH)
-	log.Info().Msg("ProcessId: " + strconv.Itoa(utils.GetProcessIdGet()))
+
+	// log golang 开发环境
+	ge := log.Info().
+		Str("BuildType", envInfo.BuildType).
+		Str("GOOS", runtime.GOOS).
+		Str("GOARCH", runtime.GOARCH).
+		Str("ProcessId", strconv.Itoa(utils.GetProcessIdGet())).
+		Str("LogLevel", utils.GetGlobalLevel())
 	if wd, e := os.Getwd(); e == nil {
-		log.Info().Msg("Getwd: " + wd)
+		ge.Str("Getwd", wd)
 	}
+	ge.Msg("Go env info")
 
 	// ===== CPython 启动 =====
+
 	if !py.Py_IsInitialized() {
-		// 方式1: Unix 用 :, Windows 用 ;
-		// py.Py_SetProgramName("/data/kevin/workspace/zproject/pytp/venv3.10/bin/python") // 参与生成 prefix，进而生成 sys.path
-		py.Py_SetProgramName("/Users/wangkevin/workspace/kproject/mes/iMES_202204/venv3.10.4/bin/python")
-		// py.Py_SetPythonHome()  // 标准库搜索路径(不可 venv)
-		// py.Py_SetPath("") 			// 会清空 prefix，只留下本初的入参，所以可能缺少标准库，不如由 Py_SetProgramName() 自动生成比较稳妥
-		py.Py_Initialize()
+		// 加载 python 环境及虚拟环境的 3 种方式：
+		loadpymethod := 1
+		if utils.GetSettingConfiger().IsSet("app.loadpymethod") {
+			loadpymethod = utils.GetSettingConfiger().GetInt("app.loadpymethod")
+		}
 
-		// 方式2
-		// syspath := []string{
-		// 	"/home/me/.pyenv/versions/3.10.4/lib/python3.10",
-		// 	"/home/me/.pyenv/versions/3.10.4/lib/python3.10/lib-dynload",
-		// 	"/data/kevin/workspace/zproject/pytp/pyTP/src",
-		// 	"/data/kevin/workspace/zproject/pytp/venv/lib/python3.8/site-packages"}
-		// py.Py_InitializeFromConfig(syspath)
-
-		// 方式3: 后面再 sys.path.append()，这样会带上 sys.path 的默认值
-		// py.Py_Initialize()
-	}
-	if !py.Py_IsInitialized() {
-		panic(fmt.Errorf("Could not initialize the python interpreter!"))
-	}
-
-	// 验证启动情况：
-	if pyName, err := py.Py_GetProgramName(); err == nil {
-		log.Debug().Str("Py_GetProgramName", pyName).Send()
-	}
-	if pyHome, err := py.Py_GetPythonHome(); err == nil {
-		log.Debug().Str("Py_GetPythonHome", pyHome).Send()
-	}
-	if pyPath, err := py.Py_GetPath(); err == nil {
-		// 注意 pip install -e 安装的 module 是否还存在
-		log.Debug().Str("Py_GetPath", pyPath).Send()
-	}
-
-	// ===== CPython 高层接口 =====
-	fmt.Println("=========== Try Python High Level C API")
-	py.PyRun_SimpleString("import os")
-	py.PyRun_SimpleString("import sys")
-	py.PyRun_SimpleString("import threading")
-	py.PyRun_SimpleString("import pytp")
-	py.PyRun_SimpleString("from pathlib import Path")
-	// sys.modules: 已 loaded 到内存的 module
-	// 建议不要直接使用 sys.modules,而是 copy 后使用
-	// dir(): 可以使用的 module、变量……
-	// python 启动后默认 load 了一些 module(os,sys,time,path...70+)但没有加入到 dir() 之前是不能直接使用的
-	// import 后出现在 dir()，就可以直接使用
-	// sys.modules["xxx"].yyy 也可以不 import 就使用
-	py.PyRun_SimpleString(`
-for path in sys.path:
-	print(path)
-_mods = sys.modules.copy() 				
-for key, value in _mods.items():	
-	print(value)
-print("Global dir():", dir()) 						
-print("OS.name: ", sys.modules["os"].name)
-print("Path.cwd: ", Path.cwd())
-print("Path.home: ", Path.home())
-print("sys.prefix: ", sys.prefix)
-print("pytp.VERSION: ", pytp.VERSION)
-sys.stdout.write('******************'+'\n')
-`)
-	py.PyRun_SimpleString(`import debugpy`)
-	py.PyRun_SimpleString(`debugpy.listen(8899)`)
-	// py.PyRun_SimpleString(`debugpy.wait_for_client()`)
-
-	// ===== CPython 低层接口 =====
-	fmt.Println("=========== Try Python Low Level C API")
-
-	// python module 的 2 步动作
-	//     1. load 到 sys.modules：module 已被创建，并全局可访问
-	//     2. 注入到全局命名空间 dir()：可以用 xxxmod.xxx 访问到该 module
-	// PyRun_SimpleString('import xxx') -- 完成 1、2 两个步骤
-	// PyImport_ImportModule('xxx') -- 只完成 1，不做 2 —— 这也太坑爹了，困我好几天
-	// 			文档中有一段：
-	// 			module = PyImport_ImportModule("<modulename>");
-	// 			如果模块尚未被导入（即它还不存在于 sys.modules 中），这会初始化该模块；否则它只是简单地返回 sys.modules["<modulename>"] 的值。
-	// 			请注意它并不会将模块加入任何命名空间 —— 它只是确保模块被初始化并存在于 sys.modules 中。
-	// 			之后你就可以通过如下方式来访问模块的属性（即模块中定义的任何名称）:
-	// 			attr = PyObject_GetAttrString(module, "<attrname>");
-	// 			然后可以使用 attr 自己的命名空间(即：attr.__dir__() )
-	// PyImport_AddModule -- 1、2 都不做，只会检查 sys.modules 中是否有，有则拿出，没有创建个 empty 的。—— 这逻辑也没谁了，太 TM 让人 emo 了。
-
-	fmt.Println("====== Try PyImport_ImportModule")
-	_mod_dt := py.PyImport_ImportModule("datetime")
-	// defer _mod_dt.DecRef() // 保留住，就不删除了
-	py.PyRun_SimpleString(`print(sys.modules["datetime"])`)                         // 有，可以访问到
-	py.PyRun_SimpleString(`print("Now1: ",sys.modules["datetime"].datetime.now())`) // 有效
-	py.PyRun_SimpleString(`print("dir():", dir())`)                                 // 全局 dir 中没有 datetime
-	py.PyRun_SimpleString(`print("Now2: ",datetime.datetime.now())`)                // 无效, NameError: name 'datetime' is not defined
-
-	_type_dt := _mod_dt.GetAttrString("datetime")
-	defer _type_dt.DecRef()
-	_func_now := _type_dt.GetAttrString("now")
-	// defer _func_now.DecRef()
-	fmt.Println(py.PyCallable_Check(_func_now)) // true，datatime 自己的命名空间(datetime.__dir__())中有 now
-
-	_now := _func_now.CallObject(nil) // call now funcution
-	defer _now.DecRef()
-	fmt.Println(py.PyNumber_Check(_now))           // false, it's type is datetime.datetime class
-	fmt.Println(_now.HasAttrString("microsecond")) // true
-
-	_attr := _now.GetAttrString("year")
-	defer _attr.DecRef()
-	fmt.Println(_attr)                    // *PyObject
-	fmt.Println(py.PyNumber_Check(_attr)) // true
-	fmt.Println(py.PyLong_Check(_attr))   // true
-	fmt.Println(_attr.Number())           // 2022
-
-	// PyObject 都会有的 3 个通用属性，相当于 repr()、dir()、type()
-	fmt.Println(_now.Repr()) // datetime.datetime(2022, 6, 9, 9, 52, 33, 879300)
-	fmt.Println(_now.Str())  // 2022-06-09 09:52:33.879300
-	fmt.Println(_now.Type()) // <class 'datetime.datetime'>
-
-	fmt.Println("====== Try PyImport_GetModule & PyImport_AddModule")
-	_mod_dt_get := py.PyImport_GetModule("datetime")
-	_mod_dt_add := py.PyImport_AddModule("datetime")
-	fmt.Println(_mod_dt)     // 指针
-	fmt.Println(_mod_dt_get) // 指针
-	fmt.Println(_mod_dt_add) // _mod_dt == _mod_dt_get == _mod_dt_add
-
-	_mod := py.PyImport_GetModule("math")
-	if _mod == nil {
-		py.PyErr_Print()
-		fmt.Println("Module math can not imported")
-	} else {
-		fmt.Println(py.PyCallable_Check(_mod))       // false
-		fmt.Println(_mod.HasAttrString("pi"))        // true
-		fmt.Println(_mod.GetAttrString("pi").Repr()) // 3.14...
-	}
-
-	_mod = py.PyImport_ImportModule("random")
-	// defer _mod.DecRef() // AddModule 的是借用，不需要自己维护指针
-	if _mod == nil {
-		py.PyErr_Print()
-		fmt.Println("Module random can not added")
-	} else {
-		fmt.Println(py.PyCallable_Check(_mod))    // false
-		fmt.Println(_mod.HasAttrString("random")) // true
-		_v := _mod.CallMethod("random")
-		if _v == nil {
-			py.PyErr_Print()
-		} else {
-			if !py.Version_Check("3.10") {
-				defer _v.DecRef()
+		switch loadpymethod {
+		case 1:
+			// 方式1: Py_SetProgramName()、Py_SetPythonHome、Py_SetPath —— 最终证明 Py_SetProgramName 最有效
+			log.Debug().Str("env", "py").Msg("Load python by Py_SetProgramName()")
+			if utils.GetSettingConfiger().IsSet("pythonvenvpath") {
+				dir := utils.GetSettingConfiger().GetString("pythonvenvpath") + "/python"
+				// Py_SetProgramName 参与生成 prefix，进而生成 sys.path，
+				// 不但会补全 sys.path 默认值（标准模块），还会加上 venv 库（用户模块）
+				py.Py_SetProgramName(dir)
 			}
-			fmt.Println(_v.Repr()) // 0.xxx....
+			// py.Py_SetPythonHome()  // 设置标准库搜索路径(不能用于 venv)。
+			// py.Py_SetPath("") 			// Unix 用 :, Windows 用 ;但会清空 prefix，只留下手工加入的路径，缺少标准库。
+			py.Py_Initialize()
+		case 2:
+			// 方式2: 先 Py_Initialize 带上 sys.path 的默认值（标准库），再手工 sys.path.append()
+			log.Debug().Str("env", "py").Msg("Load python by PySys_AppendSysPath()")
+			py.Py_Initialize()
+			if utils.GetSettingConfiger().IsSet("pythonvenvpath") {
+				dir := utils.GetSettingConfiger().GetString("pythonvenvpath") + "/python"
+				py.PySys_AppendSysPath(dir)
+			}
+		case 3:
+			// 方式3: Py_InitializeFromConfig() —— 全部都手写，不现实
+			log.Debug().Str("env", "py").Msg("Load python by Py_InitializeFromConfig()")
+			syspath := []string{
+				"/home/me/.pyenv/versions/3.10.4/lib/python3.10",
+				"/home/me/.pyenv/versions/3.10.4/lib/python3.10/lib-dynload",
+				"/data/kevin/workspace/zproject/pytp/pyTP/src",
+				"/data/kevin/workspace/zproject/pytp/venv/lib/python3.8/site-packages"}
+			py.Py_InitializeFromConfig(syspath)
 		}
 	}
-
-	fmt.Println("====== Try PyImport from a file")
-	// PyImport_ImportModule(): 只会 import 已经在 sys.path 路径下的 *.py 文件
-	// 文档里说的仅能使用绝对路径，不是文件的绝对路径，而是module的(绝对:x.y,相对:..x.y)
-	// _gpio := py.PyImport_ImportModule("/data/kevin/workspace/kproject/imes/iMES-app/testcase/python/test_gpio.py")
-	// defer _gpio.DecRef()
-	// 所以封装了 PyImport_ImportFile 函数:
-	_mod_gpio := py.PyImport_ImportFile(".", "./testcase/python/test_gpio.py")
-	if _mod_gpio == nil {
-		fmt.Println("Module test_gpio can not imported from file")
-	} else {
-		fmt.Println(_mod_gpio.Name())
-		py.PyRun_SimpleString(`print(sys.modules["testcase.python.test_gpio"])`)
+	if !py.Py_IsInitialized() {
+		log.Error().Err(errors.New("Could not initialize the python interpreter!"))
 	}
 
-	fmt.Println("====== Try PyXXX_Check")
-	fmt.Println("Is PyImport_GetModuleDict's output dict type? - ", py.PyDict_Check(py.PyImport_GetModuleDict())) // true
+	// log python 开发环境
+	e := log.Info()
+	e.Str("Version", py.Py_GetVersion())
+	if pyName, err := py.Py_GetProgramName(); err == nil {
+		e.Str("ProgramName", pyName)
+	}
+	if pyHome, err := py.Py_GetPythonHome(); err == nil {
+		e.Str("Home", pyHome)
+	}
+	if pyPath, err := py.Py_GetPath(); err == nil {
+		e.Str("DefaultModuleSearchPath", pyPath)                                     // 相比 sys.path，只含 默认（标准）库搜索路径
+		e.Str("sys.path", py.PyImport_GetModule("sys").GetAttrString("path").Repr()) // sys.path == os.sys.path
+		// 		py.PyRun_SimpleString(` // 获取 sys.path 的另一种方法
+		// import sys
+		// for path in sys.path:
+		// 	print(path)
+		// `)
+		e.Str("sys.module", py.PyImport_GetModule("sys").GetAttrString("modules").CallMethod("keys").Repr())
+		// 		py.PyRun_SimpleString(` // 获取 sys.modules 的另一种方法
+		// _mods = sys.modules.copy() // 建议不要直接使用 sys.modules,而是 copy 后使用
+		// for key, value in _mods.items():
+		// 	print(value)
+		// `)
+	}
 
-	log.Debug().Str("PythonVersion", py.Py_GetVersion()).Send()
-	log.Debug().Str("PythonPath", py.PyImport_GetModule("os").GetAttrString("sys").GetAttrString("path").Repr()).Send()
+	// 默认 import 的不多，os、sys 就是，所以可以直接 PyImport_GetModule
+	e.Str("os.name", py.PyImport_GetModule("os").GetAttrString("name").Repr())
+	e.Str("sys.prefix", py.PyImport_GetModule("sys").GetAttrString("prefix").Repr())
+	e.Str("dir()", py.PyImport_GetModule("sys").GetAttrString("prefix").Repr())
+
+	// pathlib 等没有默认 import，sys.modules 中找不到，所以直接 PyImport_GetModule 失败，需要先 PyImport_ImportModule
+	if m := py.PyImport_GetModule("pathlib"); m != nil {
+		e.Str("Path.cwd", m.GetAttrString("Path").CallMethod("cwd").Repr())
+	} else {
+		if mod := py.PyImport_ImportModule("pathlib"); mod != nil {
+			defer mod.DecRef()
+			e.Str("Path.cwd", mod.GetAttrString("Path").CallMethod("cwd").Repr())
+			e.Str("Path.home", mod.GetAttrString("Path").CallMethod("home").Repr())
+		}
+	}
+	e.Msg("Python env info")
+
+	// dir(): 全局命名空间，列出可以全局使用的 module、变量……
+	// python 启动后默认 load 了一些 module(os,sys,time,path...70+)但没有加入到 dir() 之前是不能直接使用的
+	// import 后出现在 dir()，就可以直接使用
+	// 也可以不 import，而用 sys.modules["xxx"].yyy 直接使用
+	py.PyRun_SimpleString(`
+print("Global dir():", dir())
+`)
+
+	// import 本 app 希望直接使用的（非用户测试用例所需的）、必要的 module
+	py.PyRun_SimpleString("import threading")
+	py.PyRun_SimpleString("import datetime")
+
+	// 检查是否能够成功 import 必要的 3rd module: pytest、 debugpy...
+	if mod_pytest := py.PyImport_Import("pytest"); mod_pytest == nil {
+		log.Error().Err(errors.New("Can not import pytest"))
+	} else {
+		defer mod_pytest.DecRef()
+		py.PyRun_SimpleString(`import pytest`)
+	}
+
+	if mod_debugpy := py.PyImport_ImportModule("debugpy"); mod_debugpy == nil {
+		log.Error().Err(errors.New("Can not import debugpy"))
+	} else {
+		defer mod_debugpy.DecRef()
+		// 开启 debugpy 调试 server
+		py.PyRun_SimpleString(`import debugpy`)
+		py.PyRun_SimpleString(`debugpy.listen(8899)`)
+		// py.PyRun_SimpleString(`debugpy.wait_for_client()`)
+	}
 
 	py.InitLog()
 
@@ -251,7 +204,7 @@ sys.stdout.write('******************'+'\n')
 	// Py_Initialize() 会占用 GIL，此处不放弃，其他地方抢占不到。
 	a.threadState = py.PyEval_SaveThread() // 释放 GIL，将 state 置为 null，并且返回前一个 state
 
-	// 一些基本配置
+	// 一些全局默认配置
 	c := utils.GetSettingConfiger()
 	if !c.IsSet("usercachepath") {
 		c.Set("usercachepath", utils.GetUserCacheDefaultPath())

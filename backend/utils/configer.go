@@ -212,16 +212,6 @@ func (c *Configer) Init() {
 		c.rwdata.WatchConfig() // 创建线程实时监控
 	}
 
-	// 创建一个写文件缓冲协程
-	c.wtimer = time.NewTimer(time.Second * 3)
-	go func(ch <-chan time.Time) {
-		defer c.wtimer.Stop()
-		for t := range ch {
-			log.Debug().Msg("write config to file" + t.GoString())
-			c.writeToFile()
-		}
-	}(c.wtimer.C)
-
 	c.mutex = &sync.Mutex{}
 }
 
@@ -254,6 +244,20 @@ func (c *Configer) writeToFile() {
 }
 
 func (c *Configer) Set(key string, value interface{}) {
+	log.Trace().Stack().Msgf("set setting key(%s), value(%v)", key, value)
+
+	// 创建一个写文件缓冲协程
+	if c.wtimer == nil {
+		c.wtimer = time.NewTimer(time.Second * 3)
+		go func(ch <-chan time.Time) {
+			defer c.wtimer.Stop()
+			for range ch {
+				log.Debug().Msg("write config to file after 3 second timer")
+				c.writeToFile()
+			}
+		}(c.wtimer.C)
+	}
+
 	c.mutex.Lock()
 	c.alldata.Set(key, value)
 	if c.ReadWritePath != "" {

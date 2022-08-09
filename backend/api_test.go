@@ -6,49 +6,36 @@ import (
 )
 
 // TestXXX() :go test // 会自动调用并报告结果 PASS/FAIL
-func TestAddCounter(t *testing.T) {
-	ta := new(Api)
-	ta.InitCounter()
-	i := ta.GetCounter()
-	if (i + 1) != ta.AddCounter(1) {
-		t.Errorf("AddCounter: want %d, got %d", i+1, i)
-	}
-	if (i + +1 + 100) != ta.AddCounter(100) {
-		t.Errorf("AddCounter: want %d, got %d", i+100, i)
+func TestUUID(t *testing.T) {
+	a := new(Api)
+	uuid := a.UUID()
+	if len(uuid) != 36 {
+		t.Errorf("UUID() return bits: want %d, got %d", 36, len(uuid))
 	}
 }
 
 // BenchmarkXXX(): go test 会多次执行并计算一个平均执行时间
-func BenchmarkAddCounter(b *testing.B) {
+func BenchmarkUUID(b *testing.B) {
 	ta := new(Api)
 	for i := 0; i < b.N; i++ {
-		ta.AddCounter(1)
+		ta.UUID()
 	}
 }
 
-func BenchmarkAddCounterParallel(b *testing.B) {
+func BenchmarkAddUUIDParallel(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		ta := new(Api)
 		for i := 0; i < b.N; i++ {
-			ta.AddCounter(1)
+			ta.UUID()
 		}
 	})
 }
 
 // Example<Type>_<Func><opt>() : 自动测试 + 生成文档，注释中没有 Output: 不予执行
-func ExampleApi_AddCounter() {
+func ExampleApi_UUID() {
 	ta := new(Api)
-	ta.InitCounter()
-	fmt.Println(ta.AddCounter(1))
+	ta.UUID()
+	fmt.Println(len(ta.UUID()))
 	// output:
-	// 1
-}
-
-func TestFileWalk(t *testing.T) {
-	a := new(Api)
-	fs, err := a.GetAllFile(GetAppPath(), "*.py")
-	if err != nil {
-		panic(err)
-	}
-	t.Log(fs)
+	// 36
 }

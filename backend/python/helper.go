@@ -10,8 +10,6 @@ import "C"
 import (
 	"fmt"
 	"regexp"
-
-	"github.com/rs/zerolog/log"
 )
 
 type Info struct {
@@ -39,14 +37,12 @@ func PyErr_Occurred() bool {
 func PyErr_Print() string {
 	errstr := ""
 	if err := C.PyErr_Occurred(); togo(err) != nil {
-		log.Error().Stack().Msg("XXXXXX python exception XXXXXX")
 		// sys.stdout = io.StringIO() // 修改 stdout 为 StringIO 实例
 		// sys.stderr = io.StringIO()
 		C.PyErr_Print()
 		// errstr := sys.stderr.getvalue() // 读出 stdout 的错误打印
 		// sys.stdout.close()
 		// sys.stderr.close()
-		log.Error().Stack().Msg("XXXXXX end XXXXXX")
 	}
 	return errstr
 }

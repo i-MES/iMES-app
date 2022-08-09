@@ -26,6 +26,20 @@
   - `cd cmd/wails`
   - `go install`: 生成 wails 可执行程序
 
+### 执行测试用例
+
+```sh
+$ go test ./backend/... [-count n] [-v]
+```
+
+或
+
+```sh
+$ go test -bench <XXX> ./backend/...
+```
+
+`-v` 可以查看 `t.Log()` 输出的内容。
+
 ### 切换 python 版本
 
 ```sh
