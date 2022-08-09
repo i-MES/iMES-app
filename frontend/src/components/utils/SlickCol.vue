@@ -1,5 +1,5 @@
 <template>
-  <v-col :cols="cols">
+  <v-col :cols="cols % 1 === 0 ? cols : (Math.round(cols) + 1)">
     <slot />
   </v-col>
 </template>

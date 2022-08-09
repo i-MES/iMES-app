@@ -1,5 +1,5 @@
 <template>
-  <v-container class="fill-height width-100 mt-10 ">
+  <v-container class="mt-10 ">
     <v-row justify="center">
       <v-col v-for="entity in store.testEntities" :key="entity.ip.toString()"
         :cols="defcols">

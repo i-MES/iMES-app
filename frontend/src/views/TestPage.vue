@@ -51,6 +51,16 @@
         <v-tooltip location="bottom">
           <template v-slot:activator="{ props }">
             <v-switch class="ma-0 pa-0 mt-4 mr-3" min-width="30" min-height="30"
+              density="compact" v-if="!store.TEsNotTE" v-model="store.enableTGWrap"
+              color="success" hide-details flat v-bind="props">
+            </v-switch>
+          </template>
+          <span>Enable TestGroup Wrap</span>
+        </v-tooltip>
+
+        <v-tooltip location="bottom">
+          <template v-slot:activator="{ props }">
+            <v-switch class="ma-0 pa-0 mt-4 mr-3" min-width="30" min-height="30"
               density="compact" v-if="!store.TEsNotTE" v-model="store.enableTCTooltip"
               color="success" hide-details flat v-bind="props">
             </v-switch>
