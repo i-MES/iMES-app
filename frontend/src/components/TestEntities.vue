@@ -25,14 +25,14 @@
               <v-col cols="12"
                 :class="timer && (store.testItemStatusCounter(entity.id).started > 0) ? 'animate__animated animate__flash' : ''">
                 <v-progress-linear v-model="store.testItemStatusCounter(entity.id).pass"
-                  :max="store.testItemCounter" color="green" height="15">
+                  :max="store.testItemCounter" color="green" height="12">
                   <template v-slot:default="{}">
                     <strong>{{ store.testItemStatusCounter(entity.id).pass }}
                       /{{ store.testItemCounter }}</strong>
                   </template>
                 </v-progress-linear>
                 <v-progress-linear v-model="store.testItemStatusCounter(entity.id).ng"
-                  reverse :max="store.testItemCounter" color="red" height="15">
+                  reverse :max="store.testItemCounter" color="red" height="12">
                   <template v-slot:default="{}">
                     <strong>{{ store.testItemStatusCounter(entity.id).ng }}
                       /{{ store.testItemCounter }}</strong>

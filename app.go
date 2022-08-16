@@ -79,6 +79,7 @@ func (a *App) startup(ctx context.Context) {
 	ge.Msg("Go env info")
 
 	// ===== CPython 启动 =====
+	e := log.Info()
 
 	if !py.Py_IsInitialized() {
 		// 加载 python 环境及虚拟环境的 3 种方式：
@@ -90,19 +91,20 @@ func (a *App) startup(ctx context.Context) {
 		switch loadpymethod {
 		case 1:
 			// 方式1: Py_SetProgramName()、Py_SetPythonHome、Py_SetPath —— 最终证明 Py_SetProgramName 最有效
-			log.Debug().Str("env", "py").Msg("Load python by Py_SetProgramName()")
+			e.Str("load.python.by", "Py_SetProgramName()")
 			if utils.GetSettingConfiger().IsSet("pythonvenvpath") {
 				dir := utils.GetSettingConfiger().GetString("pythonvenvpath") + "/python"
 				// Py_SetProgramName 参与生成 prefix，进而生成 sys.path，
 				// 不但会补全 sys.path 默认值（标准模块），还会加上 venv 库（用户模块）
 				py.Py_SetProgramName(dir)
+				e.Str("python.venv.path", dir)
 			}
 			// py.Py_SetPythonHome()  // 设置标准库搜索路径(不能用于 venv)。
 			// py.Py_SetPath("") 			// Unix 用 :, Windows 用 ;但会清空 prefix，只留下手工加入的路径，缺少标准库。
 			py.Py_Initialize()
 		case 2:
 			// 方式2: 先 Py_Initialize 带上 sys.path 的默认值（标准库），再手工 sys.path.append()
-			log.Debug().Str("env", "py").Msg("Load python by PySys_AppendSysPath()")
+			e.Str("load.python.by", "PySys_AppendSysPath()")
 			py.Py_Initialize()
 			if utils.GetSettingConfiger().IsSet("pythonvenvpath") {
 				dir := utils.GetSettingConfiger().GetString("pythonvenvpath") + "/python"
@@ -110,7 +112,7 @@ func (a *App) startup(ctx context.Context) {
 			}
 		case 3:
 			// 方式3: Py_InitializeFromConfig() —— 全部都手写，不现实
-			log.Debug().Str("env", "py").Msg("Load python by Py_InitializeFromConfig()")
+			e.Str("load.python.by", "Py_InitializeFromConfig()")
 			syspath := []string{
 				"/home/me/.pyenv/versions/3.10.4/lib/python3.10",
 				"/home/me/.pyenv/versions/3.10.4/lib/python3.10/lib-dynload",
@@ -120,11 +122,11 @@ func (a *App) startup(ctx context.Context) {
 		}
 	}
 	if !py.Py_IsInitialized() {
+		e.Msg("Python env info")
 		log.Error().Err(errors.New("Could not initialize the python interpreter!"))
 	}
 
 	// log python 开发环境
-	e := log.Info()
 	e.Str("Version", py.Py_GetVersion())
 	if pyName, err := py.Py_GetProgramName(); err == nil {
 		e.Str("ProgramName", pyName)
@@ -174,22 +176,25 @@ print("Global dir():", dir())
 `)
 
 	// import 本 app 希望直接使用的（非用户测试用例所需的）、必要的 module
+	py.PyRun_SimpleString("import os")
+	py.PyRun_SimpleString("import sys")
 	py.PyRun_SimpleString("import threading")
 	py.PyRun_SimpleString("import datetime")
 
 	// 检查是否能够成功 import 必要的 3rd module: pytest、 debugpy...
 	if mod_pytest := py.PyImport_Import("pytest"); mod_pytest == nil {
-		log.Error().Err(errors.New("Can not import pytest"))
+		log.Error().Err(errors.New("Can not import pytest")).Send()
 	} else {
 		defer mod_pytest.DecRef()
 		py.PyRun_SimpleString(`import pytest`)
 	}
 
 	if mod_debugpy := py.PyImport_ImportModule("debugpy"); mod_debugpy == nil {
-		log.Error().Err(errors.New("Can not import debugpy"))
+		log.Error().Err(errors.New("Can not import debugpy")).Send()
 	} else {
 		defer mod_debugpy.DecRef()
 		// 开启 debugpy 调试 server
+		log.Info().Str("debugpy", mod_debugpy.Repr()).Send()
 		py.PyRun_SimpleString(`import debugpy`)
 		py.PyRun_SimpleString(`debugpy.listen(8899)`)
 		// py.PyRun_SimpleString(`debugpy.wait_for_client()`)
@@ -210,7 +215,7 @@ print("Global dir():", dir())
 		c.Set("usercachepath", utils.GetUserCacheDefaultPath())
 	}
 
-	fmt.Println(c.AllSettings())
+	fmt.Println("AllSettings:", c.AllSettings())
 }
 
 // domReady is called after the front-end dom has been loaded

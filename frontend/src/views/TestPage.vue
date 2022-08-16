@@ -168,7 +168,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, onUnmounted, reactive, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useBaseStore } from '../stores/index'
 import TestEntities from '../components/TestEntities.vue'
@@ -294,6 +294,11 @@ runtime.EventsOn('testgroupmonitor', (x: string) => {
   }
 })
 
+onMounted(() => {
+  // 加载 TestGroup、TestClass、TestItem 数据
+  store.LoadTestGroup('config', true, false)
+  console.log('TestEntity onMounted: ')
+})
 onUnmounted(() => {
   StopTestGroupSyncMonitor()
 })

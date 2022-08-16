@@ -62,11 +62,6 @@ onBeforeMount(() => {
   runtime.EventsOff('startallgroup')
 })
 
-onMounted(() => {
-  // 加载 TestGroup、TestClass、TestItem 数据
-  store.LoadTestGroup('config', true, false)
-  console.log('TestEntity onMounted: ')
-})
 </script>
 
 <style>
