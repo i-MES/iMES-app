@@ -1,5 +1,5 @@
 <template>
-  <v-container class="mt-10 ">
+  <v-container class="mt-10">
     <v-row justify="center">
       <v-col v-for="entity in store.testEntities" :key="entity.ip.toString()"
         :cols="defcols">
@@ -13,13 +13,34 @@
           }}</template>
           <template v-slot:text>
             <v-row>
-              <v-col cols="12">
-                状态：测试中……
+              <!-- <v-col cols="12">
+                <div
+                  :class="timer && (store.testItemStatusCounter(entity.id).started > 0) ? 'animate__animated animate__flash' : ''">
+                  total: {{ store.testItemCounter }}<br />
+                  started: {{ store.testItemStatusCounter(entity.id).started }}<br />
+                  PASS: {{ store.testItemStatusCounter(entity.id).pass }}<br />
+                  NG: {{ store.testItemStatusCounter(entity.id).ng }}<br />
+                </div>
+              </v-col> -->
+              <v-col cols="12"
+                :class="timer && (store.testItemStatusCounter(entity.id).started > 0) ? 'animate__animated animate__flash' : ''">
+                <v-progress-linear v-model="store.testItemStatusCounter(entity.id).pass"
+                  :max="store.testItemCounter" color="green" height="15">
+                  <template v-slot:default="{}">
+                    <strong>{{ store.testItemStatusCounter(entity.id).pass }}
+                      /{{ store.testItemCounter }}</strong>
+                  </template>
+                </v-progress-linear>
+                <v-progress-linear v-model="store.testItemStatusCounter(entity.id).ng"
+                  reverse :max="store.testItemCounter" color="red" height="15">
+                  <template v-slot:default="{}">
+                    <strong>{{ store.testItemStatusCounter(entity.id).ng }}
+                      /{{ store.testItemCounter }}</strong>
+                  </template>
+                </v-progress-linear>
               </v-col>
             </v-row>
           </template>
-          <v-card-actions>
-          </v-card-actions>
         </v-card>
       </v-col>
     </v-row>
@@ -27,10 +48,8 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue'
+import { ref } from 'vue'
 import { useBaseStore } from '../stores/index'
-import { useI18n } from 'vue-i18n'
-const { t } = useI18n({ useScope: 'global' })
 const store = useBaseStore()
 
 withDefaults(
@@ -47,6 +66,10 @@ const onclickEntity = (id: string) => {
   store.activedTestEntityId = id
   store.TEsNotTE = false
 }
+const timer = ref(true)
+setInterval(() => {
+  timer.value = !timer.value
+}, 3000)
 
 </script>
 

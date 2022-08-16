@@ -8,11 +8,11 @@
         G-{{ tg.title == '' ? tg.id.substring(0, 4) : tg.title }}
       </v-toolbar-title>
       <v-btn class="ma-0 pa-0" min-width="30" min-height="30" stacked
-        @click="starttestgroup(tg)" :disabled="disableBtnRunGroup">
+        @click="starttestgroup()" :disabled="disableBtnRunGroup">
         <v-icon>mdi-arrow-right-bold-circle-outline</v-icon>
       </v-btn>
       <v-btn class="ma-0 pa-0" min-width="30" min-height="30" stacked
-        @click="stoptestgroup(tg)" :disabled="disableBtnStopGroup">
+        @click="stoptestgroup()" :disabled="disableBtnStopGroup">
         <v-icon>mdi-stop-circle-outline</v-icon>
       </v-btn>
       <v-menu open-on-hover>
@@ -122,9 +122,8 @@ onMounted(() => {
       disableBtnNewGroup.value = false
     }
   })
-  console.error('EventsOn startallgroup')
   runtime.EventsOn('startallgroup', () => {
-    starttestgroup(props.tg)
+    starttestgroup()
   })
 })
 onBeforeUnmount(() => {
@@ -132,31 +131,31 @@ onBeforeUnmount(() => {
 })
 
 // 执行组测试
-const starttestgroup = (tg: target.TestGroup) => {
-  console.log(tg)
+const starttestgroup = () => {
+  console.log(props.tg)
   disableBtnRunGroup.value = true
   disableBtnStopGroup.value = false
   disableBtnNewGroup.value = true
   disableBtnDelGroup.value = true
-  // 清空本 group 的所有 class 及其 itiem 的 status
-  if (store.LastestTIStatus[store.activedTestEntityId]) {
-    store.LastestTIStatus[store.activedTestEntityId].forEach((tis) => {
+  // 清空本 group 的所有 item 的 status
+  if (store.testEntitiesTIStatus[store.activedTestEntityId]) {
+    store.testEntitiesTIStatus[store.activedTestEntityId].forEach((tis) => {
       if (tis.testgroupid == props.tg.id) {
-        tis.status = 'ready'
+        tis.status = ''
       }
     })
   }
   // 只有 activedTestEntityId 才会被用户点击
-  RunTestGroup(store.activedTestEntityId, tg)
+  RunTestGroup(store.activedTestEntityId, props.tg)
   // 将 group 内所有 ti 的滚动条清零
   runtime.EventsEmit('clearprocessbar', {
     teid: store.activedTestEntityId,
-    tgid: tg.id,
+    tgid: props.tg.id,
   })
 }
 // 停止组测试
-const stoptestgroup = (tg: target.TestGroup) => {
-  console.log(tg)
+const stoptestgroup = () => {
+  console.log('stop group', props.tg)
 }
 </script>
 

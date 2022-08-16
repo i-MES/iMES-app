@@ -16,7 +16,7 @@ export enum AppStatus {
 export interface IAppStatusBar {
   [key: string]: number | string
 }
-export interface ITestItemStatus {
+export interface ITestEntityTIStatuses {
   [teid: string]: target.TestItemStatus[]
 }
 export type TGlobalState = {
@@ -38,9 +38,9 @@ export type TGlobalState = {
   activedTestStageId: number,       // 选中工序
   testStation: imes.TestStation,  // 工位(only one)
   testEntities: target.TestEntity[],  // 所有被测实体
+  testEntitiesTIStatus: ITestEntityTIStatuses,
   activedTestEntityId: string,      // 选中实体
   testGroups: target.TestGroup[],
-  testitemsLogs: target.TestItemLog[],
   addEntity: boolean,
   TEsNotTE: boolean,
   canSortTestClass: boolean,
@@ -48,7 +48,6 @@ export type TGlobalState = {
   enableTGWrap: boolean,
   darkmaincolor: string,
   lightmaincolor: string,
-  LastestTIStatus: ITestItemStatus,
   workmode: string
   paneFirstLengthPercent: number
 }
@@ -74,9 +73,9 @@ export const useBaseStore = defineStore('imesBaseStore', {
       activedTestStageId: 0,
       testStation: { id: 0, title: '', desc: '', enabledTestStageIds: [], activedTestStageIds: [] },
       testEntities: [],
+      testEntitiesTIStatus: {},
       activedTestEntityId: '',
       testGroups: [],
-      testitemsLogs: [],
       addEntity: false,
       TEsNotTE: true,
       canSortTestClass: false,
@@ -84,12 +83,59 @@ export const useBaseStore = defineStore('imesBaseStore', {
       enableTGWrap: false,
       darkmaincolor: 'blue-grey-darken-2',
       lightmaincolor: 'blue-grey-lighten-3',
-      LastestTIStatus: {},
       workmode: '',
       paneFirstLengthPercent: 100
     }
   },
   getters: {
+    // pinia getter 可以返回值，也可以返回函数（可以有入参）
+    testEntityCounter: (state) => state.testEntities.length, // 返回值写法 1
+    testGroupCounter(state): number {                        // 返回值写法 2
+      return state.testGroups.length
+    },
+    testItemCounter(state): number {
+      let c = 0
+      state.testGroups.forEach((tg) => {
+        tg.testclasses.forEach((tc) => {
+          c += tc.testitems.length
+        })
+      })
+      return c
+    },
+    // testEntityStatus(state): { [teid: string]: { started: number, ng: number, pass: number } } {
+    //   // TestEntity 整体的 status
+    //   for (let teid in state.testEntitiesTIStatus) {
+    //     state.testEntitiesTIStatus[teid].forEach((tis) => {
+
+    //     })
+    //   }
+    //   return { '123': { started: 1, ng: 2, pass: state.testEntitiesTIStatus.length } }
+    // },
+    testItemStatusCounter: (state) => {
+      return (teid: string): { started: number, ng: number, pass: number } => {
+        let started = 0
+        let ng = 0
+        let pass = 0
+        if (state.testEntitiesTIStatus[teid]) {
+          state.testEntitiesTIStatus[teid].forEach((tis) => {
+            switch (tis.status) {
+              case 'started':
+                started += 1
+                break
+              case 'ng':
+                ng += 1
+                break
+              case 'pass':
+                pass += 1
+                break
+              default:
+                break
+            }
+          })
+        }
+        return { started: started, ng: ng, pass: pass }
+      }
+    },
     testProductionById: (state) => {
       return (id: number): imes.TestProduction | undefined => {
         return state.testProductions.find((tp) => tp.id == id)
@@ -122,16 +168,15 @@ export const useBaseStore = defineStore('imesBaseStore', {
         ...user
       }
     },
-    LastestTIStatusById: (state) => {
+    TIStatusById: (state) => {
       return (teid: string, tgid: string, tcid: string, tiid: string): target.TestItemStatus | undefined => {
         // console.log('寻找', tiid)
-        if (state.LastestTIStatus[teid]) {
-          for (let index = 0; index < state.LastestTIStatus[teid].length; index++) {
-            if (state.LastestTIStatus[teid][index].testgroupid == tgid &&
-              state.LastestTIStatus[teid][index].testclassid == tcid &&
-              state.LastestTIStatus[teid][index].testitemid == tiid) {
-              // console.log('找到 TestItemStatus', state.LastestTIStatus[teid][index])
-              return state.LastestTIStatus[teid][index]
+        if (state.testEntitiesTIStatus[teid]) {
+          for (let index = 0; index < state.testEntitiesTIStatus[teid].length; index++) {
+            if (state.testEntitiesTIStatus[teid][index].testgroupid == tgid &&
+              state.testEntitiesTIStatus[teid][index].testclassid == tcid &&
+              state.testEntitiesTIStatus[teid][index].testitemid == tiid) {
+              return state.testEntitiesTIStatus[teid][index]
             }
           }
           return undefined

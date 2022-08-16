@@ -1,5 +1,5 @@
 <template>
-  <v-col :cols="cols % 1 === 0 ? cols : (Math.round(cols) + 1)">
+  <v-col :style="'width:' + colspercent + '%'">
     <slot />
   </v-col>
 </template>
@@ -10,7 +10,7 @@ import { ElementMixin } from 'vue-slicksort'
 export default {
   mixins: [ElementMixin],
   props: {
-    cols: {
+    colspercent: {
       type: Number,
       required: true,
     },

@@ -190,22 +190,23 @@ onMounted(() => {
 
   // 注册状态响应函数
   runtime.EventsOn('testitemstatus', (tis: target.TestItemStatus) => {
-    var _tises = store.LastestTIStatus[tis.testentityid]
+    var _tises = store.testEntitiesTIStatus[tis.testentityid]
     if (_tises) {
       for (let idx = 0; idx < _tises.length; idx++) {
         if (_tises[idx].testgroupid == tis.testgroupid && _tises[idx].testclassid == tis.testclassid && _tises[idx].testitemid == tis.testitemid) {
-          store.LastestTIStatus[tis.testentityid][idx] = tis
-          console.log('更新已有 tistatus', tis.testitemid, tis.status)
+          store.testEntitiesTIStatus[tis.testentityid][idx] = tis
+          console.log('更新 tistatus', tis.testitemid, tis.status)
           return
         }
       }
-      store.LastestTIStatus[tis.testentityid].push(tis)
-      console.log('添加新的 tistatus', tis.testitemid, tis.status)
+      store.testEntitiesTIStatus[tis.testentityid].push(tis)
+      console.log('新增 tistatus', tis.testitemid, tis.status)
     } else {
-      store.LastestTIStatus[tis.testentityid] = [tis]
-      console.log('创建 entity 对应的 tistatus 数组', tis.testitemid, tis.status)
+      store.testEntitiesTIStatus[tis.testentityid] = [tis]
+      console.log('新建 tises', tis.testitemid, tis.status)
     }
   })
+
 })
 
 const breakpoint = () => {

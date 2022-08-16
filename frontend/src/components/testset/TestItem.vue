@@ -63,7 +63,7 @@ const setstatus = (tis: target.TestItemStatus) => {
   }
 }
 
-var tis = store.LastestTIStatusById(props.teid, props.tgid, props.tcid, props.ti.id)
+var tis = store.TIStatusById(props.teid, props.tgid, props.tcid, props.ti.id)
 if (tis) {
   setstatus(tis)
   // } else {

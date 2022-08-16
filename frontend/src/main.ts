@@ -7,6 +7,8 @@ import zhHans from './i18n/zh-Hans.json'
 import en from './i18n/en.json'
 import vuetify from './plugins/vuetify'
 import { plugin as Slicksort } from 'vue-slicksort'
+import animated from 'animate.css'
+
 // Register global common components
 import omponentsPlugin from './components/plugin/'
 const i18n = createI18n({
@@ -28,4 +30,5 @@ createApp(App)
   .use(i18n)
   .use(vuetify)
   .use(Slicksort)
+  .use(animated)
   .mount('#app')

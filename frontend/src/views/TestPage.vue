@@ -176,7 +176,7 @@ import TestEntity from '../components/TestEntity.vue'
 import TestLog from '../components/TestLog.vue'
 import AddEntity from '../components/forms/AddEntity.vue'
 import SplitPane from '../components/pane/SplitPane.vue'
-import { StopTestGroupSyncMonitor, SetIntSetting } from '../../wailsjs/go/imes/Api'
+import { StopTestGroupSyncMonitor, SetIntSetting, RunTestGroup } from '../../wailsjs/go/imes/Api'
 import * as runtime from '../../wailsjs/runtime/runtime'
 
 const { t } = useI18n({ useScope: 'global' })
@@ -266,9 +266,15 @@ const zoomIn = () => {
 const startallgroup = () => {
   if (store.TEsNotTE) {
     console.log('run all entity\'s all group')
+    store.testEntitiesTIStatus = {}
+    store.testEntities.forEach((te) => {
+      store.testGroups.forEach((tg) => {
+        RunTestGroup(te.id, tg)
+      })
+    })
   } else {
     console.log('run activity entity\'s all group')
-    store.LastestTIStatus[store.activedTestEntityId] = []
+    store.testEntitiesTIStatus[store.activedTestEntityId] = []
     runtime.EventsEmit('startallgroup')
   }
 }

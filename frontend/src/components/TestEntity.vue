@@ -13,7 +13,8 @@
       useWindowAsScrollContainer helper-class="slicksort-helper"
       @update:list="store.SaveTestGroup" :accept="store.canSortTestClass">
       <slick-col v-for="(tg, idx) in store.testGroups" :key="tg.id" :index="idx"
-        :cols="12 / store.testGroups.length" :disabled="!store.canSortTestClass">
+        :colspercent="100 / store.testGroups.length"
+        :disabled="!store.canSortTestClass">
         <slick-list v-model:list="tg.testclasses" axis="y" group="tg" :distance="10"
           helper-class="slicksort-helper" @update:list="store.SaveTestGroup"
           :accept="store.canSortTestClass">
@@ -59,7 +60,6 @@ onBeforeMount(() => {
   runtime.EventsOff('testclassdeleted')
   runtime.EventsOff('testgroupfinished')
   runtime.EventsOff('startallgroup')
-  console.error('EventsOff startallgroup')
 })
 
 onMounted(() => {

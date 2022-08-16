@@ -31,6 +31,7 @@ JS Signature: LogSetLogLevel(level: number)
 		5	Error
 
 zerolog 共 7 级 level
+
 -	panic (zerolog.PanicLevel, 5)
 -	fatal (zerolog.FatalLevel, 4)
 -	error (zerolog.ErrorLevel, 3)
@@ -38,6 +39,7 @@ zerolog 共 7 级 level
 -	info (zerolog.InfoLevel, 1)
 -	debug (zerolog.DebugLevel, 0)
 -	trace (zerolog.TraceLevel, -1)
+
 */
 
 type AppLog struct {
@@ -93,8 +95,8 @@ func InitLog(level string) {
 
 	// 配置文件及 rotate
 	rotateFileWriter, err := NewRotate(RotateOptions{
-		Directory:       GetSettingConfiger().GetString("log.logsfilepath"),
-		MaximumFileSize: 1024 * 1024 * 1024,
+		Directory:       GetSettingConfiger().GetString("usercachepath") + "/logs",
+		MaximumFileSize: 1024 * 1024 * 10,
 		MaximumLifetime: time.Minute * time.Duration(GetSettingConfiger().GetInt("log.logsfilerotateminutes")),
 		FileNameFunc:    nil,
 	})

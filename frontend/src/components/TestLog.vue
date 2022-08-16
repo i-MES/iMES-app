@@ -12,15 +12,15 @@
     <v-table class="pt-10" density="compact">
       <thead>
         <tr>
-          <th class="text-left" width="8%">No.</th>
-          <th class="text-left" width="30%">时间戳</th>
-          <th class="text-left" width="30%">TestItemID</th>
+          <th class="text-left">No.</th>
+          <th class="text-left">时间戳</th>
+          <th class="text-left">TestItemID</th>
           <th class="text-left">Flag</th>
           <th class="text-left">Message</th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(st, idx) in store.LastestTIStatus[store.activedTestEntityId]"
+        <tr v-for="(st, idx) in store.testEntitiesTIStatus[store.activedTestEntityId] "
           :key="st.timestamp">
           <td>{{ idx + 1 }}</td>
           <td>{{ DateTime.fromSeconds(st.timestamp).toFormat('yyyy-MM-dd HH:MM:ss')
@@ -35,12 +35,11 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, onUnmounted } from 'vue'
 import { useBaseStore } from '../stores/index'
 // import { TestItemStart } from '../../wailsjs/go/imes/Api'
 import { useI18n } from 'vue-i18n'
 import { DateTime } from 'luxon'
-import * as runtime from '../../wailsjs/runtime/runtime'
 
 // const props = defineProps<{
 //   mainWindowHeight: number
@@ -84,13 +83,9 @@ const onclickMax = () => {
 
 onMounted(() => {
   // store.appStatusBar.logHeight = logHeight.value
-  runtime.EventsOn('testitemlog', (data) => {
-    store.testitemsLogs.push(data)
-  })
 })
 onUnmounted(() => {
   // clearInterval(timer)
-  runtime.EventsOff('testitemlog')
 })
 
 
