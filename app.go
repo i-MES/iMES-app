@@ -196,7 +196,7 @@ print("Global dir():", dir())
 		// 开启 debugpy 调试 server
 		log.Info().Str("debugpy", mod_debugpy.Repr()).Send()
 		py.PyRun_SimpleString(`import debugpy`)
-		py.PyRun_SimpleString(`debugpy.listen(8899)`)
+		// py.PyRun_SimpleString(`debugpy.listen(5678)`)
 		// py.PyRun_SimpleString(`debugpy.wait_for_client()`)
 	}
 

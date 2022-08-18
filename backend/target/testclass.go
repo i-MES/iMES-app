@@ -349,8 +349,8 @@ func (tc *TestClass) RunPython(ctx context.Context, emit func(ename, tiid, msg s
 				_ret = _class.CallMethodArgs(ti.Title)
 			}
 			if _ret == nil {
-				// py.PyErr_Print()
-				log.Debug().Msg(fmt.Sprintf("Run TI Error: %s\t%s", tc.ClassName, ti.Title))
+				log.Warn().Msg(fmt.Sprintf("Run TI Error: %s\t%s", tc.ClassName, ti.Title))
+				py.PyErr_Print()
 				emit("testitemstatus", ti.Id, "ng")
 			} else {
 				log.Debug().Msg(fmt.Sprintf("Run TI Pass: %s\t%s", tc.ClassName, ti.Title))

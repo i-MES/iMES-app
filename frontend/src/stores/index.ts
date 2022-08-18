@@ -102,16 +102,8 @@ export const useBaseStore = defineStore('imesBaseStore', {
       })
       return c
     },
-    // testEntityStatus(state): { [teid: string]: { started: number, ng: number, pass: number } } {
-    //   // TestEntity 整体的 status
-    //   for (let teid in state.testEntitiesTIStatus) {
-    //     state.testEntitiesTIStatus[teid].forEach((tis) => {
-
-    //     })
-    //   }
-    //   return { '123': { started: 1, ng: 2, pass: state.testEntitiesTIStatus.length } }
-    // },
-    testItemStatusCounter: (state) => {
+    tisNum: (state) => {
+      // TestItemStatus total Number
       return (teid: string): { started: number, ng: number, pass: number } => {
         let started = 0
         let ng = 0

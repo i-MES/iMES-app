@@ -1,6 +1,7 @@
 import time
 from random import randint
 import pytest
+from helper import delay
 
 
 @pytest.mark.UT
@@ -9,24 +10,16 @@ class Test_Network:
       pass
 
     def test_tcp(self):
-      i = randint(1,5)
-      time.sleep(i)
-      assert i < 5
+      assert delay()
       
     def test_udp(self):
-      i = randint(1,5)
-      time.sleep(i)
-      assert i < 5
+      assert delay()
 
     def test_socket(self):
-      i = randint(1,5)
-      time.sleep(i)
-      assert i < 5
+      assert delay()
 
     def test_icmp(self):
-      i = randint(1,5)
-      time.sleep(i)
-      assert i < 5
+      assert delay()
       
     def test_4G(self, entity):
       print(entity)
